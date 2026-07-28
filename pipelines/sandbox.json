@@ -1,0 +1,29 @@
+{
+  "iac_version": "2.0",
+  "source": "human",
+  "config": {
+    "headless": false,
+    "storage_state": "auth/session.json",
+    "save_storage_state": "auth/session.json",
+    "output": "pipelines/sandbox_results.json",
+    "ai_config": {
+      "host": "http://100.92.31.18:11434",
+      "vision_model": "llava-phi3:latest",
+      "text_model": "gemma4-obliterated:latest",
+      "ai_timeout": 300,
+      "drop": ["encoded", "desc"]
+    }
+  },
+  "plan": [
+    {
+      "op": "web.goto",
+      "args": { "url": "https://www.google.com" },
+      "_phase": "=== ENTERING INTELLIGENT SANDBOX ==="
+    },
+    {
+      "op": "web.sandbox",
+      "args": {}
+    },
+    { "op": "log", "args": { "message": "Sandbox session ended. Saving state..." } }
+  ]
+}

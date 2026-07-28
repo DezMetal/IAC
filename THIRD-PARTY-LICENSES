@@ -1,0 +1,616 @@
+THIRD-PARTY LICENCES -- IAC (Integrated Agent Core)
+========================================================================
+
+IAC (Integrated Agent Core) is a product of D-Net Lab.
+Copyright (c) 2026 D-Net Lab. All rights reserved.
+
+    "With Accessibility Comes Understanding and Inspiration"
+
+IAC (Integrated Agent Core) incorporates the third-party components listed below. Each
+remains the property of its respective authors and is used under the
+terms of its own licence. This notice is provided to satisfy those
+terms; it does not alter the licence covering IAC (Integrated Agent Core) itself.
+
+Generated 2026-07-26 by tools/gen_licenses.py
+
+------------------------------------------------------------------------
+
+PERMISSIVELY LICENSED COMPONENTS
+--------------------------------
+
+alembic 1.13.1
+    Licence : MIT License
+    Author  : Mike Bayer
+    Source  : https://alembic.sqlalchemy.org
+
+altgraph 0.17.5
+    Licence : MIT License
+    Author  : Ronald Oussoren
+    Source  : https://altgraph.readthedocs.io
+
+annotated-types 0.7.0
+    Licence : MIT License
+    Source  : Homepage, https://github.com/annotated-types/annotated-types
+
+anyio 4.12.1
+    Licence : MIT
+    Source  : Documentation, https://anyio.readthedocs.io/en/latest/
+
+attrs 25.4.0
+    Licence : MIT
+    Source  : Documentation, https://www.attrs.org/
+
+blinker 1.9.0
+    Licence : MIT License
+    Author  : Jason Kirtland
+    Source  : Chat, https://discord.gg/pallets
+
+cachetools 6.2.2
+    Licence : MIT License
+    Author  : Thomas Kemmer
+    Source  : https://github.com/tkem/cachetools/
+
+cffi 2.0.0
+    Licence : MIT
+    Author  : Armin Rigo, Maciej Fijalkowski
+    Source  : Documentation, https://cffi.readthedocs.io/
+
+charset-normalizer 3.4.4
+    Licence : MIT
+    Source  : Changelog, https://github.com/jawah/charset_normalizer/blob/master/CHANGELOG.md
+
+click 8.3.1
+    Licence : BSD-3-Clause
+    Source  : Changes, https://click.palletsprojects.com/page/changes/
+
+colorama 0.4.6
+    Licence : BSD License
+    Source  : Homepage, https://github.com/tartley/colorama
+
+cryptography 46.0.3
+    Licence : Apache-2.0 OR BSD-3-Clause
+    Source  : homepage, https://github.com/pyca/cryptography
+
+Deprecated 1.3.1
+    Licence : MIT License
+    Author  : Laurent LAPORTE
+    Source  : https://github.com/laurent-laporte-pro/deprecated
+
+dill 0.3.8
+    Licence : BSD License
+    Author  : Mike McKerns
+    Source  : https://github.com/uqfoundation/dill
+
+diskcache 5.6.3
+    Licence : Apache Software License
+    Author  : Grant Jenks
+    Source  : http://www.grantjenks.com/docs/diskcache/
+
+distro 1.9.0
+    Licence : Apache Software License
+    Author  : Nir Cohen
+    Source  : https://github.com/python-distro/distro
+
+emoji 2.10.1
+    Licence : BSD License
+    Author  : Taehoon Kim, Kevin Wurster
+    Source  : https://github.com/carpedm20/emoji/
+
+et_xmlfile 2.0.0
+    Licence : MIT License
+    Author  : See AUTHORS.txt
+    Source  : https://foss.heptapod.net/openpyxl/et_xmlfile
+
+Flask 3.0.0
+    Licence : BSD License
+    Source  : Changes, https://flask.palletsprojects.com/changes/
+
+Flask-Admin 2.0.2
+    Licence : BSD License
+    Source  : Changes, https://github.com/pallets-eco/flask-admin/releases/
+
+Flask-CKEditor 1.0.0
+    Licence : MIT License
+    Author  : Grey Li
+    Source  : http://github.com/helloflask/flask-ckeditor
+
+flask-cors 6.0.2
+    Licence : MIT
+    Source  : Homepage, https://corydolphin.github.io/flask-cors/
+
+Flask-Limiter 4.1.1
+    Licence : MIT
+    Source  : Homepage, https://flask-limiter.readthedocs.org
+
+Flask-Login 0.6.3
+    Licence : MIT License
+    Author  : Matthew Frazier
+    Source  : https://github.com/maxcountryman/flask-login
+
+Flask-Mail 0.9.1
+    Licence : BSD License
+    Author  : Dan Jacob
+    Source  : https://github.com/rduplain/flask-mail
+
+Flask-Migrate 4.1.0
+    Licence : MIT License
+    Source  : Homepage, https://github.com/miguelgrinberg/flask-migrate
+
+Flask-SocketIO 5.5.1
+    Licence : MIT License
+    Source  : Homepage, https://github.com/miguelgrinberg/flask-socketio
+
+Flask-SQLAlchemy 3.1.1
+    Licence : BSD License
+    Source  : Changes, https://flask-sqlalchemy.palletsprojects.com/changes/
+
+google-ai-generativelanguage 0.6.15
+    Licence : Apache Software License
+    Author  : Google LLC
+    Source  : https://github.com/googleapis/google-cloud-python/tree/main/packages/google-ai-generativelanguage
+
+google-api-core 2.25.2
+    Licence : Apache Software License
+    Source  : Documentation, https://googleapis.dev/python/google-api-core/latest/
+
+google-api-python-client 2.114.0
+    Licence : Apache Software License
+    Author  : Google LLC
+    Source  : https://github.com/googleapis/google-api-python-client/
+
+google-auth 2.48.0
+    Licence : Apache Software License
+    Author  : Google Cloud Platform
+    Source  : https://github.com/googleapis/google-auth-library-python
+
+google-auth-httplib2 0.2.1
+    Licence : Apache Software License
+    Author  : Google Cloud Platform
+    Source  : https://github.com/GoogleCloudPlatform/google-auth-library-python-httplib2
+
+google-auth-oauthlib 1.2.0
+    Licence : Apache Software License
+    Author  : Google Cloud Platform
+    Source  : https://github.com/GoogleCloudPlatform/google-auth-library-python-oauthlib
+
+google-cloud-secret-manager 2.16.4
+    Licence : Apache Software License
+    Author  : Google LLC
+    Source  : https://github.com/googleapis/google-cloud-python
+
+google-genai 1.65.0
+    Licence : Apache-2.0
+    Source  : Homepage, https://github.com/googleapis/python-genai
+
+google-generativeai 0.8.5
+    Licence : Apache Software License
+    Author  : Google LLC
+    Source  : https://github.com/google/generative-ai-python
+
+googleapis-common-protos 1.72.0
+    Licence : Apache Software License
+    Source  : Repository, https://github.com/googleapis/google-cloud-python/tree/main/packages/googleapis-common-protos
+
+greenlet 3.3.2
+    Licence : MIT AND PSF-2.0
+    Source  : Homepage, https://greenlet.readthedocs.io
+
+grpc-google-iam-v1 0.14.3
+    Licence : Apache Software License
+    Source  : Repository, https://github.com/googleapis/google-cloud-python
+
+grpcio 1.76.0
+    Licence : Apache Software License
+    Author  : The gRPC Authors
+    Source  : https://grpc.io
+
+grpcio-status 1.62.3
+    Licence : Apache Software License
+    Author  : The gRPC Authors
+    Source  : https://grpc.io
+
+gunicorn 21.2.0
+    Licence : MIT License
+    Author  : Benoit Chesneau
+    Source  : https://gunicorn.org
+
+h11 0.16.0
+    Licence : MIT License
+    Author  : Nathaniel J. Smith
+    Source  : https://github.com/python-hyper/h11
+
+http_ece 1.2.1
+    Licence : MIT License
+    Author  : Martin Thomson
+    Source  : https://github.com/martinthomson/encrypted-content-encoding
+
+httpcore 1.0.9
+    Licence : BSD-3-Clause
+    Source  : Documentation, https://www.encode.io/httpcore
+
+httplib2 0.31.0
+    Licence : MIT License
+    Author  : Joe Gregorio
+    Source  : https://github.com/httplib2/httplib2
+
+httpx 0.28.1
+    Licence : BSD License
+    Source  : Changelog, https://github.com/encode/httpx/blob/master/CHANGELOG.md
+
+httpx-sse 0.4.3
+    Licence : MIT
+    Source  : Homepage, https://github.com/florimondmanca/httpx-sse
+
+idna 3.11
+    Licence : BSD-3-Clause
+    Source  : Changelog, https://github.com/kjd/idna/blob/master/HISTORY.rst
+
+iniconfig 2.3.0
+    Licence : MIT
+    Source  : Homepage, https://github.com/pytest-dev/iniconfig
+
+itsdangerous 2.2.0
+    Licence : BSD License
+    Source  : Changes, https://itsdangerous.palletsprojects.com/changes/
+
+Jinja2 3.1.6
+    Licence : BSD License
+    Source  : Changes, https://jinja.palletsprojects.com/changes/
+
+jsonschema 4.26.0
+    Licence : MIT
+    Source  : Homepage, https://github.com/python-jsonschema/jsonschema
+
+jsonschema-specifications 2025.9.1
+    Licence : MIT
+    Source  : Documentation, https://jsonschema-specifications.readthedocs.io/
+
+keyboard 0.13.5
+    Licence : MIT License
+    Author  : BoppreH
+    Source  : https://github.com/boppreh/keyboard
+
+limits 5.8.0
+    Licence : MIT
+    Source  : Homepage, https://limits.readthedocs.org
+
+llama_cpp_python 0.3.16
+    Licence : MIT
+    Source  : Homepage, https://github.com/abetlen/llama-cpp-python
+
+Mako 1.3.10
+    Licence : MIT License
+    Author  : Mike Bayer
+    Source  : https://www.makotemplates.org/
+
+Markdown 3.10.2
+    Licence : BSD-3-Clause
+    Author  : Manfred Stienstra, Yuri Takhteyev
+    Source  : Homepage, https://Python-Markdown.github.io/
+
+markdown-it-py 4.0.0
+    Licence : MIT License
+    Source  : Documentation, https://markdown-it-py.readthedocs.io
+
+MarkupSafe 3.0.3
+    Licence : BSD-3-Clause
+    Source  : Donate, https://palletsprojects.com/donate
+
+mcp 1.26.0
+    Licence : MIT License
+    Author  : Anthropic, PBC.
+    Source  : Homepage, https://modelcontextprotocol.io
+
+mdurl 0.1.2
+    Licence : MIT License
+    Source  : Homepage, https://github.com/executablebooks/mdurl
+
+numpy 2.3.5
+    Licence : BSD License
+    Author  : Travis E. Oliphant et al.
+    Source  : homepage, https://numpy.org
+
+oauthlib 3.3.1
+    Licence : BSD-3-Clause
+    Author  : The OAuthlib Community
+    Source  : https://github.com/oauthlib/oauthlib
+
+ollama 0.6.1
+    Licence : MIT
+    Source  : homepage, https://ollama.com
+
+openpyxl 3.1.5
+    Licence : MIT License
+    Author  : See AUTHORS
+    Source  : https://openpyxl.readthedocs.io
+
+ordered-set 4.1.0
+    Licence : MIT License
+    Source  : Home, https://github.com/rspeer/ordered-set
+
+packaging 25.0
+    Licence : Apache Software License
+    Source  : Documentation, https://packaging.pypa.io/
+
+pefile 2024.8.26
+    Licence : MIT
+    Author  : Ero Carrera
+    Source  : https://github.com/erocarrera/pefile
+
+pillow 12.1.1
+    Licence : MIT-CMU
+    Source  : Changelog, https://github.com/python-pillow/Pillow/releases
+
+pip 25.3
+    Licence : MIT
+    Source  : Changelog, https://pip.pypa.io/en/stable/news/
+
+pluggy 1.6.0
+    Licence : MIT License
+
+proto-plus 1.26.1
+    Licence : Apache Software License
+    Source  : Documentation, https://googleapis.dev/python/proto-plus/latest/
+
+protobuf 4.25.8
+    Licence : 3-Clause BSD License
+    Author  : protobuf@googlegroups.com
+    Source  : https://developers.google.com/protocol-buffers/
+
+pyasn1 0.6.1
+    Licence : BSD License
+    Author  : Ilya Etingof
+    Source  : https://github.com/pyasn1/pyasn1
+
+pyasn1_modules 0.4.2
+    Licence : BSD License
+    Author  : Ilya Etingof
+    Source  : https://github.com/pyasn1/pyasn1-modules
+
+pycparser 3.0
+    Licence : BSD-3-Clause
+    Source  : Homepage, https://github.com/eliben/pycparser
+
+pydantic 2.12.4
+    Licence : MIT
+    Source  : Homepage, https://github.com/pydantic/pydantic
+
+pydantic-settings 2.13.1
+    Licence : MIT
+    Source  : Homepage, https://github.com/pydantic/pydantic-settings
+
+pydantic_core 2.41.5
+    Licence : MIT
+    Source  : https://github.com/pydantic/pydantic-core
+
+Pygments 2.17.2
+    Licence : BSD License
+    Author  : Matthäus G. Chajdas
+    Source  : Homepage, https://pygments.org
+
+pyinstaller-hooks-contrib 2026.6
+    Licence : Apache Software License
+    Author  : Legorooj
+    Source  : https://github.com/pyinstaller/pyinstaller-hooks-contrib
+
+PyJWT 2.11.0
+    Licence : MIT
+    Source  : Homepage, https://github.com/jpadilla/pyjwt
+
+pyparsing 3.2.5
+    Licence : MIT
+    Source  : Homepage, https://github.com/pyparsing/pyparsing/
+
+PyPDF2 3.0.1
+    Licence : BSD License
+    Source  : Bug Reports, https://github.com/py-pdf/PyPDF2/issues
+
+pytest 9.0.2
+    Licence : MIT
+    Author  : Holger Krekel, Bruno Oliveira, Ronny Pfannschmidt, Floris Bruynooghe, Brianna Laugher, Florian Bruhin, Others (See AUTHORS)
+    Source  : Changelog, https://docs.pytest.org/en/stable/changelog.html
+
+python-dotenv 1.2.1
+    Licence : BSD-3-Clause
+    Source  : Source, https://github.com/theskumar/python-dotenv
+
+python-engineio 4.12.3
+    Licence : MIT
+    Source  : Homepage, https://github.com/miguelgrinberg/python-engineio
+
+python-multipart 0.0.22
+    Licence : Apache-2.0
+    Source  : Homepage, https://github.com/Kludex/python-multipart
+
+python-socketio 5.15.0
+    Licence : MIT
+    Source  : Homepage, https://github.com/miguelgrinberg/python-socketio
+
+pywin32 311
+    Licence : Python Software Foundation License
+    Author  : Mark Hammond (et al)
+    Source  : Homepage, https://github.com/mhammond/pywin32
+
+pywin32-ctypes 0.2.3
+    Licence : BSD-3-Clause
+    Author  : Enthought Inc.
+    Source  : https://github.com/enthought/pywin32-ctypes
+
+PyYAML 6.0.3
+    Licence : MIT License
+    Author  : Kirill Simonov
+    Source  : https://pyyaml.org/
+
+reedsolo 1.7.0
+    Licence : The Unlicense (Unlicense)
+    Author  : Tomer Filiba
+    Source  : https://github.com/tomerfiliba/reedsolomon
+
+referencing 0.37.0
+    Licence : MIT
+    Source  : Documentation, https://referencing.readthedocs.io/
+
+requests 2.32.5
+    Licence : Apache Software License
+    Author  : Kenneth Reitz
+    Source  : https://requests.readthedocs.io
+
+requests-oauthlib 2.0.0
+    Licence : BSD License
+    Author  : Kenneth Reitz
+    Source  : https://github.com/requests/requests-oauthlib
+
+rich 14.3.3
+    Licence : MIT License
+    Author  : Will McGugan
+    Source  : Documentation, https://rich.readthedocs.io/en/latest/
+
+rpds-py 0.30.0
+    Licence : MIT
+    Source  : Documentation, https://rpds.readthedocs.io/
+
+rsa 4.9.1
+    Licence : Apache Software License
+    Author  : Sybren A. Stüvel
+    Source  : Homepage, https://stuvel.eu/rsa
+
+setuptools 83.0.0
+    Licence : MIT
+    Source  : Source, https://github.com/pypa/setuptools
+
+simple-websocket 1.1.0
+    Licence : MIT License
+    Source  : Homepage, https://github.com/miguelgrinberg/simple-websocket
+
+sniffio 1.3.1
+    Licence : MIT License
+    Source  : Homepage, https://github.com/python-trio/sniffio
+
+SQLAlchemy 2.0.48
+    Licence : MIT
+    Author  : Mike Bayer
+    Source  : https://www.sqlalchemy.org
+
+sse-starlette 3.3.2
+    Licence : BSD-3-Clause
+    Source  : Source, https://github.com/sysid/sse-starlette
+
+starlette 0.52.1
+    Licence : BSD-3-Clause
+    Source  : Homepage, https://github.com/Kludex/starlette
+
+stripe 14.4.0
+    Licence : MIT License
+    Source  : changelog, https://github.com/stripe/stripe-python/blob/master/CHANGELOG.md
+
+tenacity 9.1.4
+    Licence : Apache Software License
+    Author  : Julien Danjou
+    Source  : https://github.com/jd/tenacity
+
+tinycss2 1.5.1
+    Licence : BSD License
+    Source  : Changelog, https://github.com/Kozea/tinycss2/releases
+
+tqdm 4.67.1
+    Licence : MIT License
+    Source  : homepage, https://tqdm.github.io
+
+typing-inspection 0.4.2
+    Licence : MIT
+    Source  : Homepage, https://github.com/pydantic/typing-inspection
+
+typing_extensions 4.15.0
+    Licence : PSF-2.0
+    Source  : Bug Tracker, https://github.com/python/typing_extensions/issues
+
+uritemplate 4.2.0
+    Licence : BSD 3-Clause OR Apache-2.0
+    Author  : Ian Stapleton Cordasco
+    Source  : https://uritemplate.readthedocs.org
+
+urllib3 2.5.0
+    Licence : MIT
+    Source  : Changelog, https://github.com/urllib3/urllib3/blob/main/CHANGES.rst
+
+uvicorn 0.41.0
+    Licence : BSD-3-Clause
+    Source  : Changelog, https://uvicorn.dev/release-notes
+
+waitress 3.0.2
+    Licence : Zope Public License
+    Author  : Zope Foundation and Contributors
+    Source  : https://github.com/Pylons/waitress
+
+webencodings 0.5.1
+    Licence : BSD License
+    Author  : Geoffrey Sneddon
+    Source  : https://github.com/SimonSapin/python-webencodings
+
+websockets 16.0
+    Licence : BSD-3-Clause
+    Source  : Homepage, https://github.com/python-websockets/websockets
+
+Werkzeug 3.1.4
+    Licence : BSD-3-Clause
+    Source  : Changes, https://werkzeug.palletsprojects.com/page/changes/
+
+wrapt 2.1.1
+    Licence : BSD-2-Clause
+    Source  : Homepage, https://github.com/GrahamDumpleton/wrapt
+
+wsproto 1.3.2
+    Licence : MIT
+    Source  : Homepage, https://github.com/python-hyper/wsproto/
+
+WTForms 3.2.1
+    Licence : BSD License
+    Author  : WTForms
+    Source  : Documentation, https://wtforms.readthedocs.io
+
+
+COPYLEFT LICENCES -- REVIEW BEFORE DISTRIBUTION
+-----------------------------------------------
+
+These may impose obligations on distributed software, including
+source disclosure. Confirm each is compatible with your licence
+before shipping.
+
+bidict 0.23.1
+    Licence : Mozilla Public License 2.0 (MPL 2.0)
+    Source  : Changelog, https://bidict.readthedocs.io/changelog.html
+
+certifi 2025.11.12
+    Licence : Mozilla Public License 2.0 (MPL 2.0)
+    Author  : Kenneth Reitz
+    Source  : https://github.com/certifi/python-certifi
+
+psycopg2-binary 2.9.11
+    Licence : GNU Library or Lesser General Public License (LGPL)
+    Author  : Federico Di Gregorio
+    Source  : https://psycopg.org/
+
+py-vapid 1.9.4
+    Licence : MPL-2.0
+    Source  : Homepage, https://github.com/mozilla-services/vapid
+
+pyinstaller 6.21.0
+    Licence : GNU General Public License v2 (GPLv2)
+    Author  : Hartmut Goebel, Giovanni Bajo, David Vierra, David Cortesi, Martin Zibricky
+    Source  : Homepage, https://pyinstaller.org
+
+PyMuPDF 1.25.3
+    Licence : AGPL
+    Author  : Artifex
+    Source  : Documentation, https://pymupdf.readthedocs.io/
+
+pywebpush 1.11.0
+    Licence : MPL2
+    Author  : JR Conlin
+    Source  : https://github.com/web-push-libs/pywebpush
+
+
+------------------------------------------------------------------------
+
+Full licence texts are available from each project's source.
+Questions: D-Net Lab

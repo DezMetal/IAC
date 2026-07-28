@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://dnet.live/schemas/iac-payload-v2",
+  "title": "IAC Node Payload",
+  "description": "D-Net Node Protocol — Canonical structured data exchange format for the D-Net Cyberspace Ecosystem",
+  "type": "object",
+  "required": ["plan"],
+  "properties": {
+    "iac_version": {
+      "type": "string",
+      "description": "Protocol version",
+      "default": "2.0"
+    },
+    "source": {
+      "type": "string",
+      "description": "Originating node identifier",
+      "enum": ["local", "cli", "aether", "dnet_live", "opas", "pipeline", "webagent", "human", "api", "sitegen", "envoy"]
+    },
+    "target": {
+      "type": "string",
+      "description": "Destination node identifier (optional — defaults to local execution)"
+    },
+    "config": {
+      "type": "object",
+      "description": "Global session configuration",
+      "properties": {
+        "headless": { "type": "boolean", "default": true },
+        "record_video": { "type": "boolean", "default": false },
+        "record_video_dir": { "type": "string" },
+        "output": { "type": "string", "description": "File path to save execution results" },
+        "ai_config": {
+          "type": "object",
+          "description": "AI inference configuration",
+          "properties": {
+            "host": { "type": "string" },
+            "model": { "type": "string" },
+            "prompt": { "type": "string" },
+            "ai_timeout": { "type": "integer" },
+            "retries": { "type": "integer" },
+            "temp": { "type": "number" },
+            "schema": { "type": "object" },
+            "options": { "type": "object" }
+          }
+        },
+        "retries": { "type": "integer", "minimum": 0, "default": 3 },
+        "drop": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": ["encoded"],
+          "description": "Keys to remove from payload items after AI processing"
+        },
+        "data_payload": {
+          "description": "Initial data state (object or path to .json file)"
+        },
+        "security": {
+          "type": "object",
+          "properties": {
+            "allow_eval": { "type": "boolean", "default": false },
+            "allow_shell": { "type": "boolean", "default": false },
+            "allowed_domains": { "type": "array", "items": { "type": "string" } },
+            "allowed_paths": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    },
+    "plan": {
+      "type": "array",
+      "description": "Ordered list of operations to execute",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["op"],
+        "properties": {
+          "op": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Operation name (e.g., 'goto', 'web.goto', 'ai.analyze', 'fs.read')"
+          },
+          "args": {
+            "type": "object",
+            "description": "Operation-specific arguments",
+            "default": {}
+          }
+        }
+      }
+    },
+    "data_payload": {
+      "type": "object",
+      "description": "Shared state (Universal Payload) accessible to all operations",
+      "default": {}
+    }
+  }
+}

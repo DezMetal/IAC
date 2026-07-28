@@ -1,0 +1,44 @@
+IAC -- Integrated Agent Core
+Copyright (c) 2026 D-Net Lab
+
+    "With Accessibility Comes Understanding and Inspiration"
+    "From Mind To Matter"
+
+This product includes software developed by D-Net Lab.
+
+IAC was created and is maintained by D-Net Lab. This NOTICE file is part of the
+Apache License 2.0 terms under which IAC is distributed: any redistribution of
+IAC, in source or binary form, with or without modification, MUST include a
+readable copy of the attribution notices contained in this file (Apache-2.0,
+Section 4(d)). Contributors may add their own attributions below, but may not
+remove or obscure those of D-Net Lab.
+
+Derivative works and forks must retain this NOTICE and continue to credit
+D-Net Lab as the original creator of IAC.
+
+--------------------------------------------------------------------------------
+ATTRIBUTION
+--------------------------------------------------------------------------------
+
+Original author and maintainer:
+    D-Net Lab
+    https://lab.dnet.live
+
+If you use IAC in your own software, please credit it as:
+
+    "Powered by IAC (Integrated Agent Core) -- D-Net Lab"
+
+--------------------------------------------------------------------------------
+THIRD-PARTY COMPONENTS
+--------------------------------------------------------------------------------
+
+IAC depends on third-party software, each retaining its own licence and
+copyright. See THIRD-PARTY-LICENSES for the current inventory, regenerate with:
+
+    python tools/gen_licenses.py --project "IAC (Integrated Agent Core)"
+
+--------------------------------------------------------------------------------
+CONTRIBUTORS
+--------------------------------------------------------------------------------
+
+(Contributors may append their attribution here. Do not remove entries above.)

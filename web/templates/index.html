@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IAC Orchestrator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Load FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar for Operations -->
+        <aside class="sidebar" id="operations-sidebar">
+            <button id="btn-toggle-sidebar" class="toggle-sidebar-btn" title="Toggle Sidebar"><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="sidebar-header">
+                <h2><i class="fa-solid fa-microchip"></i> IAC Nodes</h2>
+                <div class="search-box">
+                    <i class="fa-solid fa-search"></i>
+                    <input type="text" id="op-search" placeholder="Search operations...">
+                </div>
+            </div>
+            <div class="op-list-container">
+                <!-- Operations will be populated here -->
+                <div id="op-categories"></div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="workspace">
+            <header class="workspace-header">
+                <div class="header-left">
+                    <h1 class="brand">D-NET <span>IAC Core</span></h1>
+                    <span class="status-badge online"><i class="fa-solid fa-circle-dot"></i> Connected</span>
+                </div>
+                <div class="header-right">
+                    <select id="pipeline-selector" class="dropdown-select">
+                        <option value="">-- Load Workflow --</option>
+                    </select>
+                    <button class="btn btn-secondary" id="btn-save-pipeline"><i class="fa-solid fa-floppy-disk"></i> Save Pipeline</button>
+                    <button class="btn btn-secondary" id="btn-validate"><i class="fa-solid fa-check"></i> Validate</button>
+                    <button class="btn btn-primary" id="btn-execute"><i class="fa-solid fa-play"></i> Execute Plan</button>
+                    <button class="btn btn-icon" id="btn-clear" title="Clear Canvas"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </header>
+
+            <div class="canvas-container" id="node-canvas">
+                <!-- SVG layer for connections -->
+                <svg id="connection-layer"></svg>
+                <!-- Nodes will be dropped here -->
+                
+                <div class="canvas-hint">
+                    <i class="fa-solid fa-diagram-project"></i>
+                    <p>Drag & Drop operations here to build your plan.</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Panel for Config / Payload / Output -->
+        <aside class="panel" id="config-panel">
+            <button id="btn-toggle-panel" class="toggle-panel-btn" title="Toggle Config Panel"><i class="fa-solid fa-chevron-right"></i></button>
+            <div class="panel-tabs">
+                <button class="tab-btn active" data-target="tab-config"><i class="fa-solid fa-sliders"></i> Config</button>
+                <button class="tab-btn" data-target="tab-payload"><i class="fa-solid fa-database"></i> Payload</button>
+                <button class="tab-btn" data-target="tab-exchanges"><i class="fa-solid fa-exchange-alt"></i> Exchanges</button>
+                <button class="tab-btn" data-target="tab-output"><i class="fa-solid fa-terminal"></i> Output</button>
+            </div>
+            
+            <div class="panel-content">
+                <!-- Config Tab -->
+                <div class="tab-pane active" id="tab-config">
+                    <div class="form-group">
+                        <label>Source Identifier</label>
+                        <input type="text" id="cfg-source" value="iac_web_gui">
+                    </div>
+                    <div class="form-group">
+                        <label>Target Identifier</label>
+                        <input type="text" id="cfg-target" value="local">
+                    </div>
+                    
+                    <h3 class="section-title">Web Agent</h3>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="cfg-headless" checked>
+                        <label for="cfg-headless">Headless Mode</label>
+                    </div>
+
+                    <h3 class="section-title">AI Orchestration</h3>
+                    <div class="form-group">
+                        <label>AI Provider</label>
+                        <select id="cfg-ai-provider" class="dropdown-select" style="width: 100%;">
+                            <option value="ollama">Ollama (Local)</option>
+                            <option value="openai">OpenAI (Cloud)</option>
+                            <option value="anthropic">Anthropic (Cloud)</option>
+                            <option value="gemini">Google Gemini (Cloud)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Ollama Host</label>
+                        <input type="text" id="cfg-ai-host" value="http://127.0.0.1:11434" placeholder="e.g. http://127.0.0.1:11434">
+                    </div>
+                    <div class="form-group">
+                        <label>Default Text Model</label>
+                        <input type="text" id="cfg-ai-text-model" value="qwen3.5:4b" placeholder="e.g. qwen3.5:4b, gpt-4o-mini">
+                    </div>
+                    <div class="form-group">
+                        <label>Default Vision Model</label>
+                        <input type="text" id="cfg-ai-vision-model" value="llama3.2-vision:latest" placeholder="e.g. llama3.2-vision:latest, gpt-4o">
+                    </div>
+                    <div class="form-group">
+                        <label>API Key (Cloud)</label>
+                        <input type="password" id="cfg-ai-api-key" placeholder="Enter API Key if using Cloud provider">
+                    </div>
+                    
+                    <h3 class="section-title">Security</h3>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="cfg-allow-eval">
+                        <label for="cfg-allow-eval">Allow Eval / Exec</label>
+                    </div>
+                </div>
+
+                <!-- Payload Tab -->
+                <div class="tab-pane" id="tab-payload">
+                    <p class="help-text">Initial data payload (JSON)</p>
+                    <div class="editor-container">
+                        <textarea id="payload-editor">{}</textarea>
+                    </div>
+                </div>
+
+                <!-- Exchanges Tab -->
+                <div class="tab-pane" id="tab-exchanges">
+                    <p class="help-text">Per-execution step history & details</p>
+                    <div class="editor-container">
+                        <textarea id="exchanges-editor" readonly placeholder="Run a pipeline to see per-step execution history and payload exchanges."></textarea>
+                    </div>
+                </div>
+
+                <!-- Output Tab -->
+                <div class="tab-pane" id="tab-output">
+                    <div class="terminal" id="console-output">
+                        <div class="log-line sys">System initialized. Ready for operations.</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Node Parameter Editor Modal -->
+    <div class="modal-overlay" id="node-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modal-title">Configure Node</h3>
+                <button class="close-btn" id="modal-close"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <div class="modal-body" id="modal-params">
+                <!-- Params dynamically inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="modal-save">Save Parameters</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template for a Node -->
+    <template id="node-template">
+        <div class="iac-node">
+            <div class="node-header">
+                <div class="node-icon"><i class="fa-solid fa-cube"></i></div>
+                <div class="node-title">Op Name</div>
+                <div class="node-delete"><i class="fa-solid fa-times"></i></div>
+            </div>
+            <div class="node-body">
+                <div class="node-desc">Description goes here</div>
+                <button class="btn-config-node">Configure</button>
+            </div>
+            <!-- Ports will be dynamically generated by JS -->
+        </div>
+    </template>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
