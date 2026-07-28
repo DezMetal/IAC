@@ -8,9 +8,9 @@
 IAC Bridge — Adapters that unify existing tool systems into IAC operations.
 
 Translates between:
-  - Aether/DNetComm Pipeline commands <-> IAC operations
-  - D-Net LIVE FUNC tools <-> IAC operations
-  - OPAS BaseTool instances <-> IAC operations
+  - pipeline-style command lists <-> IAC operations
+  - plain function maps <-> IAC operations
+  - class-based tool objects <-> IAC operations
 
 No existing tools are rewritten. Bridges wrap them.
 """
@@ -21,7 +21,11 @@ from typing import Any, Callable, Dict, List, Optional
 
 
 class PipelineBridge:
-    """Bidirectional translation between Aether/DNetComm Pipeline commands and IAC plans."""
+    """Bidirectional translation between pipeline-style command lists and IAC plans.
+
+    A "pipeline" here is any dict of the shape
+    {"commands": [{"program": ..., "action": ..., "params": {...}}]}.
+    """
 
     @staticmethod
     def pipeline_to_iac(pipeline: dict, source: str = "pipeline") -> dict:
@@ -93,11 +97,13 @@ class PipelineBridge:
 
 
 class FuncBridge:
-    """Wraps D-Net LIVE FUNC.py functions as IAC operations.
+    """Wraps a map of plain Python functions as IAC operations.
 
     IMPORTANT: Does NOT replace the D-Net Task system. These adapters
-    make FUNC tools discoverable via IAC for local/bridge usage only.
-    D-Net LIVE continues to call FUNC tools directly through its own pipeline.
+    Useful when you already have a body of callables and want them reachable
+    from an IAC plan without rewriting them as a Domain. For anything new,
+    prefer the extension API in extensions.py -- it carries schemas, ownership
+    and capability declarations that a bare function map cannot.
     """
 
     @staticmethod
@@ -137,7 +143,7 @@ class FuncBridge:
         }
 
     @staticmethod
-    def register_func_tools(registry, func_map: dict, domain: str = "dnet"):
+    def register_func_tools(registry, func_map: dict, domain: str = "tools"):
         for name, func in func_map.items():
             op_info = FuncBridge.func_to_operation(name, func, domain)
 
@@ -152,7 +158,7 @@ class FuncBridge:
                     try:
                         return fn(**call_args)
                     except Exception as e:
-                        return {"error": f"FUNC.{fn_name} failed: {e}"}
+                        return {"error": f"{fn_name} failed: {e}"}
                 return handler
 
             registry.register(
@@ -165,7 +171,11 @@ class FuncBridge:
 
 
 class ToolBridge:
-    """Wraps OPAS BaseTool instances as IAC operations."""
+    """Wraps class-based tool objects as IAC operations.
+
+    Expects objects exposing `name`, `description` and a `run(**kwargs)` or
+    `execute(**kwargs)` method -- the shape most tool frameworks converge on.
+    """
 
     @staticmethod
     def tool_to_operation(tool, domain: str = "tool") -> dict:

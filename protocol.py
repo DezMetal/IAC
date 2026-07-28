@@ -13,9 +13,12 @@ structured data exchange between D-Net ecosystem nodes.
 
 IAC_VERSION = "2.0"
 
+# Conventional origin labels, used for trust-level routing and history.
+# Not a closed set -- a host may use its own; these are simply the ones IAC
+# itself recognises out of the box.
 VALID_SOURCES = {
-    "local", "cli", "aether", "dnet_live", "opas",
-    "pipeline", "webagent", "human", "api", "sitegen", "envoy"
+    "local", "cli", "api", "human", "agent",
+    "pipeline", "webagent", "extension"
 }
 
 

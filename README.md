@@ -111,7 +111,7 @@ curl -X POST http://localhost:5050/api/iac/validate \
 
 ## The IAC Payload
 
-Every exchange between D-Net nodes uses this structure:
+Every exchange uses this structure:
 
 ```json
 {
@@ -411,46 +411,30 @@ class MyIC(IntelligenceCore):
 
 ---
 
-## Bridge Adapters
+## Bridge adapters
 
-IAC includes bridge adapters that unify existing tool systems without rewriting them.
-
-### Pipeline ↔ IAC
-
-```python
-from IAC.bridge import PipelineBridge
-
-# Convert Aether/DNetComm pipeline to IAC plan
-pipeline = {"commands": [{"program": "filesystem", "action": "read", "params": {"path": "data.txt"}}]}
-iac_plan = PipelineBridge.pipeline_to_iac(pipeline)
-# Result: {"plan": [{"op": "filesystem.read", "args": {"path": "data.txt"}}]}
-
-# Convert IAC plan back to pipeline format
-pipeline_back = PipelineBridge.iac_to_pipeline(iac_plan)
-```
-
-### D-Net FUNC Tools ↔ IAC
+For code you already have. `bridge.py` wraps existing tool systems as IAC
+operations without rewriting them.
 
 ```python
-from IAC.bridge import FuncBridge
+from IAC.bridge import PipelineBridge, FuncBridge, ToolBridge
 
-# Register D-Net FUNC tools as IAC operations
-func_map = {"search": search_function, "generate": generate_function}
-FuncBridge.register_func_tools(registry, func_map, domain="dnet")
+# 1. Pipeline-style command lists <-> IAC plans
+pipeline = {"commands": [{"program": "filesystem", "action": "read",
+                          "params": {"path": "data.txt"}}]}
+plan = PipelineBridge.pipeline_to_iac(pipeline)
+# {"plan": [{"op": "filesystem.read", "args": {"path": "data.txt"}}]}
+
+# 2. A map of plain functions
+FuncBridge.register_func_tools(registry, {"search": search_fn}, domain="tools")
+
+# 3. Class-based tool objects (name / description / run())
+ToolBridge.register_tools(registry, my_tool_registry, domain="tool")
 ```
 
-> **Note:** This does NOT replace the D-Net LIVE Task system. FUNC tools continue to operate through their native pipeline. The bridge enables local/bridge usage only.
-
-### OPAS Tools ↔ IAC
-
-```python
-from IAC.bridge import ToolBridge
-
-# Register OPAS BaseTool instances as IAC operations
-ToolBridge.register_tools(registry, opas_tool_registry, domain="tool")
-```
-
----
+> For anything new, prefer the [extension API](EXTENDING.md). Bridges exist to
+> adopt code that already works; a `Domain` carries schemas, ownership and
+> capability declarations that a bare function map cannot.
 
 ## Sanitization Protocol
 
@@ -486,7 +470,7 @@ The sanitizer also enforces payload size limits (default: 50MB) by automatically
 }
 ```
 
-Even when enabled, these operations only execute when the plan's `source` is trusted (`local`, `cli`, `human`). Plans received from remote sources (`dnet_live`, `api`) never execute restricted operations without explicit human approval.
+Even when enabled, these operations only execute when the plan's `source` is trusted (`local`, `cli`, `human`). Plans received from remote sources (`api`, `agent`) never execute restricted operations without explicit human approval.
 
 ### Granular Access Control (Allowlist/Denylist)
 
@@ -519,7 +503,7 @@ Do not duplicate the IAC codebase. Instead, use Python imports (e.g. `import sys
 |:---|:---|:---|
 | `local`, `cli`, `human` | Trusted | Yes (when `allow_eval=true`) |
 | `aether` | Trusted | Yes (when `allow_eval=true`) |
-| `dnet_live`, `api` | Untrusted | No (requires human approval) |
+| `api`, `agent` | Untrusted | No (requires human approval) |
 | `pipeline` | Conditional | Depends on pipeline origin |
 
 ---
@@ -539,7 +523,7 @@ Do not duplicate the IAC codebase. Instead, use Python imports (e.g. `import sys
 | `ic.py` | Intelligence Core interface and implementations |
 | `runner.py` | Plan executor with `{{interpolation}}`, `foreach`/`if`/`repeat` control flow |
 | `agent_tools.py`| AI task functions: `task_encode`, `task_ai_process`, `task_ai_plan` |
-| `bridge.py` | Adapters for Pipeline, FUNC, and OPAS tool systems |
+| `bridge.py` | Adapters for pipeline command lists, function maps, and class-based tools |
 | `iac.py` | Universal CLI entry point, operation bootstrapping |
 | `schemas/iac_payload.json` | Formal JSON Schema definition |
 
@@ -561,26 +545,27 @@ Aether serves as the primary IAC Gateway with these endpoints:
 ## Architecture
 
 ```
-D-Net Cyberspace Ecosystem
-├── IAC Protocol (Structured Data Exchange)
-│   ├── Schema Validation
-│   ├── Operation Registry
-│   ├── Intelligence Core Router
-│   ├── Security Layer
-│   └── Sanitization Protocol
+IAC
+├── Protocol            structured, validated plan exchange
+│   ├── Schema validation
+│   ├── Operation registry
+│   ├── Intelligence Core router
+│   ├── Security layer
+│   └── Sanitization
 │
-├── D-Net Nodes (Each speaks IAC)
-│   ├── Aether (Client / Gateway)
-│   ├── D-Net LIVE (Cloud / Personas)
-│   ├── SiteGen (Site Builder)
-│   └── OPAS (Operational Node — rebuild target)
+├── Domains             what a plan can actually do
+│   ├── Shipped         core · filesystem · web · vision · desktop · datastore · ai
+│   └── Your own        anything else, via EXTENDING.md
 │
-└── Intelligence Cores (Swappable Batteries)
-    ├── Ollama (Local)
-    ├── Gemini (Cloud)
-    ├── D-Net Personas (Cloud)
-    └── Human (Manual)
+└── Intelligence Cores  swappable batteries
+    ├── Ollama (local)
+    ├── Gemini (cloud)
+    ├── OpenAI-compatible endpoints
+    └── Human (manual)
 ```
+
+Hosts are whatever drives IAC — a CLI, a desktop assistant, a server, another
+agent. IAC does not know or care which; it validates a plan and runs it.
 
 ---
 
