@@ -321,23 +321,6 @@ def bootstrap(safe_mode=False):
             return handler
 
         sys_schemas = {
-            "fs_read": {
-                "type": "object",
-                "properties": {
-                    "path": {"type": "string", "description": "Path to read file from"},
-                    "payload_key": {"type": "string", "description": "Key to store read content under"}
-                },
-                "required": ["path"]
-            },
-            "fs_write": {
-                "type": "object",
-                "properties": {
-                    "path": {"type": "string", "description": "Path to write file to"},
-                    "content": {"type": "string", "description": "Raw text content to write"},
-                    "from_key": {"type": "string", "description": "Or payload key to read content from"}
-                },
-                "required": ["path"]
-            },
             "exec": {
                 "type": "object",
                 "properties": {
@@ -350,16 +333,20 @@ def bootstrap(safe_mode=False):
             }
         }
 
-        for op in ["fs_read", "fs_write", "exec"]:
-            registry.register(op, "sys", f"System operation: {op}", sys_schemas.get(op, {}), _make_sys_handler(op))
+        # sys.exec only. fs_read/fs_write were a second door into the same
+        # room as filesystem.read/write, and the second door skipped the host's
+        # path policy entirely -- sys.fs_write would happily write outside every
+        # configured root while filesystem.write refused the identical path.
+        # One way to touch a file, and it is the guarded one.
+        registry.register("exec", "sys", "Run a shell command",
+                          sys_schemas["exec"], _make_sys_handler("exec"))
 
     # Add common aliases for backward compatibility with v1 plans
     for op in ["goto", "click", "type", "wait", "scroll", "tour", "snap", "analyze", "extract", "probe", "eval", "stop", "sandbox"]:
         registry.alias(op, f"web.{op}")
     
     if not safe_mode:
-        for op in ["fs_read", "fs_write", "exec"]:
-            registry.alias(op, f"sys.{op}")
+        registry.alias("exec", "sys.exec")
 
     # 4. Register Control Flow Operations (handled natively by runner)
     flow_noop = lambda a, c: {"status": "ok", "note": "handled by runner"}

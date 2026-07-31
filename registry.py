@@ -82,6 +82,29 @@ class OperationRegistry:
         op = self.resolve(op_name)
         if not op:
             return {"error": f"Unknown operation: '{op_name}'", "status": "error"}
+
+        # Optional policy gate supplied by the host. This is the ONE place every
+        # operation passes through, which is exactly why the check belongs here:
+        # containment enforced inside individual operations only ever covers the
+        # ones that remember to enforce it. A host that guards its filesystem
+        # operations and forgets its shell operations has no boundary at all.
+        #
+        # IAC stays generic. It asks a yes/no question and knows nothing about
+        # what the policy is or how the answer was reached.
+        guard = (context or {}).get("guard")
+        if guard is not None:
+            try:
+                verdict = guard.check(op_name, args, context)
+            except Exception as e:
+                # A guard that cannot answer must not fail open.
+                return {"status": "error", "refused_by": "guard",
+                        "error": f"[{op_name}] policy check failed: {e}"}
+            if verdict is not None and not getattr(verdict, "allowed", True):
+                return {"status": "error", "refused_by": "guard",
+                        "verdict": getattr(verdict, "kind", "deny"),
+                        "error": getattr(verdict, "reason",
+                                         f"'{op_name}' is not permitted here.")}
+
         try:
             return op.handler(args, context or {})
         except Exception as e:
