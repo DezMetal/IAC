@@ -42,6 +42,71 @@ DEFAULT_AI_CONFIG = {
 # Cached endpoint capability per host
 _ollama_capabilities = {}
 
+# ── defaults that make an unconfigured call fast ──────────────────────────
+#
+# Measured, on one screenshot through one model, changing nothing else:
+#
+#     no flags (what this used to send)  23.19s  466 eval  1946ch thinking
+#     think disabled                      2.39s   24 eval     0ch thinking
+#
+# Ten times faster, same answer. Reasoning-capable models emit a full trace
+# before answering unless told not to, and for "what is on this screen" that
+# trace is the entire cost of the call. A caller who wants deliberation asks
+# for it; the default should be the fast, correct one, because an operation
+# that is slow out of the box gets worked around rather than configured.
+#
+# num_ctx is here for a second reason: it must MATCH whatever else on this
+# machine talks to the same model. Ollama reloads the model whenever the
+# requested context size differs from the loaded one, so a host alternating
+# between 4096 and 16384 pays a reload on every switch -- a cost that looks
+# like slow inference and is not.
+DEFAULT_OPTIONS = {
+    "temperature": 0.2,
+    "num_ctx": 16384,
+    # Generous rather than tight. A cap below the length of a thinking trace
+    # returns an EMPTY answer, which is worse than a slow one: with think
+    # disabled the budget is spent on the reply, so this only stops rambling.
+    "num_predict": 512,
+}
+
+# Not sampling knobs -- these are top-level Ollama fields, and putting them in
+# `options` silently does nothing.
+#
+# BOTH names, deliberately. Gemma builds have shipped under two spellings and
+# which one a given server honours depends on its version, so setting one and
+# assuming is how a 10x regression comes back quietly on someone else's box.
+# Sending both costs nothing: an unrecognised top-level key is ignored.
+DEFAULT_EXTRAS = {
+    "think": False,
+    "enable_thinking": False,
+}
+
+
+def _merge_defaults(options: dict = None, extras: dict = None):
+    """Caller wins; defaults only fill what was not specified.
+
+    Explicitly passing `think: True` or a different num_ctx has to survive --
+    the point is a good default, not a policy.
+    """
+    merged_options = dict(DEFAULT_OPTIONS)
+    merged_options.update(options or {})
+    merged_extras = dict(DEFAULT_EXTRAS)
+    merged_extras.update(extras or {})
+
+    # If the caller DID ask to think, the reply budget has to cover the trace
+    # as well as the answer -- a thinking trace runs to hundreds of tokens and
+    # is emitted first. Observed: think enabled against the default cap
+    # returned a completely EMPTY answer after 17s, because the budget was
+    # spent before the reply began. Only raised when the caller did not pick a
+    # number themselves.
+    thinking_on = any(bool(merged_extras.get(k))
+                      for k in ("think", "enable_thinking"))
+    if thinking_on and "num_predict" not in (options or {}):
+        merged_options["num_predict"] = max(
+            merged_options.get("num_predict", 0) or 0, 2048)
+    return merged_options, merged_extras
+
+
 def ollama_request(host: str, model: str, prompt: str, images: list = None,
                    options: dict = None, extras: dict = None, timeout: int = 300) -> str:
     """Unified Ollama request handler. Auto-detects /api/chat vs /api/generate."""
@@ -49,19 +114,20 @@ def ollama_request(host: str, model: str, prompt: str, images: list = None,
     host = host.rstrip("/")
 
     use_chat = _ollama_capabilities.get(host, True)
+    options, extras = _merge_defaults(options, extras)
 
     messages_payload = {
         "model": model,
         "messages": [{"role": "user", "content": prompt, "images": images or []}],
         "stream": False,
-        "options": options or {"temperature": 0.2}
+        "options": options
     }
     generate_payload = {
         "model": model,
         "prompt": prompt,
         "images": images or [],
         "stream": False,
-        "options": options or {"temperature": 0.2}
+        "options": options
     }
 
     if extras:
