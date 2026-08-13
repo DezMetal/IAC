@@ -1,29 +1,85 @@
 {
   "iac_version": "2.0",
   "source": "human",
+  "_doc": [
+    "Interactive sandbox: a real browser you drive by hand, with the IAC HUD",
+    "attached so anything you do can be run as an operation and exported as a",
+    "plan.",
+    "",
+    "Run:  python3 iac.py pipelines/sandbox.json",
+    "",
+    "PRIMARY USE -- REFRESHING AN EXPIRED LOGIN",
+    "  1. The browser opens on the site below. Log in by hand.",
+    "  2. Either press Exit in the HUD, or run the `save_state` operation",
+    "     explicitly. Its path is prefilled from save_storage_state, so you",
+    "     do not have to type it.",
+    "  3. On exit the session is written to auth/session.json automatically.",
+    "     Every pipeline pointing at that file picks it up on its next run.",
+    "",
+    "A malformed or expired session file no longer blocks this: it is reported",
+    "and ignored, and the browser starts clean so you can log in and replace it.",
+    "",
+    "The HUD's operation list is the same vocabulary the runner uses, so a",
+    "chain exported from here replays as-is through `python3 iac.py <plan>`.",
+    "",
+    "headless MUST stay false -- the entire point is that a human drives it.",
+    "Recording is off by default so a login is not filmed; turn it on",
+    "deliberately if you want the session captured."
+  ],
   "config": {
     "headless": false,
     "storage_state": "auth/session.json",
     "save_storage_state": "auth/session.json",
+    "record_video": false,
+    "record_video_dir": "./recordings/",
     "output": "pipelines/sandbox_results.json",
     "ai_config": {
+      "providers": {
+        "vision": {
+          "_doc": "Backs the HUD's analyze/brain operations.",
+          "provider": "ollama",
+          "host": "http://100.92.31.18:11434",
+          "model": "Gemma4:E4B",
+          "ai_timeout": 300,
+          "options": { "num_ctx": 8192, "num_predict": 400, "think": false }
+        },
+        "author": {
+          "_doc": "Backs the HUD's plan operation.",
+          "provider": "ollama",
+          "host": "http://100.92.31.18:11434",
+          "model": "Gemma4:E4B",
+          "ai_timeout": 600,
+          "options": { "num_ctx": 16384, "num_predict": 2048, "think": false }
+        }
+      },
+      "default_provider": "author",
+      "vision_provider": "vision",
       "host": "http://100.92.31.18:11434",
-      "vision_model": "llava-phi3:latest",
-      "text_model": "gemma4-obliterated:latest",
+      "model": "Gemma4:E4B",
+      "vision_model": "Gemma4:E4B",
+      "text_model": "Gemma4:E4B",
       "ai_timeout": 300,
       "drop": ["encoded", "desc"]
     }
   },
+  "data_payload": {
+    "start_url": "https://www.facebook.com/"
+  },
   "plan": [
     {
+      "_phase": "=== ENTERING INTELLIGENT SANDBOX ===",
       "op": "web.goto",
-      "args": { "url": "https://www.google.com" },
-      "_phase": "=== ENTERING INTELLIGENT SANDBOX ==="
+      "args": { "url": "{{start_url}}" }
+    },
+    { "op": "web.sandbox", "args": {} },
+    {
+      "_why": "Explicit save as well as the automatic one on close, so the session is on disk before anything else can go wrong during shutdown.",
+      "op": "web.save_state",
+      "args": { "path": "auth/session.json" }
     },
     {
-      "op": "web.sandbox",
-      "args": {}
-    },
-    { "op": "log", "args": { "message": "Sandbox session ended. Saving state..." } }
+      "op": "log",
+      "args": { "message": "Sandbox session ended. Session state saved to auth/session.json" }
+    }
   ]
 }

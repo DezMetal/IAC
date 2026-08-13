@@ -366,88 +366,77 @@ def task_ai_process(key: str, info: Dict[str, Any], config: Dict[str, Any]) -> b
         images = []
 
     has_images = len(images) > 0
-    target_model = config.get("vision_model") if has_images and "vision_model" in config else config.get("model")
-    
-    if has_images and "vision_provider" in config:
-        provider = config.get("vision_provider", "").lower()
-    else:
-        provider = config.get("provider", "").lower()
-    
-    is_gemini = (provider == "gemini") or (target_model and (target_model.startswith("gemini") or "gemini" in target_model.lower()))
-    is_openai = (provider == "openai") or (target_model and (target_model.startswith("gpt") or "openai" in target_model.lower()))
-    is_anthropic = (provider == "anthropic") or (target_model and (target_model.startswith("claude") or "anthropic" in target_model.lower()))
 
     try:
-        if is_gemini:
-            print(f"    [AI-REQ] Task: {key} | Gemini Vision: {has_images} ({len(images)} imgs)")
-            api_key = config.get("api_key") or config.get("gemini_api_key")
+        from inference import (resolve_provider, split_extras, ollama_request,
+                               TOP_LEVEL_EXTRAS)
+    except ImportError:
+        from .inference import (resolve_provider, split_extras, ollama_request,
+                                TOP_LEVEL_EXTRAS)
+
+    # `config` is the merged base + ai_config + step args; `_step_args` is what
+    # the step itself asked for, which is what has to outrank a profile.
+    settings = resolve_provider(config, config.get("_step_args") or {},
+                                has_images=has_images)
+    kind = settings["kind"]
+    target_model = settings["model"]
+    api_key = settings.get("api_key") or config.get(f"{kind}_api_key") or config.get("api_key")
+
+    final_prompt = prompt
+    if info.get("input_data"):
+        final_prompt += f"\n\nContext Data:\n{info['input_data']}"
+    if config.get("schema"):
+        final_prompt += f"\n\nResponse must strictly adhere to this JSON schema: {json.dumps(config['schema'])}"
+
+    ai_options = {"temperature": settings.get("temperature", settings.get("temp", 0.2))}
+    if isinstance(settings.get("options"), dict):
+        ai_options.update(settings["options"])
+    ai_options, extras = split_extras(ai_options)
+    for key_extra in TOP_LEVEL_EXTRAS + ("stream",):
+        if key_extra in config:
+            extras[key_extra] = config[key_extra]
+
+    label = settings.get("profile") or kind
+    max_retries = int(settings.get("retries", 3) or 3)
+    timeout = int(settings.get("ai_timeout", 300) or 300)
+    call_cfg = {**settings, **ai_options}
+
+    def _call_once():
+        if kind == "gemini":
+            return call_gemini_api(final_prompt, images, target_model or "gemini-2.5-flash", api_key, call_cfg)
+        if kind == "openai":
+            return call_openai_api(final_prompt, images, target_model or "gpt-4o", api_key, call_cfg)
+        if kind == "anthropic":
+            return call_anthropic_api(final_prompt, images, target_model or "claude-sonnet-4-5", api_key, call_cfg)
+        return ollama_request(
+            host=settings.get("host", "http://127.0.0.1:11434"),
+            model=target_model,
+            prompt=final_prompt,
+            images=images,
+            options=ai_options,
+            extras=extras or None,
+            timeout=timeout,
+        )
+
+    try:
+        print(f"    [AI-REQ] Task: {key} | {label} | Model: {target_model} | "
+              f"Vision: {has_images} ({len(images)} imgs)")
+        if config.get("debug"):
+            print(f"    [DEBUG] Options: {json.dumps(ai_options)} Extras: {json.dumps(extras)}")
+            print(f"    [DEBUG] Prompt: {final_prompt}")
+
+        attempt = 0
+        out = ""
+        while attempt < max_retries:
             s_time = time.time()
-            out = call_gemini_api(prompt, images, target_model or "gemini-1.5-flash", api_key, config)
-            print(f"    [AI-RES] Received in {time.time()-s_time:.2f}s")
-        elif is_openai:
-            print(f"    [AI-REQ] Task: {key} | OpenAI Vision: {has_images} ({len(images)} imgs)")
-            api_key = config.get("api_key") or config.get("openai_api_key")
-            s_time = time.time()
-            out = call_openai_api(prompt, images, target_model or "gpt-4o", api_key, config)
-            print(f"    [AI-RES] Received in {time.time()-s_time:.2f}s")
-        elif is_anthropic:
-            print(f"    [AI-REQ] Task: {key} | Anthropic Vision: {has_images} ({len(images)} imgs)")
-            api_key = config.get("api_key") or config.get("anthropic_api_key")
-            s_time = time.time()
-            out = call_anthropic_api(prompt, images, target_model or "claude-3-5-sonnet-20241022", api_key, config)
-            print(f"    [AI-RES] Received in {time.time()-s_time:.2f}s")
-        else:
-            host = config.get('host', 'http://127.0.0.1:11434')
-            ai_options = {"temperature": config.get("temp", 0.2)}
-            if config.get("options"):
-                ai_options.update(config["options"])
-
-            extras = {}
-            for key_extra in ["think", "stream"]:
-                if key_extra in config:
-                    extras[key_extra] = config[key_extra]
-
-            print(f"    [AI-REQ] Task: {key} | Ollama Vision: {has_images}")
-            
-            final_prompt = prompt
-            if info.get("input_data"):
-                final_prompt += f"\n\nContext Data:\n{info['input_data']}"
-            if config.get("schema"):
-                final_prompt += f"\n\nResponse must strictly adhere to this JSON schema: {json.dumps(config['schema'])}"
-
-            if config.get("debug"):
-                print(f"    [DEBUG] Options: {json.dumps(ai_options)}")
-                print(f"    [DEBUG] Prompt: {final_prompt}")
-            
-            max_retries = config.get("retries", 3)
-            attempt = 0
-            out = ""
-            
-            try:
-                from inference import ollama_request
-            except ImportError:
-                from .inference import ollama_request
-
-            while attempt < max_retries:
-                s_time = time.time()
-                out = ollama_request(
-                    host=host,
-                    model=target_model,
-                    prompt=final_prompt,
-                    images=images,
-                    options=ai_options,
-                    extras=extras if extras else None,
-                    timeout=config.get("ai_timeout", 90)
-                )
-                print(f"    [AI-RES] Received in {time.time()-s_time:.2f}s")
-                
-                if out: 
-                    break
-                    
-                attempt += 1
-                if attempt < max_retries:
-                    print(f"    [!] AI returned blank. Retrying ({attempt}/{max_retries})...")
-                    time.sleep(1)
+            out = _call_once()
+            print(f"    [AI-RES] Received {len(out)} chars in {time.time()-s_time:.2f}s")
+            if out:
+                break
+            attempt += 1
+            if attempt < max_retries:
+                print(f"    [!] AI returned blank. Retrying ({attempt}/{max_retries})...")
+                time.sleep(1)
 
         # Data registration
         o_key = config.get("output_key", "raw_output")
@@ -538,6 +527,13 @@ def _clean_ai_output(text: str, fmt: str = "auto") -> str:
     return cleaned
 
 
+# A generation step produces a document, not a sentence. 4096 tokens covers a
+# project.json or a creative brief; the HTML and CSS steps pin their own higher
+# value. Anything lower silently truncates and the truncation looks like a
+# badly-written page rather than a budget.
+DEFAULT_PLAN_NUM_PREDICT = 4096
+
+
 def task_ai_plan(args: dict, payload: dict, config: dict) -> dict:
     """Standalone AI text inference. Sends a prompt to the LLM with optional
     payload context injection and stores the response in the payload."""
@@ -612,94 +608,82 @@ def task_ai_plan(args: dict, payload: dict, config: dict) -> dict:
     if context_parts:
         prompt += "\n\n--- SCRAPED DATA ---\n" + "\n\n".join(context_parts)
 
-    ai_options = {"temperature": args.get("temperature", config.get("temp", 0.3))}
-    if args.get("options"):
-        ai_options.update(args["options"])
+    try:
+        from inference import (resolve_provider, split_extras, ollama_request,
+                               TOP_LEVEL_EXTRAS)
+    except ImportError:
+        from .inference import (resolve_provider, split_extras, ollama_request,
+                                TOP_LEVEL_EXTRAS)
 
-    model = args.get("model") or (config.get("vision_model") if images and config.get("vision_model") else config.get("model"))
-    
-    if images and (args.get("vision_provider") or config.get("vision_provider")):
-        provider = args.get("vision_provider", config.get("vision_provider", "")).lower()
-    else:
-        provider = args.get("provider", config.get("provider", "")).lower()
-    is_gemini = (provider == "gemini") or (model and (model.startswith("gemini") or "gemini" in model.lower()))
-    is_openai = (provider == "openai") or (model and (model.startswith("gpt") or "openai" in model.lower()))
-    is_anthropic = (provider == "anthropic") or (model and (model.startswith("claude") or "anthropic" in model.lower()))
+    settings = resolve_provider(config, args, has_images=bool(images))
+    kind = settings["kind"]
+    model = settings["model"]
 
-    max_retries = config.get("retries", 3)
+    ai_options = {"temperature": args.get("temperature",
+                                          settings.get("temperature", settings.get("temp", 0.3)))}
+    if isinstance(settings.get("options"), dict):
+        ai_options.update(settings["options"])
+
+    # A plan step writes documents -- a project.json, a creative brief, a whole
+    # index.html. The vision defaults in inference.py cap the reply at 512
+    # tokens, which is right for "what is on this screen" and truncates an HTML
+    # page mid-tag. Callers pin num_predict per step; this is the floor.
+    ai_options.setdefault("num_predict", DEFAULT_PLAN_NUM_PREDICT)
+
+    # think/keep_alive are top-level Ollama fields. Plans put them in `options`
+    # because that is where every other knob lives; move them where the server
+    # will actually read them instead of letting them do nothing.
+    ai_options, extras = split_extras(ai_options)
+    for key_extra in TOP_LEVEL_EXTRAS + ("stream",):
+        if key_extra in args:
+            extras[key_extra] = args[key_extra]
+
+    api_key = args.get("api_key") or settings.get("api_key") \
+        or config.get(f"{kind}_api_key") or config.get("api_key")
+    max_retries = int(settings.get("retries", 3) or 3)
+    timeout = int(settings.get("ai_timeout", 300) or 300)
+
+    # Temperature has to reach the cloud SDKs too, which read it off `config`.
+    call_cfg = {**settings, **ai_options}
+
+    def _call_once():
+        if kind == "gemini":
+            return call_gemini_api(prompt, images, model or "gemini-2.5-flash", api_key, call_cfg)
+        if kind == "openai":
+            return call_openai_api(prompt, images, model or "gpt-4o", api_key, call_cfg)
+        if kind == "anthropic":
+            return call_anthropic_api(prompt, images, model or "claude-sonnet-4-5", api_key, call_cfg)
+        # Ollama goes through the shared client rather than a bare POST. That
+        # client is what applies the num_ctx match and the think:false pair;
+        # bypassing it is why this op used to return an empty string while the
+        # model happily wrote 1100 characters into `message.thinking`.
+        return ollama_request(
+            host=settings.get("host", "http://127.0.0.1:11434"),
+            model=model,
+            prompt=prompt,
+            images=images,
+            options=ai_options,
+            extras=extras or None,
+            timeout=timeout,
+        )
+
+    label = settings.get("profile") or kind
     attempt = 0
     out = ""
 
     try:
-        if is_gemini:
-            api_key = args.get("api_key") or config.get("api_key") or config.get("gemini_api_key")
-            while attempt < max_retries:
-                s_time = time.time()
-                print(f"    [AI-PLAN] Gemini Model: {model} | Images: {len(images)} | Attempt {attempt+1}/{max_retries}")
-                out = call_gemini_api(prompt, images, model or "gemini-1.5-flash", api_key, config)
-                print(f"    [AI-PLAN] Received {len(out)} chars in {time.time()-s_time:.2f}s")
-                if out:
-                    break
-                attempt += 1
-                if attempt < max_retries:
-                    print(f"    [!] AI returned blank. Retrying ({attempt}/{max_retries})...")
-                    time.sleep(1)
-        elif is_openai:
-            api_key = args.get("api_key") or config.get("api_key") or config.get("openai_api_key")
-            while attempt < max_retries:
-                s_time = time.time()
-                print(f"    [AI-PLAN] OpenAI Model: {model} | Images: {len(images)} | Attempt {attempt+1}/{max_retries}")
-                out = call_openai_api(prompt, images, model or "gpt-4o", api_key, config)
-                print(f"    [AI-PLAN] Received {len(out)} chars in {time.time()-s_time:.2f}s")
-                if out:
-                    break
-                attempt += 1
-                if attempt < max_retries:
-                    print(f"    [!] AI returned blank. Retrying ({attempt}/{max_retries})...")
-                    time.sleep(1)
-        elif is_anthropic:
-            api_key = args.get("api_key") or config.get("api_key") or config.get("anthropic_api_key")
-            while attempt < max_retries:
-                s_time = time.time()
-                print(f"    [AI-PLAN] Anthropic Model: {model} | Images: {len(images)} | Attempt {attempt+1}/{max_retries}")
-                out = call_anthropic_api(prompt, images, model or "claude-3-5-sonnet-20241022", api_key, config)
-                print(f"    [AI-PLAN] Received {len(out)} chars in {time.time()-s_time:.2f}s")
-                if out:
-                    break
-                attempt += 1
-                if attempt < max_retries:
-                    print(f"    [!] AI returned blank. Retrying ({attempt}/{max_retries})...")
-                    time.sleep(1)
-        else:
-            host = config.get("host", "http://127.0.0.1:11434")
-            url = f"{host}/api/chat"
-
-            request_payload = {
-                "model": model,
-                "messages": [{"role": "user", "content": prompt, "images": images or None}],
-                "stream": False,
-                "options": ai_options
-            }
-
-            for key_extra in ["think", "stream"]:
-                if key_extra in args:
-                    request_payload[key_extra] = args[key_extra]
-
-            while attempt < max_retries:
-                s_time = time.time()
-                print(f"    [AI-PLAN] Model: {model} | Attempt {attempt+1}/{max_retries}")
-                res = requests.post(url, json=request_payload, timeout=config.get("ai_timeout", 90))
-                res.raise_for_status()
-                out = res.json().get("message", {}).get("content", "").strip()
-                print(f"    [AI-PLAN] Received {len(out)} chars in {time.time()-s_time:.2f}s")
-
-                if out:
-                    break
-
-                attempt += 1
-                if attempt < max_retries:
-                    print(f"    [!] AI returned blank. Retrying ({attempt}/{max_retries})...")
-                    time.sleep(1)
+        while attempt < max_retries:
+            s_time = time.time()
+            print(f"    [AI-PLAN] {label} | Model: {model} | "
+                  f"Images: {len(images)} | Attempt {attempt+1}/{max_retries}")
+            out = _call_once()
+            print(f"    [AI-PLAN] Received {len(out)} chars in {time.time()-s_time:.2f}s")
+            if out:
+                break
+            attempt += 1
+            if attempt < max_retries:
+                print(f"    [!] AI returned blank. Retrying ({attempt}/{max_retries})...")
+                time.sleep(1)
 
         if not out:
             print(f"    [!] AI Plan failed: No output after {max_retries} attempts")
@@ -738,6 +722,7 @@ def task_ai_batch(payload: dict, config: dict) -> int:
             for key in list(payload.keys()):
                 info = payload[key]
                 if not isinstance(info, dict): continue
+                if key.startswith("_"): continue  # runner bookkeeping, not content
 
                 # Check if matches prefix or has vision indicators
                 is_match = key.startswith(prefix)
@@ -793,6 +778,13 @@ def task_ai_batch(payload: dict, config: dict) -> int:
     for key in list(payload.keys()):
         info = payload[key]
         if not isinstance(info, dict): continue
+
+        # Runner bookkeeping (_last_result, _output) is not content. It mirrors
+        # the previous step's return value, so the heuristics below match it on
+        # whatever that step happened to contain and it gets sent to the model
+        # as if it were a scraped image -- a full inference call, every sweep,
+        # describing nothing.
+        if key.startswith("_"): continue
 
         # Check if it matches prefix or has vision indicators
         is_match = key.startswith(prefix)

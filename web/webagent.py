@@ -4,7 +4,7 @@
 # Part of IAC (Integrated Agent Core), created and maintained by D-Net Lab.
 # Attribution is required on redistribution; the D-Net Lab name is not
 # licensed by Apache-2.0 (see TRADEMARKS.md).
-import json, os, sys, time, argparse, subprocess, requests, base64
+import json, os, sys, time, argparse, subprocess, requests, base64, threading
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
@@ -30,6 +30,11 @@ class WebAgent:
         self.workflow = resolve_resource(self.master.get("workflow", self.master.get("plan", [])), is_list=True)
         self.payload = resolve_resource(self.master.get("data_payload", {}), is_list=False)
 
+        # The sync Playwright API may only be driven from the thread that
+        # started it; anything else needs to know that before it tries.
+        self._owner_thread = threading.get_ident()
+        self._state_saved = None
+
         self.pw = sync_playwright().start()
         
         # Context Configuration
@@ -53,11 +58,36 @@ class WebAgent:
             ctx_opts["viewport"] = v_size # Synchronized with target recording size
         
         # 1. Handle Storage State (Snapshot-based cookies/storage)
+        #
+        # A malformed state file must not be fatal. Playwright raises when
+        # handed one, which takes down the browser launch -- including the
+        # sandbox launch you need in order to log in and produce a good file.
+        # A bad session is a reason to start clean and say so, never a reason
+        # to be unable to start at all.
         if self.web_cfg.get("storage_state"):
             state_path = os.path.abspath(self.web_cfg["storage_state"])
             if os.path.exists(state_path):
-                ctx_opts["storage_state"] = state_path
-                self._log("SYSTEM", f"Loading storage state: {state_path}")
+                problem = None
+                try:
+                    with open(state_path, "r", encoding="utf-8") as f:
+                        state = json.load(f)
+                    if not isinstance(state, dict):
+                        problem = "not a JSON object"
+                    elif "cookies" not in state and "origins" not in state:
+                        problem = "no 'cookies' or 'origins' key -- not a Playwright storage state"
+                except json.JSONDecodeError as e:
+                    problem = f"not valid JSON ({e})"
+                except OSError as e:
+                    problem = f"unreadable ({e})"
+
+                if problem:
+                    self._log("WARN", f"Ignoring storage state {state_path}: {problem}. "
+                                      f"Starting with a clean session -- log in and save "
+                                      f"a new one with web.save_state.")
+                else:
+                    n = len(state.get("cookies") or [])
+                    ctx_opts["storage_state"] = state_path
+                    self._log("SYSTEM", f"Loading storage state: {state_path} ({n} cookies)")
         
         if self.web_cfg.get("record_video"):
             v_dir = self.web_cfg.get("record_video_dir", "./recordings/")
@@ -111,8 +141,49 @@ class WebAgent:
             "plan": self._cmd_plan,
             "save_state": self._cmd_save_state,
             "modify": self._cmd_modify,
-            "sandbox": self._cmd_sandbox
+            "sandbox": self._cmd_sandbox,
+            # Modern filesystem vocabulary. The sandbox dispatches on the last
+            # dotted segment, so these keys make `filesystem.write` work here
+            # AND make an exported chain resolvable by the runner -- fs_read /
+            # fs_write are no longer registered operations, so a chain built
+            # with them used to die on replay with "Unregistered operation".
+            "read": self._cmd_fs_read,
+            "write": self._cmd_fs_write,
+            "copy": self._cmd_fs_copy,
+            # Core payload ops, delegated to the runner's implementations so
+            # the sandbox and a replayed plan behave identically.
+            "set": lambda a: self._core("set", a),
+            "append": lambda a: self._core("append", a),
+            "parse_json": lambda a: self._core("parse_json", a),
+            "log": lambda a: self._core("log", a),
         }
+
+    def _core(self, op_name, args):
+        """Run a runner core operation against this session's payload."""
+        try:
+            from runner import _fallback_execute
+        except ImportError:
+            from ..runner import _fallback_execute
+        return _fallback_execute(op_name, args, self.payload, self.ai_cfg)
+
+    def _cmd_fs_copy(self, args):
+        s = time.time()
+        src = args.get("src") or args.get("from")
+        dst = args.get("dst") or args.get("to")
+        if not src or not dst:
+            return {"status": "error", "error": "copy requires 'src' and 'dst'"}
+        src, dst = os.path.abspath(src), os.path.abspath(dst)
+        if not os.path.isfile(src):
+            return {"status": "error", "error": f"Source file not found: {src}"}
+        parent = os.path.dirname(dst)
+        if parent:
+            os.makedirs(parent, exist_ok=True)
+        with open(src, "r", encoding="utf-8", errors="replace") as f:
+            data = f.read()
+        with open(dst, "w", encoding="utf-8") as f:
+            f.write(data)
+        self._log("FS_COPY", f"{os.path.basename(src)} -> {dst} ({len(data)} bytes)", s)
+        return {"status": "ok", "src": src, "dst": dst, "size": len(data)}
     
     def _cmd_stop(self, args):
         """Explicitly stop the session, saving any active recordings."""
@@ -123,6 +194,26 @@ class WebAgent:
     def close(self):
         if self.closed: return
         self.closed = True
+
+        # Honour save_storage_state here rather than at one call site, because
+        # this is the only point every entry path goes through. It used to be
+        # handled solely in webagent.py's __main__ block, so a sandbox login
+        # driven through iac.py -- the normal way to run a pipeline -- threw
+        # the session away on exit and left the config line looking like it
+        # had done something. Must run BEFORE the context closes.
+        target = self.web_cfg.get("save_storage_state")
+        already = getattr(self, "_state_saved", None)
+        if target and not already and self._context_alive():
+            try:
+                self._cmd_save_state({"path": target})
+            except Exception as e:
+                # Teardown must never raise. The session is either on disk or
+                # it is not; either way the process still has a recording to
+                # finalise and an exit code to report.
+                self._log("WARN", f"Could not save storage state on close: {e}")
+        elif already:
+            self._log("SYSTEM", f"Storage state already saved to {already}")
+
         try:
             if hasattr(self, "page") and self.page:
                 self.page.close()
@@ -774,14 +865,146 @@ class WebAgent:
             self._log("PLAN", "AI inference failed", s)
             return {"status": "error", "error": "AI inference failed"}
 
+    def _resolve_state_path(self, raw=None):
+        """Work out where a session snapshot belongs.
+
+        A blank path is the normal case, not an error case: the sandbox HUD
+        submits every argument field whether or not it was filled in, so
+        `save_state` with an untouched path arrives as "". abspath("") is the
+        CURRENT DIRECTORY, and asking Playwright to write a file onto a
+        directory fails with `Permission denied` -- which reads like a
+        filesystem problem and sends you looking at ACLs on a folder that was
+        writable all along.
+
+        So: blank falls back to whatever the config already nominated, then to
+        a sensible default, and a path that names a directory gets a filename.
+        """
+        candidates = [
+            raw,
+            self.web_cfg.get("save_storage_state"),
+            self.web_cfg.get("storage_state"),
+            os.path.join("auth", "session.json"),
+        ]
+        chosen = next((str(c).strip() for c in candidates
+                       if c is not None and str(c).strip()), None)
+
+        path = os.path.abspath(chosen)
+        # Names a directory (existing, or written with a trailing separator)?
+        # Put the file inside it rather than trying to overwrite it.
+        if os.path.isdir(path) or chosen.endswith(("/", "\\", os.sep)):
+            path = os.path.join(path, "session.json")
+        return path
+
+    def _context_alive(self):
+        """Can this context still be asked for its storage state?
+
+        Anything after the sandbox loop may be running against a browser the
+        user already closed, or one torn down by a previous `stop`. Asking a
+        dead context for storage_state raises out of Playwright, which is a
+        confusing way to end a run that already did everything correctly.
+        """
+        ctx = getattr(self, "context", None)
+        if ctx is None:
+            return False
+
+        # Playwright's SYNC api is bound to the thread that created it. Calling
+        # it from anywhere else raises "Cannot switch to a different thread",
+        # which is what teardown running on a cleanup thread produced -- an
+        # alarming traceback after a run that had already done everything
+        # right. There is no way to satisfy the call from here, so the honest
+        # answer is that this context is not usable from this thread.
+        owner = getattr(self, "_owner_thread", None)
+        if owner is not None and owner != threading.get_ident():
+            return False
+
+        browser = getattr(self, "browser", None)
+        if browser is not None:
+            try:
+                if not browser.is_connected():
+                    return False
+            except Exception:
+                return False
+        page = getattr(self, "page", None)
+        if page is not None:
+            try:
+                if page.is_closed() and not ctx.pages:
+                    return False
+            except Exception:
+                return False
+        return True
+
     def _cmd_save_state(self, args):
         """Save the current storage state (cookies, local storage) to a JSON file."""
         s = time.time()
-        path = os.path.abspath(args.get("path", "storage_state.json"))
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        self.context.storage_state(path=path)
-        self._log("SYSTEM", f"Storage state saved to {path}", s)
-        return {"status": "ok", "path": path}
+        path = self._resolve_state_path(args.get("path"))
+
+        if not self._context_alive():
+            msg = (f"Browser session already closed; cannot snapshot to {path}. "
+                   f"Run save_state before the session ends.")
+            self._log("WARN", msg, s)
+            return {"status": "skipped", "path": path, "reason": msg}
+
+        parent = os.path.dirname(path)
+        if parent:
+            try:
+                os.makedirs(parent, exist_ok=True)
+            except OSError as e:
+                self._log("SYSTEM", f"Storage state save FAILED: {e}", s)
+                return {"status": "error", "path": path, "error": str(e)}
+
+        # Write beside the target, then swap. A session that took a manual
+        # login to obtain must never be replaced by a half-written file
+        # because the browser died mid-serialisation.
+        tmp = f"{path}.tmp"
+        try:
+            self.context.storage_state(path=tmp)
+
+            # Never downgrade a real session to an empty one. Because close()
+            # saves automatically, an ordinary headless run that happened to
+            # start without cookies would otherwise write a cookie-less
+            # snapshot over a login that took a human to obtain -- and the
+            # next run would start logged out too, with nothing to point at.
+            if not args.get("allow_empty"):
+                new_cookies = old_cookies = 0
+                try:
+                    with open(tmp, "r", encoding="utf-8") as f:
+                        new_cookies = len(json.load(f).get("cookies") or [])
+                except Exception:
+                    pass
+                if os.path.exists(path):
+                    try:
+                        with open(path, "r", encoding="utf-8") as f:
+                            old_cookies = len(json.load(f).get("cookies") or [])
+                    except Exception:
+                        pass
+                if new_cookies == 0 and old_cookies > 0:
+                    os.remove(tmp)
+                    msg = (f"Refusing to overwrite {path} ({old_cookies} cookies) "
+                           f"with an empty session. Pass allow_empty to force it.")
+                    self._log("WARN", msg, s)
+                    return {"status": "skipped", "path": path, "reason": msg}
+
+            os.replace(tmp, path)
+        except Exception as e:
+            try:
+                if os.path.exists(tmp):
+                    os.remove(tmp)
+            except OSError:
+                pass
+            hint = ""
+            if isinstance(e, PermissionError):
+                hint = (f" -- check that '{path}' is not a directory, is not "
+                        f"open in another program, and is not read-only.")
+            self._log("SYSTEM", f"Storage state save FAILED: {e}{hint}", s)
+            return {"status": "error", "path": path, "error": f"{e}{hint}"}
+
+        size = os.path.getsize(path) if os.path.exists(path) else 0
+        # Remember that this session already produced a snapshot, so the
+        # automatic save in close() does not repeat work the plan did
+        # explicitly -- by then the context is usually gone anyway.
+        self._state_saved = path
+        self._log("SYSTEM", f"Storage state saved to {path} ({size} bytes)", s)
+        return {"status": "ok", "path": path, "size": size}
 
     def _cmd_sandbox(self, args):
         """Hand control to the user. Poll for state changes in the browser."""
@@ -802,6 +1025,17 @@ class WebAgent:
         # 2. Bridge: Queue commands to avoid Playwright Sync re-entrancy deadlocks
         def py_bridge(op_name, op_args):
             try:
+                # The HUD submits every argument field for the selected op,
+                # filled in or not, so an untouched box arrives as "". An empty
+                # string is not the same as "not supplied": it defeats every
+                # `args.get(k, default)` in the codebase, because the key is
+                # present. save_state was the visible casualty -- blank path ->
+                # abspath("") -> the working directory -> Permission denied --
+                # but goto, snap and exec all had the same hole.
+                if isinstance(op_args, dict):
+                    op_args = {k: v for k, v in op_args.items()
+                               if not (isinstance(v, str) and not v.strip())}
+
                 if op_name == "exit":
                     self._sandbox_exit = True
                     return {"status": "ok", "msg": "Exiting..."}
@@ -852,10 +1086,23 @@ class WebAgent:
             "scroll": {"args": ["dir", "amount"]},
             "tour": {"args": ["attr", "wait"]},
             "brain": {"args": ["prefix", "tasks"]},
-            "fs_read": {"args": ["path", "payload_key"]},
-            "fs_write": {"args": ["path", "content", "from_key"]},
+            # Modern op names, so a chain exported from here replays unchanged
+            # through `python3 iac.py <plan>`.
+            "filesystem.read": {"args": ["path", "payload_key"]},
+            "filesystem.write": {"args": ["path", "content", "from_key"]},
+            "filesystem.copy": {"args": ["src", "dst"]},
+            "set": {"args": ["payload_key", "value"]},
+            "append": {"args": ["payload_key", "from_key", "sep"]},
+            "parse_json": {"args": ["from_key", "into"]},
             "save_state": {"args": ["path"]}
         }
+
+        # Prefill the save path so the single most important sandbox action --
+        # log in, keep the session -- needs no typing and cannot be left blank.
+        default_state = (self.web_cfg.get("save_storage_state")
+                         or self.web_cfg.get("storage_state")
+                         or "auth/session.json")
+        ops_metadata["save_state"]["defaults"] = {"path": default_state}
         
         hud_js = self._get_sandbox_hud_js(ops_metadata, self.ai_cfg)
         self.context.add_init_script(hud_js)
@@ -1112,6 +1359,12 @@ class WebAgent:
                         if (arg === 'host') defaultValue = ai_cfg.host || '';
                         if (arg === 'payload_key') defaultValue = 'sandbox_item';
                         if (arg === 'full_page') defaultValue = 'true';
+                        // Per-op defaults supplied by Python (e.g. where the
+                        // session snapshot belongs), so the field is never
+                        // blank for the actions where blank used to fail.
+                        if (op.defaults && op.defaults[arg] !== undefined) {
+                            defaultValue = op.defaults[arg];
+                        }
                         row.innerHTML = `
                             <label class="arg-label">${arg}</label>
                             <input type="text" class="arg-input" data-arg="${arg}" value="${defaultValue}">
@@ -1240,12 +1493,9 @@ class WebAgent:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(); parser.add_argument("config"); args = parser.parse_args()
     agent = WebAgent(args.config)
-    try: 
+    try:
         agent.run()
-        # Optional: Auto-save state at end if configured
-        save_at_end = agent.web_cfg.get("save_storage_state")
-        if save_at_end:
-            agent._cmd_save_state({"path": save_at_end})
-    finally: 
+    finally:
+        # close() honours save_storage_state for every entry point.
         agent.close()
         os._exit(0)

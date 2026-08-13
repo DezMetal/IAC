@@ -17,6 +17,30 @@ Supports dot notation for nested access: `{{tab.route}}`, `{{image_0.src}}`, `{{
 }
 ```
 
+The `config` block is interpolated too, against `data_payload`, so a per-run
+output path works: `"output": "pipelines/{{slug}}_results.json"`.
+
+**Filters** — `{{key|filter}}`, chainable. A closed set, deliberately:
+interpolation is not a template language.
+
+| Filter | Effect |
+|---|---|
+| `qsep` | `?` or `&`, whichever correctly appends a query to that URL (empty if it already ends in one) |
+| `slug` | lowercase, non-alphanumerics collapsed to `-` |
+| `upper` / `lower` / `trim` | the obvious string transforms |
+| `json` | serialise the value as JSON |
+| `count` | length of a list, string or dict |
+
+`qsep` exists because a hardcoded separator is wrong for half of all inputs:
+`https://site.com/name` needs `?sk=photos` while
+`https://site.com/profile.php?id=1` needs `&sk=photos`. Getting it wrong does
+not raise — the page loads, the scrape returns nothing, and the failure only
+surfaces much later as missing data.
+
+```json
+{ "op": "web.goto", "args": { "url": "{{fb_url}}{{fb_url|qsep}}sk=photos" } }
+```
+
 ### 2. `foreach`
 Iterates over an array present in the payload. The current item and its index are temporarily injected into the payload during the loop.
 
@@ -89,19 +113,118 @@ Fundamental operations available on every IAC node without needing specific runt
 - **`log`**
   - Outputs to the console with priority levels.
   - Args: `message` (string), `level` (string: "info", "warn", "error")
+- **`set`**
+  - Assigns one payload key to a literal value.
+  - Args: `payload_key` (string), `value` (any)
+- **`append`**
+  - Accumulates onto a payload key. Appends to a list if the key holds one,
+    otherwise concatenates as text with `sep` (default newline).
+  - Args: `payload_key` (string), `from_key` (string) or `value` (any), `sep` (string)
+  - This is what makes generating a document in pieces possible: inside a
+    `foreach`, every iteration writes the same `output_key`, so without an
+    accumulator a ten-section page arrives as its final section.
+- **`parse_json`**
+  - Parses a payload key holding JSON text into a real object or list,
+    tolerating markdown fences. Needed to `foreach` over an AI-generated list.
+  - Args: `from_key` (string), `into` (string, defaults to `from_key`)
+- **`dump_payload`**
+  - Writes the whole payload to disk as `{"final_payload": {...}}`, for handing
+    state to an external script mid-plan.
+  - Args: `path` (string)
 
 ### System Operations (`sys`)
 Host-level interactions.
 
 - **`sys.exec`**
   - Executes a command on the host shell. *(Restricted operation)*
-  - Args: `cmd` (string)
-- **`sys.fs_read`**
-  - Reads a file from disk into the payload.
+  - Args: `cmd` (string), `cwd` (string), `timeout` (int), `payload_key` (string)
+  - With `payload_key`, stores `{stdout, stderr, exit_code}` — reachable by dot
+    path, e.g. `{{result.stdout}}`. Stored regardless of exit code.
+
+> `sys.fs_read` and `sys.fs_write` were removed. They were a second door into
+> the same room as `filesystem.read`/`filesystem.write` that skipped the host's
+> path policy entirely. Use the `filesystem` domain below.
+
+### Filesystem Operations (`filesystem`)
+Subject to the host's workspace boundary and any staging hook it supplies.
+
+- **`filesystem.read`**
   - Args: `path` (string), `payload_key` (string)
-- **`sys.fs_write`**
-  - Writes data from the payload to disk.
-  - Args: `path` (string), `content` (string or object)
+  - `payload_key` is how the content becomes addressable. Without it the value
+    is only reachable as `{{_output}}`, which the very next operation overwrites.
+- **`filesystem.write`**
+  - Args: `path` (string), and exactly one of `content` (literal) or
+    `from_key` (payload key, dot paths allowed).
+  - `from_key` is the normal choice for anything a previous step generated —
+    interpolating 6KB of HTML through `content` would mean pasting the whole
+    document into the plan file.
+  - A missing `from_key` is an **error**, never an empty file. Silently writing
+    `""` turns a failed generation step into a 0-byte artifact that the rest of
+    the pipeline then builds on top of.
+  - `expect`: `json` | `object` | `array` validates before touching the file.
+    A model that hits its token cap returns a document truncated mid-string;
+    without this the truncation overwrites the good copy and only surfaces
+    several steps later as a parse error somewhere else.
+
+> **Never ask a model to echo back a large document in order to edit it.** Give
+> it a reduced view, take a patch, and merge the patch yourself — the pieces it
+> must not touch then cannot be lost, and its reply stays far below the cap.
+> SiteGen's `compose.py config-view` / `merge-config` are this pattern.
+- **`filesystem.copy`**
+  - Args: `src` (string), `dst` (string). Creates parent directories.
+  - Prefer this over `sys.exec` with `cp`: plans run on Windows as often as
+    not, and `cmd.exe` has no `cp`.
+
+### Choosing where inference runs — provider profiles
+
+One pipeline routinely wants more than one backend: something cheap and local
+to describe forty screenshots, something stronger for the handful of calls that
+make real decisions. A **profile** is that bundle of settings, named once in
+`config.ai_config.providers`:
+
+```json
+"ai_config": {
+  "providers": {
+    "vision":    { "provider": "ollama", "host": "http://10.0.0.5:11434",
+                   "model": "Gemma4:E4B",
+                   "options": { "num_ctx": 8192, "think": false } },
+    "architect": { "provider": "gemini", "model": "gemini-2.5-pro",
+                   "api_key_env": "GEMINI_API_KEY" }
+  },
+  "default_provider": "architect",
+  "vision_provider": "vision"
+}
+```
+
+Any AI step then selects one with `"provider": "vision"`. A step that says
+nothing gets `default_provider` — or `vision_provider` when the call carries
+images, which is what makes "vision goes to the local box" a single line rather
+than a per-step annotation.
+
+Name profiles for the **role they play** in the pipeline, not for where they
+happen to run. Whether a slot resolves to a machine on the LAN or a hosted API
+is a property of the slot; repoint it and every step using it moves with it,
+with no edit to any operation.
+
+Precedence, highest first: **step args → profile → base `ai_config`**.
+`provider` also accepts a bare backend name (`ollama`, `gemini`, `openai`,
+`anthropic`). Keys come from `api_key_env` so they stay out of the plan file.
+A plan with no `providers` block behaves exactly as it always did.
+
+### Failing a step deliberately — `on_error`
+
+Steps are advisory by default: a failure is logged and the plan continues. A
+step that is load-bearing says so, at step level (not inside `args`):
+
+```json
+{ "op": "sys.exec", "on_error": "abort",
+  "args": { "cmd": "python3 inject_media.py ..." } }
+```
+
+`abort` stops the run, still writes the results file, and reports the step
+index so `--resume` can pick up from there. `sys.exec` is judged on its exit
+code as well as its status. Use it where continuing would mean generating
+confidently against missing inputs.
 
 ### AI Operations (`ai`)
 Requires an `IntelligenceCore` provider (Ollama, Gemini, Persona).
@@ -143,16 +266,38 @@ Requires a `WebAgent` browser runtime.
 - **`web.type`**: Type `text` into `selector`
 - **`web.snap`**: Capture screenshot and store in `payload_key`
 - **`web.eval`**: Execute custom JS `code`
+- **`web.modify`**: Set text, value or an attribute on an element
+- **`web.brain`**: AI sweep over every matching payload item
 - **`web.stop`**: Terminate the browser session
+- **`web.sandbox`**: Hand the browser to a human, with the IAC HUD attached
+- **`web.save_state`**: Write cookies and local storage to a JSON file
 
-### Runner-Level Operations
+#### Sessions: `storage_state` and `save_storage_state`
 
-Handled directly by the runner rather than the registry, so they will not
-appear in `registry.list_operations()`:
+`config.storage_state` loads a saved session at launch;
+`config.save_storage_state` writes it back when the browser closes — through
+whichever entry point ran the plan, not just `webagent.py` directly.
 
-- **`dump_payload`**: Write the entire current payload to disk.
-  - Args: `path` (string)
-  - Useful for handing payload state to an external script mid-plan.
+`web.save_state`'s `path` falls back to `save_storage_state`, then
+`storage_state`, then `auth/session.json`; a path naming a *directory* gets
+`session.json` appended. Writes are atomic, and an empty session will not
+overwrite a non-empty one unless you pass `allow_empty` — losing a login that
+took a human to obtain costs far more than a skipped save.
+
+A storage state file that is missing, malformed, or not actually a Playwright
+state is reported and ignored rather than being fatal. It must never block the
+sandbox launch, because that launch is how you produce a good one.
+
+**Refreshing an expired login:**
+
+```bash
+python3 iac.py pipelines/sandbox.json
+```
+
+Log in by hand, then exit the HUD. The session lands in `auth/session.json`,
+and every pipeline pointing at that file picks it up on its next run. Every
+operation the sandbox HUD offers is a registered operation, so a chain exported
+from it replays unchanged through `python3 iac.py <plan>`.
 
 ### Skill Operations (`skill`)
 

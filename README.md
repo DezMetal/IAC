@@ -203,6 +203,25 @@ Console output with priority levels.
 #### `noop`
 No-operation placeholder.
 
+#### `set`
+Assigns one payload key to a literal value.
+- **Args**: `payload_key`, `value`
+
+#### `append`
+Accumulates onto a payload key — appends to a list if it holds one, otherwise
+concatenates as text. This is what lets a `foreach` build up a document across
+iterations instead of each pass overwriting the last.
+- **Args**: `payload_key`, `from_key` or `value`, `sep`
+
+#### `parse_json`
+Parses a payload key holding JSON text (markdown fences tolerated) into a real
+object or list, so a `foreach` can iterate an AI-generated array.
+- **Args**: `from_key`, `into`
+
+#### `dump_payload`
+Writes the whole payload to disk for an external script to read.
+- **Args**: `path`
+
 ### Web Operations (Domain: `web`)
 Operations that interact with a browser instance. Requires a `WebAgent` runtime.
 
@@ -258,9 +277,11 @@ Host-level interactions and filesystem management.
 
 | Operation | Description |
 |:---|:---|
-| `sys.exec`  | Execute host shell command |
-| `sys.fs_read`| Read file from disk into payload |
-| `sys.fs_write`| Write payload data to disk |
+| `sys.exec`  | Execute host shell command. With `payload_key`, stores `{stdout, stderr, exit_code}` |
+
+> `sys.fs_read` / `sys.fs_write` were removed: they were a second door into the
+> same room as `filesystem.read` / `filesystem.write`, and that door skipped the
+> host's path policy. Use the `filesystem` domain.
 
 ### Desktop Operations (Domain: `desktop`)
 Host-level GUI automation (requires `pyautogui`). These are optional and only available if the library is installed.
@@ -287,9 +308,14 @@ Native local file system operations.
 | Operation | Description |
 |:---|:---|
 | `filesystem.list`  | Lists files and directories in a given path |
-| `filesystem.read`  | Reads the entire content of a specified file |
-| `filesystem.write` | Writes content to a specified file |
+| `filesystem.read`  | Reads a file. Pass `payload_key` to make the content addressable as `{{key}}` |
+| `filesystem.write` | Writes a file from `content` (literal) or `from_key` (payload key, dot paths allowed) |
+| `filesystem.copy`  | Copies a file, creating parent directories. Use instead of `cp` — plans run on Windows too |
 | `filesystem.grep`  | Searches for a pattern within a file |
+
+`filesystem.write` **errors** on a missing `from_key` rather than writing an
+empty file. Writing `""` silently would turn a failed generation step into a
+0-byte artifact that later steps then build on.
 
 ### Datastore Operations (Domain: `datastore`)
 Manages a persistent key-value store (relies on `datastore` and an auth token injected via execution context).

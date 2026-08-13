@@ -1,0 +1,120 @@
+[
+  {
+    "hero": {
+      "eyebrow": "Rome, New York",
+      "heading": "Sip *Sinless* with Northern",
+      "sub": "Zero sugar and full flavor variety packs now available at your neighborhood shop.",
+      "cta_label": "Shop Variety Packs"
+    }
+  },
+  {
+    "prose": {
+      "heading": "Our *neighborhood* roots",
+      "body": "Northern Wine & Spirits is a family-owned shop serving the Rome community. We prioritize personal recommendations over the impersonal experience of large retail chains.\n\nWe stock our shelves with wine and spirits selected for your table. When you walk through our doors, you are greeted by neighbors who know the inventory and are here to help you find exactly what you need."
+    }
+  },
+  {
+    "services": {
+      "heading": "Our *curated* collection",
+      "intro": "We hand-select every bottle on our shelves to ensure your next gathering in Rome is perfectly paired."
+    },
+    "prose": {
+      "heading": "Rooted in our *community*",
+      "body": "More than just a store, we are your neighbors dedicated to finding the right pour for your table. We take the guesswork out of discovery by focusing on quality wines and fine spirits that turn ordinary evenings into celebrations.\n\nWhether you are hunting for a rare vintage or a reliable favorite for the weekend, our shelves are stocked with intention. Stop by to see what we have discovered for you this season."
+    }
+  },
+  {
+    "media": {
+      "heading": "Premium *Reserve* Selection",
+      "caption": "Enjoy four bottles worth of exquisite Marlborough, Napa Valley, and Sonoma County wines in every convenient Black Box Reserve.",
+      "alts": [
+        "Three Black Box Reserve wine varieties lined up on a black marble surface with gold accents, featuring Sauvignon Blanc, Chardonnay, and Cabernet Sauvignon."
+      ]
+    }
+  },
+  {
+    "media": {
+      "heading": "A *Tradition* of Quality",
+      "caption": "Since 2015, we have served Rome with a curated selection of fine wines and spirits.",
+      "alts": [
+        "The Northern Wine & Spirits logo featuring a wine bottle and glass illustration with the brand name and establishment date."
+      ]
+    }
+  },
+  {
+    "media": {
+      "heading": "The *Blue* Chill Arrival",
+      "caption": "Experience the crisp, zero-sugar refreshment of Super Lyte vodka cocktails, back in stock and ready for your weekend.",
+      "alts": [
+        "A 12 fl. oz. can of Blue Chill Super Lyte vodka cocktail surrounded by icy water splashes, highlighting its five percent alcohol content and zero sugar formula."
+      ]
+    }
+  },
+  {
+    "media": {
+      "heading": "The *Allocated* Collection",
+      "caption": "Experience our curated selection of rare W.L. Weller bourbon, available for a limited time at our Rome storefront.",
+      "alts": [
+        "Weller Special Reserve and Weller Full Proof bourbon bottles displayed against a dark, premium background for an exclusive release event."
+      ]
+    }
+  },
+  {
+    "media": {
+      "heading": "Exceptional by *design*",
+      "caption": "Experience the premium quality and convenience of Bota Box Limited Reserve Napa Valley Cabernet Sauvignon.",
+      "alts": [
+        "A tall, vertical advertisement for Bota Box Limited Reserve Cabernet Sauvignon featuring a 1.5-liter box, gold branding, and text highlighting notes of dark fruit and vanilla."
+      ]
+    }
+  },
+  {
+    "media": {
+      "heading": "Sip *Refreshment* for Less",
+      "caption": "Cool down with our vibrant selection of SuperLyte vodka cocktails, now available for just $2.49 each at our Rome storefront.",
+      "alts": [
+        "Four colorful cans of SuperLyte vodka cocktails featuring Orange, Fruit Punch, Lemon Lime, and Blue Chill flavors, displayed against a backdrop of ice and liquid splashes."
+      ]
+    }
+  },
+  {
+    "media": {
+      "heading": "Celebrate with *Northern*",
+      "caption": "We are open until 10 PM tonight to help you stock up for your Fourth of July festivities in Rome.",
+      "alts": [
+        "A patriotic graphic featuring firework illustrations and the text Happy Fourth of July, announcing extended holiday hours for Northern Wine & Spirits."
+      ]
+    }
+  },
+  {
+    "media": {
+      "heading": "Celebrate with *Campo* Bravo",
+      "caption": "Experience the crisp, authentic spirit of high-quality tequila, perfectly chilled and ready for your next gathering.",
+      "alts": [
+        "A bottle of Campo Bravo Tequila Plata next to a fresh lime wedge and salt, set against a dark background with agave accents."
+      ]
+    }
+  },
+  {
+    "gallery": {
+      "heading": "Our *Latest* Arrivals",
+      "intro": "Discover the newest additions to our shelves, hand-picked for your next gathering in Rome.",
+      "alts": [
+        "Promotional flyer for Cutwater Peach Margarita featuring product 4-packs and a peach-garnished cocktail.",
+        "Advert for BuzzBallz Cocktails highlighting Paddle Punch and Hole-in-Fun flavors with festive liquid splashes.",
+        "High-end display of Johnnie Walker Blue Label New York Limited Edition bottle and gift box with gold firework accents.",
+        "Patriotic display of Carbliss vodka cocktail variety packs and single flavors against a fireworks background.",
+        "Promotional graphic for Squealing Pig Sauvignon Blanc featuring the wine bottle beside flavor profile details."
+      ]
+    }
+  },
+  {
+    "contact": {
+      "heading": "Get in *touch* with us",
+      "intro": "Whether you are planning a celebration or looking for a specific bottle, our family is here to help."
+    },
+    "addon": {
+      "heading": "Visit our Rome shop at (315) 336-5530 to speak with our team directly."
+    }
+  }
+]

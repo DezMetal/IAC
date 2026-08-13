@@ -82,6 +82,160 @@ DEFAULT_EXTRAS = {
 }
 
 
+# ── provider selection ────────────────────────────────────────────────────
+#
+# The backends IAC can talk to. A profile naming one of these directly is the
+# short form; a profile naming something else is a user-defined name that must
+# say which of these it is.
+BUILTIN_PROVIDERS = ("ollama", "gemini", "openai", "anthropic")
+
+# Which keys belong to a provider profile. Everything else in a config block
+# (prompt, drop, output_key, retries...) is orthogonal to WHERE inference runs
+# and is left alone, so a profile cannot accidentally redefine plan semantics.
+PROFILE_KEYS = (
+    "provider", "host", "model", "vision_model", "text_model", "api_key",
+    "api_key_env", "options", "extras", "temp", "temperature", "ai_timeout",
+    "retries", "think", "num_ctx", "num_predict",
+    "max_tokens", "max_output_tokens",
+)
+
+# Sampling knobs that Ollama expects at the TOP level of the request, not
+# inside `options`. Pipelines reliably put them in `options` because that is
+# where every other knob lives, and there they are silently ignored -- which
+# is how a "think: false" that reads correctly in the plan file still returns
+# an empty answer with a 1000-character thinking trace.
+TOP_LEVEL_EXTRAS = ("think", "enable_thinking", "keep_alive")
+
+
+def split_extras(options: dict):
+    """Split a flat options dict into (sampling_options, top_level_extras)."""
+    opts, extras = {}, {}
+    for k, v in (options or {}).items():
+        (extras if k in TOP_LEVEL_EXTRAS else opts)[k] = v
+    return opts, extras
+
+
+def infer_kind(provider: str = None, model: str = None) -> str:
+    """Which backend a (provider, model) pair means. Provider name wins."""
+    p = (provider or "").lower().strip()
+    if p in BUILTIN_PROVIDERS:
+        return p
+    m = (model or "").lower()
+    if m.startswith("gemini") or "gemini" in m:
+        return "gemini"
+    if m.startswith("gpt") or m.startswith("o1") or m.startswith("o3") or "openai" in m:
+        return "openai"
+    if m.startswith("claude") or "anthropic" in m:
+        return "anthropic"
+    return "ollama"
+
+
+def resolve_provider(config: dict, args: dict = None, has_images: bool = False) -> dict:
+    """Work out WHERE a single inference call runs, and with what settings.
+
+    Why named profiles exist
+    ------------------------
+    One pipeline routinely wants two different backends: a local vision model
+    that costs nothing to run over forty screenshots, and a strong hosted model
+    for the two calls that actually write the site. Before this, the choice was
+    one `model` per plan and a scattering of per-op overrides, so "vision local,
+    everything else Gemini" meant repeating host, model, key and timeout on
+    every step and keeping them in sync by hand.
+
+    A profile is that bundle, named once:
+
+        "ai_config": {
+          "providers": {
+            "eyes":  {"provider": "ollama", "host": "http://...", "model": "Gemma4:E4B"},
+            "brain": {"provider": "gemini", "model": "gemini-2.5-pro",
+                      "api_key_env": "GEMINI_API_KEY"}
+          },
+          "default_provider": "brain",
+          "vision_provider":  "eyes"
+        }
+
+    Any AI step then selects one with `"provider": "eyes"`, and a step that
+    says nothing gets `default_provider` -- or `vision_provider` when the call
+    carries images, which is what makes "vision goes local" a single line
+    rather than a per-step annotation.
+
+    Precedence, highest first: step args, the selected profile, the base
+    config. Nothing here is required: a config with no `providers` block
+    resolves exactly as it did before profiles existed.
+
+    Returns the merged settings with a resolved "kind" naming the backend.
+    """
+    args = args or {}
+    profiles = config.get("providers") or config.get("provider_profiles") or {}
+
+    # Which profile. A vision-specific choice only applies to a call that
+    # actually carries images.
+    selected = None
+    if has_images:
+        selected = args.get("vision_provider") or args.get("provider")
+        if not selected:
+            selected = config.get("vision_provider") or config.get("default_provider") or config.get("provider")
+    else:
+        selected = args.get("provider") or config.get("default_provider") or config.get("provider")
+    selected = (selected or "").strip()
+
+    merged = {k: v for k, v in config.items()
+              if k not in ("providers", "provider_profiles", "_step_args")}
+
+    profile = profiles.get(selected) if selected else None
+    if profile is None and selected and selected not in BUILTIN_PROVIDERS and profiles:
+        # A name that matches no profile and no backend is a typo in the plan.
+        # Falling back silently would run the whole job on the wrong model, so
+        # say so -- loudly, once -- and continue on the base config.
+        print(f"    [AI] Unknown provider '{selected}'. Known profiles: "
+              f"{', '.join(sorted(profiles)) or 'none'}. Using base config.")
+
+    if isinstance(profile, dict):
+        merged.update({k: v for k, v in profile.items() if k in PROFILE_KEYS})
+        # A profile's `options` refine the base rather than replacing it.
+        if isinstance(config.get("options"), dict) and isinstance(profile.get("options"), dict):
+            merged["options"] = {**config["options"], **profile["options"]}
+
+    # Step args win over everything.
+    for k in PROFILE_KEYS:
+        if k in args and args[k] is not None:
+            if k == "options" and isinstance(args[k], dict) and isinstance(merged.get("options"), dict):
+                merged["options"] = {**merged["options"], **args[k]}
+            else:
+                merged[k] = args[k]
+
+    # The model: an explicit vision_model only applies to a call with images.
+    chosen_by_caller = bool(args.get("model") or (isinstance(profile, dict) and profile.get("model")))
+    model = args.get("model")
+    if not model and has_images:
+        model = merged.get("vision_model")
+    if not model:
+        model = merged.get("model") or (merged.get("text_model") if not has_images else None)
+
+    declared = merged.get("provider")
+    if selected in BUILTIN_PROVIDERS:
+        declared = selected
+    kind = infer_kind(declared, model)
+
+    # `"provider": "anthropic"` with no model of its own would otherwise carry
+    # the plan-wide Ollama model name straight to the Anthropic API. A model
+    # nobody chose for THIS backend is worse than no model: drop it and let the
+    # per-backend default apply.
+    if not chosen_by_caller and model and infer_kind(None, model) != kind:
+        model = None
+
+    merged["model"] = model
+    merged["kind"] = kind
+    merged["profile"] = selected if isinstance(profile, dict) else None
+
+    # Keys live in the environment, not in a plan file that gets committed.
+    if not merged.get("api_key") and merged.get("api_key_env"):
+        import os
+        merged["api_key"] = os.environ.get(merged["api_key_env"])
+
+    return merged
+
+
 def _merge_defaults(options: dict = None, extras: dict = None):
     """Caller wins; defaults only fill what was not specified.
 

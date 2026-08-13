@@ -57,6 +57,23 @@ def register_filesystem_operations(registry):
         """
         return (context or {}).get("stage")
 
+    def _payload_ref(payload, key_path):
+        """Resolve a dotted payload path. Returns None if any hop is missing."""
+        current = payload
+        for part in str(key_path).split("."):
+            if isinstance(current, dict):
+                current = current.get(part)
+            elif isinstance(current, (list, tuple)):
+                try:
+                    current = current[int(part)]
+                except (ValueError, IndexError):
+                    return None
+            else:
+                return None
+            if current is None:
+                return None
+        return current
+
     def make_filesystem_handler(action):
         def handler(args, context):
             payload = context.get("payload", {}) if context else {}
@@ -116,30 +133,85 @@ def register_filesystem_operations(registry):
                         with open(target_path, 'r', encoding='utf-8') as f:
                             content = f.read()
 
+                    # A plan reads a file in order to feed it to a later step,
+                    # so the content has to land somewhere addressable. Without
+                    # this the value is reachable only as {{_output}}, which the
+                    # very next operation overwrites.
+                    dest_key = args.get("payload_key") or args.get("to_key")
+
                     if target_path.endswith('.json'):
                         try:
                             content = json.loads(content)
                         except json.JSONDecodeError:
                             pass
-                    
+
+                    if dest_key:
+                        payload[dest_key] = content
+
                     payload["_output"] = content
-                    return {"status": "success", "data": content}
+                    return {"status": "success", "data": content,
+                            "payload_key": dest_key}
 
                 elif action == "write":
                     path = args.get("path")
-                    content = args.get("content", "")
-                    
+
+                    # Two content sources. `content` is an inline literal;
+                    # `from_key` names a payload key, which is how anything
+                    # generated earlier in the plan gets to disk -- an AI step
+                    # stores 6KB of HTML under a key, and interpolating that
+                    # through `content` would mean pasting the whole document
+                    # into the plan file.
+                    #
+                    # A missing from_key is an ERROR, never an empty file.
+                    # Silently writing "" here is what turned a failed
+                    # generation step into a 0-byte project.json and let the
+                    # rest of the pipeline run on top of the wreckage.
+                    if "content" in args:
+                        content = args["content"]
+                    elif args.get("from_key"):
+                        content = _payload_ref(payload, args["from_key"])
+                        if content is None:
+                            return {"status": "error",
+                                    "error": f"Payload key not found: '{args['from_key']}'. "
+                                             f"Refusing to write an empty file to '{path}'."}
+                    else:
+                        return {"status": "error",
+                                "error": "No content source: pass either 'content' or 'from_key'."}
+
                     if not isinstance(path, str) or not path:
                         return {"status": "error", "error": "Invalid or missing 'path' parameter"}
-                    
+
                     target_path, err = _resolve_and_validate(path, workspace_dir, resolver, "write")
                     if err:
                         return {"status": "error", "error": err}
 
                     if isinstance(content, (dict, list)):
-                        content = json.dumps(content, indent=2)
+                        content = json.dumps(content, indent=2, ensure_ascii=False)
                     else:
                         content = str(content)
+
+                    # Optional shape check before the file is touched. A model
+                    # that hit its token cap returns a document truncated
+                    # mid-string; writing that over a valid file destroys the
+                    # good copy and the failure only surfaces several steps
+                    # later, as a parse error in whatever reads it next.
+                    expect = str(args.get("expect", "")).lower()
+                    if expect in ("json", "object", "array"):
+                        try:
+                            parsed = json.loads(content)
+                        except json.JSONDecodeError as e:
+                            return {"status": "error",
+                                    "error": f"Refusing to write '{path}': content is "
+                                             f"not valid JSON ({e}). {len(content)} bytes "
+                                             f"— likely a truncated generation."}
+                        if expect == "object" and not isinstance(parsed, dict):
+                            return {"status": "error",
+                                    "error": f"Refusing to write '{path}': expected a JSON "
+                                             f"object, got {type(parsed).__name__}."}
+                        if expect == "array" and not isinstance(parsed, list):
+                            return {"status": "error",
+                                    "error": f"Refusing to write '{path}': expected a JSON "
+                                             f"array, got {type(parsed).__name__}."}
 
                     # When the host supplies a staging hook, the real file is
                     # never touched here -- the change waits for approval.
@@ -164,13 +236,57 @@ def register_filesystem_operations(registry):
                         except Exception as e:
                             return {"status": "error", "error": f"Could not stage write: {e}"}
 
-                    os.makedirs(os.path.dirname(target_path), exist_ok=True)
+                    parent = os.path.dirname(target_path)
+                    if parent:
+                        os.makedirs(parent, exist_ok=True)
 
                     with open(target_path, 'w', encoding='utf-8') as f:
                         f.write(content)
 
                     payload["_output"] = content
                     return {"status": "success", "data": {"path": target_path, "content_length": len(content)}}
+
+                elif action == "copy":
+                    src = args.get("src") or args.get("from") or args.get("source")
+                    dst = args.get("dst") or args.get("to") or args.get("dest")
+                    if not isinstance(src, str) or not src:
+                        return {"status": "error", "error": "Invalid or missing 'src' parameter"}
+                    if not isinstance(dst, str) or not dst:
+                        return {"status": "error", "error": "Invalid or missing 'dst' parameter"}
+
+                    src_path, err = _resolve_and_validate(src, workspace_dir, resolver, "read")
+                    if err:
+                        return {"status": "error", "error": err}
+                    dst_path, err = _resolve_and_validate(dst, workspace_dir, resolver, "write")
+                    if err:
+                        return {"status": "error", "error": err}
+                    if not os.path.isfile(src_path):
+                        return {"status": "error", "error": f"Source file not found: '{src}'"}
+
+                    with open(src_path, 'r', encoding='utf-8', errors='replace') as f:
+                        data = f.read()
+
+                    # Routed through the same staging hook as write, so a host
+                    # holding writes for review does not get bypassed by a copy.
+                    if stage is not None:
+                        try:
+                            info = stage.stage_write(dst, data, author=author)
+                            applied = bool(info.get("applied"))
+                            return {"status": "success", "staged": not applied,
+                                    "data": {"src": src_path, "dst": info.get("path", dst),
+                                             "content_length": len(data)}}
+                        except Exception as e:
+                            return {"status": "error", "error": f"Could not stage copy: {e}"}
+
+                    parent = os.path.dirname(dst_path)
+                    if parent:
+                        os.makedirs(parent, exist_ok=True)
+                    with open(dst_path, 'w', encoding='utf-8') as f:
+                        f.write(data)
+
+                    return {"status": "success",
+                            "data": {"src": src_path, "dst": dst_path, "content_length": len(data)},
+                            "message": f"Copied {src} -> {dst} ({len(data)} bytes)"}
 
                 elif action == "grep":
                     path = args.get("path")
@@ -212,7 +328,8 @@ def register_filesystem_operations(registry):
         "read": {
             "type": "object",
             "properties": {
-                "path": {"type": "string", "description": "The path of the file to read, relative to workspace."}
+                "path": {"type": "string", "description": "The path of the file to read, relative to workspace."},
+                "payload_key": {"type": "string", "description": "Store the file content under this payload key so later steps can reference it as {{key}}."}
             },
             "required": ["path"]
         },
@@ -220,9 +337,19 @@ def register_filesystem_operations(registry):
             "type": "object",
             "properties": {
                 "path": {"type": "string", "description": "The path of the file to write to, relative to workspace."},
-                "content": {"description": "The content to write to the file."}
+                "content": {"description": "Literal content to write. Use 'from_key' instead for anything a previous step generated."},
+                "from_key": {"type": "string", "description": "Payload key (dotted paths allowed) holding the content to write. Errors rather than writing an empty file if the key is missing."},
+                "expect": {"type": "string", "description": "Validate before writing: 'json', 'object' or 'array'. Refuses the write if the content does not parse — a truncated generation must not overwrite a good file."}
             },
-            "required": ["path", "content"]
+            "required": ["path"]
+        },
+        "copy": {
+            "type": "object",
+            "properties": {
+                "src": {"type": "string", "description": "Path of the file to copy from."},
+                "dst": {"type": "string", "description": "Path to copy to. Parent directories are created."}
+            },
+            "required": ["src", "dst"]
         },
         "grep": {
             "type": "object",
@@ -237,7 +364,8 @@ def register_filesystem_operations(registry):
     filesystem_ops = [
         ("list", "Lists files and directories in a given path."),
         ("read", "Reads the entire content of a specified file."),
-        ("write", "Writes content to a specified file."),
+        ("write", "Writes content to a specified file, either inline or from a payload key."),
+        ("copy", "Copies a file from one path to another, creating parent directories."),
         ("grep", "Searches for a pattern within a file and returns matching lines.")
     ]
 

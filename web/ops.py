@@ -181,7 +181,16 @@ def register_web_operations(registry):
         "save_state": {
             "type": "object",
             "properties": {
-                "path": {"type": "string", "description": "Destination storage state JSON path", "default": "storage_state.json"}
+                "path": {"type": "string", "description": "Destination storage state JSON path. Defaults to the plan's save_storage_state, then storage_state, then auth/session.json."}
+            }
+        },
+        "brain": {
+            "type": "object",
+            "properties": {
+                "prefix": {"type": "string", "description": "Payload key prefix to sweep", "default": "image_"},
+                "prompt": {"type": "string", "description": "Prompt applied to each matching item"},
+                "output_key": {"type": "string", "description": "Key to store each result under"},
+                "provider": {"type": "string", "description": "DO NOT fill unless user explicitly requests a specific provider override"}
             }
         },
         "probe": {
@@ -207,7 +216,12 @@ def register_web_operations(registry):
         ("eval", "Execute custom JavaScript"),
         ("stop", "Finalize the session"),
         ("save_state", "Save browser storage state"),
-        ("sandbox", "Enter interactive sandbox mode")
+        ("sandbox", "Enter interactive sandbox mode"),
+        # These were reachable from the sandbox HUD but never registered, so a
+        # chain exported with either of them failed on replay with
+        # "Unregistered operation". Anything the sandbox can do, a plan can do.
+        ("modify", "Set text, value or an attribute on a DOM element"),
+        ("brain", "Run the AI sweep over every matching payload item")
     ]
 
     for op_name, desc in web_ops:

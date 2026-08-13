@@ -83,6 +83,39 @@ def bootstrap(safe_mode=False):
         "noop": {
             "type": "object",
             "properties": {}
+        },
+        "set": {
+            "type": "object",
+            "properties": {
+                "payload_key": {"type": "string", "description": "Key to assign"},
+                "value": {"description": "Value to store (any JSON type)"}
+            },
+            "required": ["payload_key"]
+        },
+        "append": {
+            "type": "object",
+            "properties": {
+                "payload_key": {"type": "string", "description": "Key to accumulate into. Appends to a list if it holds one, otherwise concatenates as text."},
+                "from_key": {"type": "string", "description": "Payload key holding the piece to append"},
+                "value": {"description": "Literal piece to append, instead of from_key"},
+                "sep": {"type": "string", "description": "Separator used for text accumulation", "default": "\n"}
+            },
+            "required": ["payload_key"]
+        },
+        "parse_json": {
+            "type": "object",
+            "properties": {
+                "from_key": {"type": "string", "description": "Payload key holding JSON text (markdown fences tolerated)"},
+                "into": {"type": "string", "description": "Key to store the parsed object under. Defaults to from_key."}
+            },
+            "required": ["from_key"]
+        },
+        "dump_payload": {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string", "description": "File to write the whole payload to, as {\"final_payload\": {...}}"}
+            },
+            "required": ["path"]
         }
     }
 
@@ -90,6 +123,10 @@ def bootstrap(safe_mode=False):
         ("push", "Add data to the Universal Payload"),
         ("pull", "Retrieve data from the payload"),
         ("merge", "Fold a dictionary into the root payload"),
+        ("set", "Assign a single payload key to a literal value"),
+        ("append", "Accumulate a value onto a payload key across loop iterations"),
+        ("parse_json", "Parse a payload key holding JSON text into a real object or list"),
+        ("dump_payload", "Write the entire payload to a file for another process to read"),
         ("drop", "Remove specific keys from the payload"),
         ("wait", "Pause execution for N milliseconds"),
         ("log", "Output a message to the console"),
@@ -115,6 +152,13 @@ def bootstrap(safe_mode=False):
             base_config = ctx.get("config", {})
             ai_config = base_config.get("ai_config", base_config.get("ai_core", {}))
             final_cfg = {**base_config, **ai_config, **args}
+            # Keep the step's OWN arguments distinguishable after the merge.
+            # Provider profiles need to know which settings the step asked for
+            # and which merely came from the plan-wide config -- flattened
+            # together, a plan-level `model` outranks the model belonging to
+            # the profile the step selected, and the step silently runs on the
+            # wrong one.
+            final_cfg["_step_args"] = dict(args)
 
             # AUTO-BATCHING: If no payload_key is provided and it's ai.process, hit everything
             if op_func == agent_tools.task_ai_process and not args.get("payload_key") and not args.get("key"):
@@ -196,9 +240,12 @@ def bootstrap(safe_mode=False):
     # ai.plan — Standalone text inference with payload injection
     def _ai_plan_handler(args, context):
         payload = context.get("payload", {})
-        ai_cfg = context.get("config", {}).get("ai_config", {})
-        merged = {**ai_cfg, **args}
-        return agent_tools.task_ai_plan(merged, payload, ai_cfg)
+        base_config = context.get("config", {})
+        ai_cfg = base_config.get("ai_config", base_config.get("ai_core", {}))
+        # args stay unmerged: task_ai_plan already falls back to config for
+        # everything a step does not state, and it needs the two separable to
+        # rank step > profile > plan config.
+        return agent_tools.task_ai_plan(args, payload, ai_cfg)
 
     registry.register(
         name="plan",
@@ -448,7 +495,44 @@ def main():
             traceback.print_exc()
         exit_code = 1
     finally:
-        # Cleanup browser if active
+        # Snapshot the session on THIS thread, before teardown moves to a
+        # worker. Playwright's sync API is bound to the thread that created it,
+        # so a save attempted from the cleanup thread below cannot work -- it
+        # raises "Cannot switch to a different thread" after the run has
+        # otherwise finished. A plan with save_storage_state set but no
+        # explicit save_state step would quietly never refresh its session.
+        try:
+            try:
+                from .web.ops import _agent_instance as _agent
+            except ImportError:
+                from web.ops import _agent_instance as _agent
+        except Exception:
+            _agent = None
+
+        if _agent and not getattr(_agent, "closed", False):
+            # Best effort. Playwright's sync connection may already be parked
+            # by this point, in which case the snapshot cannot be taken from
+            # here at all -- which is why plans that care put an explicit
+            # web.save_state step on the main path instead of relying on this.
+            try:
+                _target = _agent.web_cfg.get("save_storage_state")
+                if _target and not getattr(_agent, "_state_saved", None):
+                    _agent._cmd_save_state({"path": _target})
+            except Exception as e:
+                print(f"[WARN] Session snapshot skipped during shutdown: "
+                      f"{str(e).splitlines()[0]}")
+
+            # Close on THIS thread first. The driver is a child node process;
+            # os._exit() below kills Python without letting it shut down, and
+            # it reports that as an EPIPE traceback long after the run has
+            # finished. Closing properly here usually avoids that entirely.
+            try:
+                _agent.close()
+            except Exception:
+                pass
+
+        # Backstop: if the main-thread close above hung or never ran, do it on
+        # a worker so a wedged browser cannot hold the process open.
         import threading
         def safe_close():
             try:
@@ -462,7 +546,11 @@ def main():
         
         cleanup_thread = threading.Thread(target=safe_close, daemon=True)
         cleanup_thread.start()
-        cleanup_thread.join(timeout=2.0) # 2.0s maximum budget to finalize recording
+        # Budget covers finalizing the recording AND writing save_storage_state.
+        # 2s was enough for a video flush but could cut off a session snapshot,
+        # and losing a login that took a human to obtain costs far more than a
+        # few seconds of shutdown.
+        cleanup_thread.join(timeout=15.0)
 
         # Force terminate — Playwright sync threads can prevent clean exit
         os._exit(exit_code)

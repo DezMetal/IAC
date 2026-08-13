@@ -33,6 +33,22 @@ except ImportError:
     from registry import get_registry
 
 
+class PlanAborted(Exception):
+    """A step marked `on_error: abort` failed.
+
+    Most plan steps are advisory -- a scroll that found nothing, a validation
+    that reported warnings -- and stopping on them would make plans brittle,
+    so the default stays "log it and carry on". But some steps are load-bearing:
+    if media injection fails there is nothing to build a site around, and every
+    expensive generation step after it produces a confident, complete, wrong
+    result. Those steps say so, and this is how they stop the run.
+    """
+
+    def __init__(self, op: str, index: int, detail: str):
+        self.op, self.index, self.detail = op, index, detail
+        super().__init__(f"step {index} '{op}' failed: {detail}")
+
+
 def execute(source, context: dict = None, resume: bool = False, resume_from: Any = None) -> dict:
     if isinstance(source, str) and os.path.isfile(source):
         envelope = resolve_full_envelope(source)
@@ -75,6 +91,60 @@ def _resolve_ref(key: str, payload: dict):
     return current
 
 
+def _qsep(value) -> str:
+    """"?" or "&" -- whichever correctly appends a query parameter to this URL.
+
+    A plan that hardcodes one of them works for exactly half of its inputs.
+    `https://facebook.com/profile.php?id=123` needs "&"; `.../nws1733` needs
+    "?", and getting it wrong does not error -- the page loads, the scrape
+    finds nothing, and the site gets built around media that never arrived.
+    """
+    s = str(value or "")
+    if not s:
+        return "?"
+    if s.endswith(("?", "&")):
+        return ""
+    return "&" if "?" in s else "?"
+
+
+def _slugify(value) -> str:
+    s = re.sub(r"[^a-z0-9]+", "-", str(value or "").lower()).strip("-")
+    return s or "item"
+
+
+# Pure, side-effect-free transforms usable as {{key|filter}} inside any
+# interpolated string. Deliberately a closed set: interpolation is not a
+# template language and must never become one.
+_FILTERS = {
+    "qsep":  _qsep,
+    "upper": lambda v: str(v).upper(),
+    "lower": lambda v: str(v).lower(),
+    "slug":  _slugify,
+    "trim":  lambda v: str(v).strip(),
+    "json":  lambda v: json.dumps(v, ensure_ascii=False),
+    "count": lambda v: str(len(v)) if hasattr(v, "__len__") else "0",
+}
+
+
+def _resolve_expr(expr: str, payload: dict):
+    """Resolve `key`, `key.path`, or `key|filter[|filter]` against the payload."""
+    if "|" not in expr:
+        return _resolve_ref(expr.strip(), payload)
+
+    parts = [p.strip() for p in expr.split("|")]
+    value = _resolve_ref(parts[0], payload)
+    for name in parts[1:]:
+        fn = _FILTERS.get(name)
+        if fn is None:
+            # Unknown filter: leave the token untouched rather than guessing.
+            return None
+        try:
+            value = fn(value)
+        except Exception:
+            return None
+    return value
+
+
 def _interpolate_value(value, payload: dict):
     """Recursively resolve {{key}}, $OUTPUT, and $STORE{key} tokens against the live payload."""
     if isinstance(value, str):
@@ -92,7 +162,7 @@ def _interpolate_value(value, payload: dict):
         # IAC full-value: {{key}} -> payload key lookup
         full_match = re.fullmatch(r"\{\{([^{}]+)\}\}", value.strip())
         if full_match:
-            resolved = _resolve_ref(full_match.group(1), payload)
+            resolved = _resolve_expr(full_match.group(1), payload)
             return resolved if resolved is not None else value
 
         # Inline replacements (legacy then IAC)
@@ -103,7 +173,7 @@ def _interpolate_value(value, payload: dict):
             value = re.sub(r"\$STORE\{([^}]+)\}", lambda m: str(_resolve_ref(m.group(1), payload) or m.group(0)), value)
 
         def _replacer(m):
-            resolved = _resolve_ref(m.group(1), payload)
+            resolved = _resolve_expr(m.group(1), payload)
             return str(resolved) if resolved is not None else m.group(0)
         return re.sub(r"\{\{([^{}]+)\}\}", _replacer, value)
 
@@ -192,7 +262,26 @@ def align_scraped_images(payload: dict):
             
     payload.update(new_images)
 
-def _execute_steps(steps: list, payload: dict, config: dict, security_context: dict, 
+def _entry_failed(entry: dict) -> bool:
+    """Did a recorded history entry fail? Recurses into control-flow children.
+
+    A foreach reports its own status, not its body's. Judging the loop alone
+    means resume happily skips an iteration set in which every single web.eval
+    errored -- which looks like a fast resume and is actually a silent hole in
+    the payload.
+    """
+    data = entry.get("data")
+    if not isinstance(data, dict):
+        return False
+    if data.get("status") in ("error", "timeout") or "error" in data:
+        return True
+    if data.get("exit_code") not in (None, 0):
+        return True
+    return any(_entry_failed(child) for child in (data.get("steps") or [])
+               if isinstance(child, dict))
+
+
+def _execute_steps(steps: list, payload: dict, config: dict, security_context: dict,
                    registry, history: list, depth: int = 0, existing_history: list = None,
                    resume_from_idx: int = None):
     """Shared step executor used by the main plan loop and all control flow constructs."""
@@ -201,9 +290,15 @@ def _execute_steps(steps: list, payload: dict, config: dict, security_context: d
     for i, step in enumerate(steps):
         align_scraped_images(payload)
         op = step.get("op", "")
-        
-        # Skip phase markers
+
+        # Phase markers do no work, but they still occupy a slot in the plan.
+        # Dropping them from history silently shifts every later entry left,
+        # and resume matches history to plan BY INDEX -- so a plan with one
+        # bare marker resumes each step into its neighbour's slot.
         if not op and "_phase" in step:
+            history.append({"op": None, "data": {"status": "marker",
+                                                 "phase": step.get("_phase")},
+                            "elapsed": 0})
             continue
 
         # Top-level resume skip
@@ -214,13 +309,7 @@ def _execute_steps(steps: list, payload: dict, config: dict, security_context: d
             else:
                 old_entry = existing_history[i]
                 if old_entry.get("op") == op:
-                    old_data = old_entry.get("data", {})
-                    is_error = False
-                    if isinstance(old_data, dict):
-                        if old_data.get("status") == "error" or "error" in old_data:
-                            is_error = True
-                    
-                    if not is_error:
+                    if not _entry_failed(old_entry):
                         print(f"{prefix}[RESUMED] Skipping successful step {i+1}: {op} ({old_entry.get('elapsed', 0)}s)")
                         history.append(old_entry)
                         continue
@@ -241,16 +330,26 @@ def _execute_steps(steps: list, payload: dict, config: dict, security_context: d
             
             print(f"{prefix}[FOREACH] Iterating '{items_key}' ({len(items)} items) as '{as_var}'")
             s = time.time()
+            # Child steps record into their OWN list, nested under this entry.
+            # Appending them to the parent made top-level history longer than
+            # the plan, and since resume pairs history[i] with plan[i], every
+            # step after the first loop was compared against the wrong entry --
+            # which is why resuming re-ran work that had plainly succeeded.
+            child_history = []
             for idx, item in enumerate(items):
                 payload[as_var] = item
                 payload[index_var] = idx
-                _execute_steps(body, payload, config, security_context, registry, history, depth + 1)
-            
+                _execute_steps(body, payload, config, security_context, registry,
+                               child_history, depth + 1)
+
             # Cleanup loop variables
             payload.pop(as_var, None)
             payload.pop(index_var, None)
             elapsed = round(time.time() - s, 3)
-            history.append({"op": "foreach", "data": {"status": "ok", "items": items_key, "count": len(items)}, "elapsed": elapsed})
+            history.append({"op": op, "data": {"status": "ok", "items": items_key,
+                                               "count": len(items),
+                                               "steps": child_history},
+                            "elapsed": elapsed})
             print(f"{prefix}[FOREACH] Complete ({elapsed:.2f}s)")
             continue
 
@@ -268,13 +367,17 @@ def _execute_steps(steps: list, payload: dict, config: dict, security_context: d
             
             print(f"{prefix}[REPEAT] {count} iterations, index as '{index_var}'")
             s = time.time()
+            child_history = []
             for idx in range(int(count)):
                 payload[index_var] = idx
-                _execute_steps(body, payload, config, security_context, registry, history, depth + 1)
-            
+                _execute_steps(body, payload, config, security_context, registry,
+                               child_history, depth + 1)
+
             payload.pop(index_var, None)
             elapsed = round(time.time() - s, 3)
-            history.append({"op": "repeat", "data": {"status": "ok", "count": count}, "elapsed": elapsed})
+            history.append({"op": op, "data": {"status": "ok", "count": count,
+                                               "steps": child_history},
+                            "elapsed": elapsed})
             print(f"{prefix}[REPEAT] Complete ({elapsed:.2f}s)")
             continue
 
@@ -294,10 +397,15 @@ def _execute_steps(steps: list, payload: dict, config: dict, security_context: d
             
             print(f"{prefix}[IF] '{condition}' -> {result} (taking {branch})")
             s = time.time()
+            child_history = []
             if target:
-                _execute_steps(target, payload, config, security_context, registry, history, depth + 1)
+                _execute_steps(target, payload, config, security_context, registry,
+                               child_history, depth + 1)
             elapsed = round(time.time() - s, 3)
-            history.append({"op": "if", "data": {"status": "ok", "condition": str(condition), "result": result, "branch": branch}, "elapsed": elapsed})
+            history.append({"op": op, "data": {"status": "ok", "condition": str(condition),
+                                               "result": result, "branch": branch,
+                                               "steps": child_history},
+                            "elapsed": elapsed})
             continue
 
         # --- Standard Operation ---
@@ -339,12 +447,35 @@ def _execute_steps(steps: list, payload: dict, config: dict, security_context: d
 
         print(f"{prefix}[{i+1}] {op} ({elapsed:.2f}s)")
 
+        # A step may declare itself load-bearing. sys.exec is judged on its
+        # exit code as well as its status, because a script that fails is the
+        # usual way a pipeline step fails.
+        if str(step.get("on_error", "")).lower() == "abort" and isinstance(result, dict):
+            failed = result.get("status") in ("error", "timeout") or "error" in result
+            if not failed and result.get("exit_code") not in (None, 0):
+                failed = True
+            if failed:
+                detail = result.get("error") or result.get("stderr") \
+                    or f"exit code {result.get('exit_code')}"
+                print(f"{prefix}[ABORT] {op}: {str(detail)[:400]}")
+                raise PlanAborted(op, i + 1, str(detail)[:400])
+
 
 def _execute_plan(envelope: dict, security_context: dict, resume: bool = False, resume_from: Any = None) -> dict:
     registry = get_registry()
     plan = envelope.get("plan", [])
     config = envelope.get("config", {})
     payload = envelope.get("data_payload", {})
+
+    # The config block gets the same {{key}} treatment as step arguments.
+    # Without this an `output` of "pipelines/{{slug}}_results.json" is taken
+    # literally and every project's run overwrites one absurdly-named file --
+    # the per-client results the path was clearly written to produce never
+    # exist. Only data_payload is in scope here: nothing has run yet, so
+    # referencing a step result would resolve to nothing anyway.
+    config = _interpolate_value(config, payload)
+    envelope["config"] = config
+
     history = []
     output_path = config.get("output")
     
@@ -387,7 +518,15 @@ def _execute_plan(envelope: dict, security_context: dict, resume: bool = False, 
     start_time = time.time()
     print(f"[SYSTEM] IAC Runner v2.0 | {len(plan)} operations | Source: {envelope.get('source', 'local')}")
 
-    _execute_steps(plan, payload, config, security_context, registry, history, existing_history=existing_history, resume_from_idx=resume_from_idx)
+    aborted = None
+    try:
+        _execute_steps(plan, payload, config, security_context, registry, history,
+                       existing_history=existing_history, resume_from_idx=resume_from_idx)
+    except PlanAborted as e:
+        # Everything up to the failure is still worth keeping: the results file
+        # is what `--resume` reads, so a run that dies at step 14 can be picked
+        # up at step 14 instead of re-scraping and re-describing from scratch.
+        aborted = e
 
     drop_list = config.get("drop", ["encoded"])
     sanitize_payload(payload, drop_list)
@@ -406,10 +545,18 @@ def _execute_plan(envelope: dict, security_context: dict, resume: bool = False, 
         }
     }
 
+    if aborted is not None:
+        output["error"] = str(aborted)
+        output["meta"]["aborted_at_step"] = aborted.index
+
     if output_path:
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(output, f, indent=4, default=str)
         print(f"[SYSTEM] Saved to {output_path}")
+
+    if aborted is not None:
+        print(f"[SYSTEM] Plan aborted at step {aborted.index} ({aborted.op}). "
+              f"Fix the cause and re-run with --resume to continue from there.")
 
     return output
 
@@ -423,7 +570,9 @@ def _fallback_execute(op: str, args: dict, payload: dict, config: dict) -> dict:
     if op == "dump_payload":
         path = args.get("path")
         if path:
-            import json
+            # No `import json` here: a function-local import makes `json` a
+            # local name for the WHOLE function, so every other branch that
+            # touches the module-level json raises UnboundLocalError.
             with open(path, "w", encoding="utf-8") as f:
                 json.dump({"final_payload": payload}, f, indent=4, default=str)
             return {"status": "ok", "path": path}
@@ -440,6 +589,70 @@ def _fallback_execute(op: str, args: dict, payload: dict, config: dict) -> dict:
         if isinstance(data, dict):
             payload.update(data)
         return {"status": "ok", "merged_keys": list(data.keys()) if isinstance(data, dict) else []}
+
+    if op == "set":
+        key = args.get("payload_key") or args.get("key")
+        if not key:
+            return {"status": "error", "error": "set requires 'payload_key'"}
+        payload[key] = args.get("value", "")
+        return {"status": "ok", "key": key}
+
+    if op == "append":
+        # Accumulate across loop iterations. Without this, a foreach that
+        # generates one section of a document per pass has nowhere to put the
+        # results: every iteration writes the same output_key and the last one
+        # wins, so a ten-section page arrives as its final section.
+        key = args.get("payload_key") or args.get("key")
+        if not key:
+            return {"status": "error", "error": "append requires 'payload_key'"}
+        if "value" in args:
+            piece = args["value"]
+        elif args.get("from_key"):
+            piece = _resolve_ref(args["from_key"], payload)
+            if piece is None:
+                return {"status": "error",
+                        "error": f"Payload key not found: '{args['from_key']}'"}
+        else:
+            return {"status": "error", "error": "append requires 'value' or 'from_key'"}
+
+        existing = payload.get(key)
+        if isinstance(existing, list):
+            existing.append(piece)
+            return {"status": "ok", "key": key, "count": len(existing)}
+
+        sep = args.get("sep", "\n")
+        base = "" if existing is None else str(existing)
+        payload[key] = (base + sep + str(piece)) if base else str(piece)
+        return {"status": "ok", "key": key, "length": len(payload[key])}
+
+    if op == "parse_json":
+        # An AI step stores its output as text. flow.foreach needs a real list,
+        # and a plan should not have to round-trip through a file to get one.
+        src = args.get("from_key") or args.get("payload_key")
+        dest = args.get("into") or args.get("payload_key") or src
+        raw = _resolve_ref(src, payload) if src else None
+        if raw is None:
+            return {"status": "error", "error": f"Payload key not found: '{src}'"}
+        if isinstance(raw, (dict, list)):
+            payload[dest] = raw
+            return {"status": "ok", "key": dest, "type": type(raw).__name__}
+        text = str(raw).strip()
+        if text.startswith("```"):
+            lines = text.split("\n")
+            text = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:]).strip()
+        try:
+            parsed = json.loads(text)
+        except json.JSONDecodeError:
+            m = re.search(r'(\{[\s\S]*\}|\[[\s\S]*\])', text)
+            if not m:
+                return {"status": "error", "error": f"'{src}' is not JSON"}
+            try:
+                parsed = json.loads(m.group(1))
+            except json.JSONDecodeError as e:
+                return {"status": "error", "error": f"'{src}' is not JSON: {e}"}
+        payload[dest] = parsed
+        return {"status": "ok", "key": dest, "type": type(parsed).__name__,
+                "count": len(parsed) if hasattr(parsed, "__len__") else 1}
 
     if op == "drop":
         keys = args.get("keys", [])

@@ -1,0 +1,20 @@
+{
+  "project": "nws",
+  "ok": false,
+  "error_count": 2,
+  "warn_count": 0,
+  "findings": [
+    {
+      "severity": "ERROR",
+      "code": "MEDIA_UNUSED",
+      "message": "18/19 media assets are never referenced (94%): ['image_0', 'hero_poster', 'image_1', 'promo_banner', 'image_2', 'feature_1', 'feature_2', 'image_4']...",
+      "fix": "Every provided asset should appear in the layout. Unused media is the clearest signal of a lazy or templated design."
+    },
+    {
+      "severity": "ERROR",
+      "code": "PLACEHOLDER_ORPHAN",
+      "message": "Template references keys absent from project.json: ['feature_2', 'feature_3', 'hero_interior', 'hero_staff_interaction', 'hero_storefront', 'media_10', 'media_11', 'media_12', 'media_13', 'media_2', 'media_4', 'media_5', 'media_6', 'media_7', 'media_8', 'media_9', 'sec.location_details', 'sec.phone', 'sec.phone_label', 'sec.phone_number', 'sec.reach_out_title', 'sec.title', 'sec.website_link', 'story_hero', 'story_interior', 'story_location', 'story_service']",
+      "fix": "These ship to production as literal '{{...}}' text. Add the keys or remove the references."
+    }
+  ]
+}
