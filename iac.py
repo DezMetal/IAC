@@ -299,6 +299,16 @@ def bootstrap(safe_mode=False):
         except ImportError as e:
             print(f"[WARN] Vision operations not available: {e}")
 
+        # 2.65 Register Sense Operations
+        try:
+            try:
+                from .sense_ops import register_sense_operations
+            except ImportError:
+                from sense_ops import register_sense_operations
+            register_sense_operations(registry)
+        except ImportError as e:
+            print(f"[WARN] Sense operations not available: {e}")
+
         # 2.7 Register Filesystem Operations
         try:
             try:

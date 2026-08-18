@@ -17,6 +17,25 @@ requiring a better one.
 
 ---
 
+## In plain terms
+
+Say you want your assistant to take a screenshot, find a button on it, and click
+that button. Three steps, and every one of them can fail in a way the next step
+cannot see.
+
+IAC is the thing that makes those three steps *one plan* — validated before
+anything runs, with each step's output reaching the next, and every step passing
+the same permission check. Add your own steps and they work the same way as the
+built-in ones.
+
+The reason it exists rather than "just call the model's tool API": **most models
+are not good at this, and the good ones are expensive.** IAC is built so that a
+small model running on your own machine, with no tool-calling support and no
+JSON mode, behaves like one that has both. The system does the work so the model
+does not have to be bigger.
+
+---
+
 ## Licence and attribution
 
 IAC is free and open source under **[Apache-2.0](LICENSE)**. Use it, modify it,

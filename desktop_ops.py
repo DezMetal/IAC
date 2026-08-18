@@ -27,14 +27,35 @@ def register_desktop_operations(registry):
             
             try:
                 if op_name == "snap":
-                    s_time = time.time()
                     path = args.get("path") or f"desktop_snap_{int(time.time())}.png"
                     path = os.path.abspath(path)
-                    
-                    # Take screenshot
-                    screenshot = pyautogui.screenshot()
+
+                    # DEPRECATED, and deliberately not deleted. `sense.capture`
+                    # supersedes this: it can address a second monitor, a
+                    # region or a camera, where this can only ever return the
+                    # whole primary desktop.
+                    #
+                    # The NAME survives because plans, pipelines and skills in
+                    # the wild call it, and breaking those to make a point
+                    # about naming is not an upgrade. The IMPLEMENTATION does
+                    # not: it delegates, so there is one screen-capture path in
+                    # the ecosystem rather than two that drift apart. Two
+                    # capture implementations is exactly the redundancy that
+                    # produced an unpoliced fallback in Aether's media layer.
+                    screenshot = None
+                    try:
+                        from .sense_ops import grab_screen
+                    except ImportError:
+                        try:
+                            from sense_ops import grab_screen
+                        except ImportError:
+                            grab_screen = None
+                    if grab_screen is not None:
+                        screenshot = grab_screen(0)
+                    if screenshot is None:
+                        screenshot = pyautogui.screenshot()
                     screenshot.save(path)
-                    
+
                     key = args.get("payload_key") or f"image_{len(payload)}"
                     payload[key] = {"src": path}
                     return {"status": "ok", "key": key, "path": path}
@@ -129,7 +150,9 @@ def register_desktop_operations(registry):
     }
 
     desktop_ops = [
-        ("snap", "Take a screenshot of the entire desktop"),
+        ("snap", "DEPRECATED -- use sense.capture. Takes a screenshot of the "
+                 "primary desktop only; sense.capture can address any screen, "
+                 "a region of one, or a camera"),
         ("click", "Click the mouse at specific coordinates or current location"),
         ("type", "Type text simulating keyboard input"),
         ("hotkey", "Press a combination of keys"),
