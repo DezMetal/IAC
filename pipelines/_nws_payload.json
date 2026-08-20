@@ -1,0 +1,67 @@
+{
+    "final_payload": {
+        "fb_url": "https://www.facebook.com/nws1733",
+        "slug": "nws",
+        "business_name": "Northern Wine & Spirits",
+        "image_count": 15,
+        "image_skip": [],
+        "image_start_index": 0,
+        "sitegen_root": "C:/Users/user/Documents/pythons/test/SiteGen",
+        "info_tabs": [
+            {
+                "route": "about",
+                "key": "fb_about"
+            },
+            {
+                "route": "directory_category",
+                "key": "fb_category"
+            },
+            {
+                "route": "directory_basic_info",
+                "key": "fb_basic_info"
+            },
+            {
+                "route": "directory_links",
+                "key": "fb_links"
+            },
+            {
+                "route": "directory_contact_info",
+                "key": "fb_contact_info"
+            },
+            {
+                "route": "reviews",
+                "key": "fb_reviews"
+            }
+        ],
+        "_last_result": {
+            "status": "ok",
+            "exit_code": 0,
+            "stdout": "[OK] Scaffolded project: Northern Wine & Spirits",
+            "stderr": ""
+        },
+        "_output": "Processed 3 items",
+        "fb_about": "Bio\nFamily Owned Liquor Store In Rome NY\nStop By For All Your Wine And Spirits!!",
+        "fb_category": "Category\nShopping & retail",
+        "fb_basic_info": "Rating and reviews\n100% recommend (5 Reviews)",
+        "fb_links": "",
+        "fb_contact_info": "Phone\n(315) 336-5530\nMobile",
+        "fb_reviews": "",
+        "scaffold_result": {
+            "stdout": "[OK] Scaffolded project: Northern Wine & Spirits",
+            "stderr": "",
+            "exit_code": 0
+        },
+        "image_0": {
+            "src": "https://scontent-ord5-2.xx.fbcdn.net/v/t39.30808-6/733095681_1425709136029240_1294883815633957910_n.jpg?stp=dst-jpg_tt6&cstp=mx1254x1254&ctp=s1254x1254&_nc_cat=105&ccb=1-7&_nc_sid=833d8c&_nc_ohc=oT1jOgXtpiEQ7kNvwH5yRyP&_nc_oc=Adq10oV9KsXlksTv5dfOMYjzIY1btUb7ZQCadR3Dxhe2blWwBM2ijmtXTcjQiYCZ_Ag&_nc_zt=23&_nc_ht=scontent-ord5-2.xx&_nc_gid=uuwiQb7JiZwZcvzSL1_Q5Q&_nc_ss=7f2a8&oh=00_AQFnKXX8NPx5_J9pFbq8o8UFKkHaicnnbrFtoGG4yCDrWw&oe=6A86595A",
+            "desc": "buzzballz_flyer\nGRAPHIC\nThis advertisement promotes two new BuzzBallz cocktail flavors, Paddle Punch and Hole-in-Fun, available for $3.59 each at Northern Wine & Spirits in Rome, NY.\nGRAPHIC: display whole and contained, never crop it, and never place page text on top of it."
+        },
+        "image_1": {
+            "src": "https://scontent-ord5-2.xx.fbcdn.net/v/t39.30808-6/730749830_1424045822862238_2246119781434869647_n.jpg?stp=dst-jpg_tt6&cstp=mx1023x1537&ctp=s1023x1537&_nc_cat=103&ccb=1-7&_nc_sid=833d8c&_nc_ohc=y9A9se-qB8cQ7kNvwG_q2Zw&_nc_oc=AdpcZ8xTIoNHB743J3E_OFt3W5eODLEyIWJIhs8ZrRl5UR9T8jpd0-hWeZGZ-9urciY&_nc_zt=23&_nc_ht=scontent-ord5-2.xx&_nc_gid=rek-6PY5fzFJrTS7ONAnEA&_nc_ss=7f2a8&oh=00_AQESNZExOCGBXDZ6C41480aC38diEI6thdg-1lDGRTop3A&oe=6A865601",
+            "desc": "johnnie_walker_flyer\nGRAPHIC\nThis advertisement promotes a New York Limited Edition bottle of Johnnie Walker Blue Label blended Scotch whisky for $209.99 at Northern Wine & Spirits in Rome, NY.\nGRAPHIC: display whole and contained, never crop it, and never place page text on top of it."
+        },
+        "image_2": {
+            "src": "https://scontent-ord5-1.xx.fbcdn.net/v/t39.30808-6/727104627_1421773299756157_2312897285837999944_n.jpg?stp=dst-jpg_tt6&cstp=mx1024x1536&ctp=s1024x1536&_nc_cat=101&ccb=1-7&_nc_sid=833d8c&_nc_ohc=Dw4DcoQu3p4Q7kNvwE5cmtY&_nc_oc=Ado9W1cRPyMFG8G1i9ApHZcBKqf_DDxGe8xaH2JW7ujaaJMQODxCA4CkLBlIlgjgVeo&_nc_zt=23&_nc_ht=scontent-ord5-1.xx&_nc_gid=cR1-KHLpr6gp7sTH8HsZ0g&_nc_ss=7f2a8&oh=00_AQFk63HBM5VJC-PITk67_4E9nATvnUf6tu3negihgeMN0Q&oe=6A867AA8",
+            "desc": "carbliss_flyer\nGRAPHIC\nThis advertisement promotes Carbliss premium vodka cocktails, featuring an 8-can \"Americana Backyard Bliss\" variety pack and 4-can packs of Pineapple and Black Cherry flavors available at Northern Wine & Spirits in Rome, New York.\nGRAPHIC: display whole and contained, never crop it, and never place page text on top of it."
+        }
+    }
+}

@@ -1,0 +1,742 @@
+{
+    "history": [
+        {
+            "op": "core.log",
+            "data": {
+                "status": "ok",
+                "message": "Intake for Northern Wine & Spirits -> SiteGen/nws"
+            },
+            "elapsed": 0.001
+        },
+        {
+            "op": "web.goto",
+            "data": {
+                "status": 200,
+                "url": "https://www.facebook.com/nws1733?sk=photos"
+            },
+            "elapsed": 4.535
+        },
+        {
+            "op": "web.wait",
+            "data": {
+                "status": "ok"
+            },
+            "elapsed": 3.021
+        },
+        {
+            "op": "web.scroll",
+            "data": {
+                "status": "ok",
+                "direction": "down"
+            },
+            "elapsed": 2.013
+        },
+        {
+            "op": "web.eval",
+            "data": {
+                "image_6": {
+                    "src": "https://scontent-ord5-2.xx.fbcdn.net/v/t39.30808-6/748527838_1442235877709899_1101602429740821505_n.jpg?stp=dst-jpg_tt6&cstp=mx1024x1536&ctp=s1024x1536&_nc_cat=102&ccb=1-7&_nc_sid=833d8c&_nc_ohc=79thzaca4SIQ7kNvwHXeBjB&_nc_oc=AdrFYmsKw_-uKi0qyf5a21B81h2_XlYYlu5T9wWej641tdTXEA7hOcKCqEx85AzSX3Y&_nc_zt=23&_nc_ht=scontent-ord5-2.xx&_nc_gid=K6uuQQSLzyNEFWFonoyd4g&_nc_ss=7f2a8&oh=00_AQHN-4hSZDXKNmbNAvIBb6T7ZziWFLqDliakl991ZsFu1A&oe=6A865576",
+                    "desc": "May be an image of wine, silver oak tree and text that says 'LIMITED. RESERVE. DESIGN. EXCEPTIONAL BY ORIGINA 130 PEAt Y-1H1 BOTA O -LIMITED RESERVE NAPA VALLEY CABERNET SAUVIGNON BOTABOX BOTA BOX IMITED RESERVE FULL-BODIED WITH NOTES OF DARK FRUIT AND VANILLA NAPA NAPAVALLEY VALLEY CABERNET SAUVIGNON TMWAHL MOTESOFDR5K AWARD WINNING BOTA BOX HINES AWARD WINNING \u043be OK PREMIUM QUALITY ECO-FRIENDLY OX 1.5LITER PERFECT FOR ANY OCCASION $2099 99 1.5LITER 1.5 WHILE SUPPLIES LAST! NORTHERN WINE ROME.NY ELEVATE EVERY POUR. SPIRITS'"
+                },
+                "image_7": {
+                    "src": "https://scontent-ord5-2.xx.fbcdn.net/v/t39.30808-6/745545604_1439883107945176_5599589060449790361_n.jpg?stp=dst-jpg_tt6&cstp=mx1092x1440&ctp=s1092x1440&_nc_cat=102&ccb=1-7&_nc_sid=833d8c&_nc_ohc=lURRAZMHQ9UQ7kNvwGF1wND&_nc_oc=Adq5teX4FBONQQipzSF6GaogheMcVznE2VjIeNasBGRwB2Qgct62w8rYJ_HBgz-32Io&_nc_zt=23&_nc_ht=scontent-ord5-2.xx&_nc_gid=b57kQqDJw04E6F_Lkj4PAA&_nc_ss=7f2a8&oh=00_AQGtLnrAPDITIlc_mAPAlrL8hUJq3yx4aEyRLLbNuyMSXA&oe=6A8660B2",
+                    "desc": "May be an image of \u200edrink and \u200etext that says '\u200eNEW! SuperLytem ADE CONTAINS VODKA SALE VODKA ZERO SUGAR ON $2.49 JUST $2.49! EACH VODKA GRAB AN INDIVIDUAL CAN FOR COMPLIWS VODKA ZERO 66 CUENTELINS VODKA ZERO SUGAR Lyte S Lyte \u12c8\u130c\u1208\u1308 \u05d5\u05e8\u05ea\u05e8\u05d3 Super Super \u05e8\u05d5\u05d0\u05d1 3HT\u0424 Serae LEWNN 3 BULE Surae VODKA +ADE VODKA ADE VODKA ADE VODKA ADE COCKTAL COCKTAIL ALCBTVOL 12FL.OZ ENMCBYVO.. ONLY $2.49 EACH TRY MORE. PERFECT SAME GREAT FIND YOUR OCCASION TASTE FAVORITEFLAVOR! ONE SUGAR. AND READY! CONTAINS VODKA. INDIVIDUAL CANS $ PAY LESS. ONE LESS THAN BIG PACK! ORANGE FRUIT PUNCH LEMON LIME NORTHERN WINE & ROME,NY BLUE CHILL SPIRITS\u200e'\u200e\u200e"
+                },
+                "image_8": {
+                    "src": "https://scontent-ord5-1.xx.fbcdn.net/v/t39.30808-6/739362972_1432288938704593_3554992241496861256_n.jpg?stp=dst-jpg_tt6&cstp=mx1023x1537&ctp=s1023x1537&_nc_cat=108&ccb=1-7&_nc_sid=833d8c&_nc_ohc=JAhYV1H05JoQ7kNvwEoixeZ&_nc_oc=Adp4lAHS6Wl7D3P6PgaWOyVAdhQWKqEx6Wra07rX-ngAC4EKDvEH649rCRC_uF2OJeY&_nc_zt=23&_nc_ht=scontent-ord5-1.xx&_nc_gid=ZyziFfYA5jx0I5cZM9n1RQ&_nc_ss=7f2a8&oh=00_AQFvzV8iCfQXsMS5d2ZmpCigQVBgfcsbDzSo0tSdgJY5hA&oe=6A8661B1",
+                    "desc": "May be an image of wine, fireworks and text that says 'CELEBRATING Happy 250 YEARS FOURTH INDEPENDENCE INDEPE OF 1776 1776*2026 2026 JULY! OF OPEN 10 PM TONIGHT! UNTIL Northern Wine & Spirits Rome, NY'"
+                },
+                "image_9": {
+                    "src": "https://scontent-ord5-2.xx.fbcdn.net/v/t39.30808-6/729148568_1429241209009366_4810529419041136623_n.jpg?stp=dst-jpg_tt6&cstp=mx1024x1536&ctp=s1024x1536&_nc_cat=110&ccb=1-7&_nc_sid=833d8c&_nc_ohc=Un967jHLKEMQ7kNvwFRUnmY&_nc_oc=AdorcmvR4zpWc36OY4SlSS9TS_lejwfmOm2ZsyGVQ064VLI5xnKbmanFnJGzoAK-_vw&_nc_zt=23&_nc_ht=scontent-ord5-2.xx&_nc_gid=XedSD-8ZtiyUluUz4xMWfA&_nc_ss=7f2a8&oh=00_AQGcukcsYdLe7PGP7MMJ2f_tnBHALEdY-tbYqH-z6C2o9w&oe=6A86456B",
+                    "desc": "May be an image of drink and text that says '100% We DE AGAVE TEQUILA \u30cd CAMPO BRAVO TEQUILA PLATA Smooth Taste. Great Moments. AGAVE 100% AGAVE Premium quality for smooth, authentic taste. CAMPO BRAVO PLATA TEQUILA CLEAN & CRISP Mild and smooth with clean, fresh finish. MIXITUP Perfect for margaritas, sips or any occasion. ae m MADE MADEFOR FOR ANY OCCASION From celebrations to everyday mom moments. ONLY 2499 EACH 40%Alc.Val (80Fresil-1 IL TEQUIL 6 EQUILAPLATA PLATA DK AGAVE GREAT TEQUILA. BETTER TIMES. That's the Campo Bravo way! NORTHERN WINE & SPIRITS 4\u044ew local store for fine wine & spirits 1733 BLACK RIVER BLVD. ROME, NEW YORK'"
+                },
+                "image_10": {
+                    "src": "https://scontent-ord5-2.xx.fbcdn.net/v/t39.30808-6/733737279_1429073475692806_8356944789223677167_n.jpg?stp=dst-jpg_tt6&cstp=mx1024x1536&ctp=s1024x1536&_nc_cat=107&ccb=1-7&_nc_sid=833d8c&_nc_ohc=5dfrEtIir30Q7kNvwFo9QIs&_nc_oc=Adr6IAplsBOrCfQGcOe9MaaNgXv4yWOMnFh7omwc3Dft1qcNY6WxA7t6Axas4pXphwI&_nc_zt=23&_nc_ht=scontent-ord5-2.xx&_nc_gid=7lcZHpvIFrVaWy7Wxx2GcQ&_nc_ss=7f2a8&oh=00_AQGrmnsNNBbRPPZDsgACdy8US12-ZUlbkrc_1HsOqzGzHQ&oe=6A865756",
+                    "desc": "May be an image of drink and text that says 'MADE WITH NEW CUTWATER ARRIVAL! PEACH REAL TEQUILA MARGARITA NEW 2026 REFRESHING DELICIOUS RELEASE! REAL SPIRITS 10% MADE 042026 12H0004-07 MADE WITH REAL TEQUILA CUTWATER TEQUILA, TRIPLE SEC, PEACH PUREE NATURAL FLAVORS 4CANS 12FL.0Z 35GML WARD WINNING REAL SWEET PEACH FLAVOR JUICY SMOOTH WITH PERFECTLY BALANCED FINISH CUTWATER PEACH MARGARITA MADE WITH 10%A LC.B VOL. RIGHT KICK IN EVERY SIP AMADE TEQUILA, &NATURAL GF ITHCUTWATER GLUTEN FREE ENJOY RESPONSIBLY ONLY $12.99 CANS 12 OZ CANS_ SWEET CH. REAL TEQUILA. PERFECTLY REFRESHING. NATURALLY DELICIOUS. NORTHERN WINE & SPIRITS Your for fine wine spirits 1733 BLACK RIVER BLVD. ROME, NEW YORK'"
+                },
+                "image_11": {
+                    "src": "https://scontent-ord5-1.xx.fbcdn.net/v/t39.30808-6/736896859_1428940339039453_5100319995099413422_n.jpg?stp=dst-jpg_tt6&cstp=mx1092x1440&ctp=s1092x1440&_nc_cat=108&ccb=1-7&_nc_sid=833d8c&_nc_ohc=RMRTIBtQrA4Q7kNvwEkFxYf&_nc_oc=AdpgbVn9QFwVQy5981naJeC4Olzy_rc0jtaXTgWniptEuSs0GJ-PPXMqnT-Dtnn6feU&_nc_zt=23&_nc_ht=scontent-ord5-1.xx&_nc_gid=bQWDyf6SjBYHLMgtckDJCg&_nc_ss=7f2a8&oh=00_AQH5YzBqdhfQvsDwciADqzq_pO2xoJQOQsQoSa88qROiYQ&oe=6A8655F6",
+                    "desc": "May be an image of \u200edrink and \u200etext that says '\u200eNEW! SuperLytem VODKA CONTAINS ADE VODKA ZERO SUGAR TRY ONE BEFORE YOU BUY A PACK! GRAB AN INDIVIDUAL CAN FOR JUST $2.99! VODKA ZERO Lyte V Super VODKA ADE COCKTAIL CORTAWS VODKA ZERO \u05e8\u05e0\u05dd \u05e8\u05d5\u05e9 Serne NOWN VODKA ADE COATA\u0418HAR VODKA ZERO SUGAR \u0e2d\u0e32\u0e38\u0e2a\u0e32 \u05db\u05d0\u05d5\u05e8\u05d3 Supae BUDD VODKA ADE CONTRAIONS VODKA ZERO SUGAR \u0e2d\u0e07\u0e38\u0e28\u0e32 OW VODKA +ADE COCKTAIL OACKTA 122.LZ UIKALC. |12FLOz ONLY $2.99 EACH TRYMORE. TRY PERFECT SAME GREAT YOUR FAVORITE FLAVOR! INDIVIDUAL CANS PAY LESS. CAN LESS THAN BIG PACK! ONE AND READY! ORANGE FRUIT PUNCH LEMON LIME BLUE CHILL NORTHERN WINE SPIRITS ROME,N SUGAR. CONTAINS VODKA.\u200e'\u200e\u200e"
+                },
+                "image_12": {
+                    "src": "https://scontent-ord5-2.xx.fbcdn.net/v/t39.30808-6/733095681_1425709136029240_1294883815633957910_n.jpg?stp=dst-jpg_tt6&cstp=mx1254x1254&ctp=s1254x1254&_nc_cat=105&ccb=1-7&_nc_sid=833d8c&_nc_ohc=oT1jOgXtpiEQ7kNvwH5yRyP&_nc_oc=Adq10oV9KsXlksTv5dfOMYjzIY1btUb7ZQCadR3Dxhe2blWwBM2ijmtXTcjQiYCZ_Ag&_nc_zt=23&_nc_ht=scontent-ord5-2.xx&_nc_gid=pc_I9EC57Lu6rWI0WUqAhQ&_nc_ss=7f2a8&oh=00_AQHvdoiin_H_GiC47ljdc_AWPbaHlOLb1E6cgmGj_-E1kQ&oe=6A86595A",
+                    "desc": "May be an image of text that says 'NEW! SHELVES! JUST HIT THE TWO BRAND-NEW BRAND BUZZBALLZ FLAVORS ARE HERE! BuzzBall? Cocktails PADDLE PUNCH WITH AVORS & MATUIRAL VODKA VODKAWITH CERTIFIED COLOR COLOR ALC15%BYVOL-20 BuzzBalls\u00ae Cocktails HOLE-IN-FUN HOLE- -IN-FUN FUN VODKA WITH NATU TURAL FLAVORS CERTIFIED COLORS ALC15%BY ALC15%BYVOL-200ML VOL 200 L-200 ML PADDLE ONLY PUNCH OF VODKA $3.59 HOLE-IN-FUN FUN A SMOOTH BLEND OF VODKA EACH WITH NATURAL FLAVORS & A REFRESHING BLEND CERTIFIED COLORS WITH NATURAL FLAVORS& CERTIFIED COLOR NORTHERN WINE & SPIRITS= ROME, NY'"
+                },
+                "image_13": {
+                    "src": "https://scontent-ord5-2.xx.fbcdn.net/v/t39.30808-6/730749830_1424045822862238_2246119781434869647_n.jpg?stp=dst-jpg_tt6&cstp=mx1023x1537&ctp=s1023x1537&_nc_cat=103&ccb=1-7&_nc_sid=833d8c&_nc_ohc=y9A9se-qB8cQ7kNvwG_q2Zw&_nc_oc=AdpcZ8xTIoNHB743J3E_OFt3W5eODLEyIWJIhs8ZrRl5UR9T8jpd0-hWeZGZ-9urciY&_nc_zt=23&_nc_ht=scontent-ord5-2.xx&_nc_gid=jTgmDBEWnP9vqfCgEtj0ag&_nc_ss=7f2a8&oh=00_AQFWQtwuIcM3UG2LTqPiR1sj8aJgKkD7f8eABN2WW22cCQ&oe=6A865601",
+                    "desc": "May be an image of drink and text"
+                },
+                "image_14": {
+                    "src": "https://scontent-ord5-1.xx.fbcdn.net/v/t39.30808-6/727104627_1421773299756157_2312897285837999944_n.jpg?stp=dst-jpg_tt6&cstp=mx1024x1536&ctp=s1024x1536&_nc_cat=101&ccb=1-7&_nc_sid=833d8c&_nc_ohc=Dw4DcoQu3p4Q7kNvwE5cmtY&_nc_oc=Ado9W1cRPyMFG8G1i9ApHZcBKqf_DDxGe8xaH2JW7ujaaJMQODxCA4CkLBlIlgjgVeo&_nc_zt=23&_nc_ht=scontent-ord5-1.xx&_nc_gid=xBbl1nxDTPs4qRKfWOQONA&_nc_ss=7f2a8&oh=00_AQF1xH5800lVPnzc4xin8CZb82fc2vp-HcbaRCoiNPdtNQ&oe=6A867AA8",
+                    "desc": "May be an image of drink and text"
+                }
+            },
+            "elapsed": 8.647
+        },
+        {
+            "op": "ai.process",
+            "data": {
+                "status": "ok",
+                "count": 8,
+                "message": "Processed 8 items"
+            },
+            "elapsed": 18.316
+        },
+        {
+            "op": "flow.foreach",
+            "data": {
+                "status": "ok",
+                "items": "info_tabs",
+                "count": 6,
+                "steps": [
+                    {
+                        "op": "web.goto",
+                        "data": {
+                            "status": 200,
+                            "url": "https://www.facebook.com/nws1733?sk=about"
+                        },
+                        "elapsed": 3.245
+                    },
+                    {
+                        "op": "web.wait",
+                        "data": {
+                            "status": "ok"
+                        },
+                        "elapsed": 2.012
+                    },
+                    {
+                        "op": "web.eval",
+                        "data": "Bio\nFamily Owned Liquor Store In Rome NY\nStop By For All Your Wine And Spirits!!",
+                        "elapsed": 0.007
+                    },
+                    {
+                        "op": "web.goto",
+                        "data": {
+                            "status": 200,
+                            "url": "https://www.facebook.com/nws1733?sk=directory_category"
+                        },
+                        "elapsed": 3.401
+                    },
+                    {
+                        "op": "web.wait",
+                        "data": {
+                            "status": "ok"
+                        },
+                        "elapsed": 2.012
+                    },
+                    {
+                        "op": "web.eval",
+                        "data": "Category\nShopping & retail",
+                        "elapsed": 0.009
+                    },
+                    {
+                        "op": "web.goto",
+                        "data": {
+                            "status": 200,
+                            "url": "https://www.facebook.com/nws1733?sk=directory_basic_info"
+                        },
+                        "elapsed": 2.73
+                    },
+                    {
+                        "op": "web.wait",
+                        "data": {
+                            "status": "ok"
+                        },
+                        "elapsed": 2.018
+                    },
+                    {
+                        "op": "web.eval",
+                        "data": "Rating and reviews\n100% recommend (5 Reviews)",
+                        "elapsed": 0.007
+                    },
+                    {
+                        "op": "web.goto",
+                        "data": {
+                            "status": 200,
+                            "url": "https://www.facebook.com/nws1733?sk=directory_links"
+                        },
+                        "elapsed": 2.581
+                    },
+                    {
+                        "op": "web.wait",
+                        "data": {
+                            "status": "ok"
+                        },
+                        "elapsed": 2.016
+                    },
+                    {
+                        "op": "web.eval",
+                        "data": "",
+                        "elapsed": 0.008
+                    },
+                    {
+                        "op": "web.goto",
+                        "data": {
+                            "status": 200,
+                            "url": "https://www.facebook.com/nws1733?sk=directory_contact_info"
+                        },
+                        "elapsed": 2.7
+                    },
+                    {
+                        "op": "web.wait",
+                        "data": {
+                            "status": "ok"
+                        },
+                        "elapsed": 2.018
+                    },
+                    {
+                        "op": "web.eval",
+                        "data": "Phone\n(315) 336-5530\nMobile",
+                        "elapsed": 0.008
+                    },
+                    {
+                        "op": "web.goto",
+                        "data": {
+                            "status": 200,
+                            "url": "https://www.facebook.com/nws1733?sk=reviews"
+                        },
+                        "elapsed": 3.013
+                    },
+                    {
+                        "op": "web.wait",
+                        "data": {
+                            "status": "ok"
+                        },
+                        "elapsed": 2.018
+                    },
+                    {
+                        "op": "web.eval",
+                        "data": "",
+                        "elapsed": 0.008
+                    }
+                ]
+            },
+            "elapsed": 29.816
+        },
+        {
+            "op": "web.save_state",
+            "data": {
+                "status": "ok",
+                "path": "C:\\Users\\user\\Documents\\pythons\\test\\IAC\\auth\\session.json",
+                "size": 45544
+            },
+            "elapsed": 0.181
+        },
+        {
+            "op": "sys.exec",
+            "data": {
+                "status": "ok",
+                "exit_code": 0,
+                "stdout": "[OK] Scaffolded project: Northern Wine & Spirits",
+                "stderr": ""
+            },
+            "elapsed": 0.237
+        },
+        {
+            "op": "filesystem.read",
+            "data": {
+                "status": "success",
+                "data": {
+                    "name": "Northern Wine & Spirits",
+                    "client": "nws",
+                    "description": "",
+                    "entry": "index.html",
+                    "pages": [],
+                    "output": "dist/site.html",
+                    "addons": [],
+                    "addon_config": {},
+                    "media": {
+                        "logo": "",
+                        "banner": ""
+                    },
+                    "data": {
+                        "contact_phone": "",
+                        "contact_email": ""
+                    }
+                },
+                "payload_key": "scaffold_config"
+            },
+            "elapsed": 0.0
+        },
+        {
+            "op": "ai.plan",
+            "data": {
+                "status": "ok",
+                "output_key": "generated_project_json",
+                "length": 1019,
+                "message": "{\n  \"name\": \"Northern Wine & Spirits\",\n  \"client\": \"nws\",\n  \"description\": \"Northern Wine & Spirits is a family-owned liquor store in Rome, NY, offering a wide selection of wine and spirits for the local community.\",\n  \"entry\": \"index.html\",\n  \"pages\": [],\n  \"output\": \"dist/site.html\",\n  \"addons\": [],\n  \"addon_config\": {},\n  \"data\": {\n    \"phone\": \"(315) 336-5530\",\n    \"email\": \"\",\n    \"location\": \"Rome, NY\",\n    \"hours\": \"\",\n    \"about_summary\": \"Northern Wine & Spirits is a family-owned liquor store dedicated to serving the Rome community. We provide a curated selection of quality wines and spirits for all your shopping needs.\",\n    \"hero_h1\": \"Your Local <span class='text-accent'>Family-Owned</span> Liquor Store\",\n    \"hero_p\": \"Serving the Rome community with a wide selection of fine wines and spirits.\",\n    \"cta_text\": \"Call us today for our latest selection\",\n    \"services\": [\n      \"Wine selection\",\n      \"Spirits and liquor\",\n      \"Retail shopping\",\n      \"Local family-owned service\"\n    ]\n  }\n}"
+            },
+            "elapsed": 1.433
+        },
+        {
+            "op": "filesystem.write",
+            "data": {
+                "status": "success",
+                "data": {
+                    "path": "C:\\Users\\user\\Documents\\pythons\\test\\SiteGen\\nws\\project.json",
+                    "content_length": 1019
+                }
+            },
+            "elapsed": 0.001
+        },
+        {
+            "op": "core.dump_payload",
+            "data": {
+                "status": "ok",
+                "path": "pipelines/_nws_payload.json"
+            },
+            "elapsed": 0.001
+        },
+        {
+            "op": "sys.exec",
+            "data": {
+                "status": "ok",
+                "exit_code": 0,
+                "stdout": "[inject_media] Injected 8 images (8 with descriptions) into C:\\Users\\user\\Documents\\pythons\\test\\SiteGen\\nws\\project.json\r\n[inject_media] media keys: 8 | roles: ['hero_poster', 'promo_banner', 'feature_1', 'feature_2', 'feature_3']",
+                "stderr": ""
+            },
+            "elapsed": 0.21
+        },
+        {
+            "op": "filesystem.read",
+            "data": {
+                "status": "success",
+                "data": {
+                    "name": "Northern Wine & Spirits",
+                    "client": "nws",
+                    "description": "Northern Wine & Spirits is a family-owned liquor store in Rome, NY, offering a wide selection of wine and spirits for the local community.",
+                    "entry": "index.html",
+                    "pages": [],
+                    "output": "dist/site.html",
+                    "addons": [],
+                    "addon_config": {},
+                    "data": {
+                        "phone": "(315) 336-5530",
+                        "email": "",
+                        "location": "Rome, NY",
+                        "hours": "",
+                        "about_summary": "Northern Wine & Spirits is a family-owned liquor store dedicated to serving the Rome community. We provide a curated selection of quality wines and spirits for all your shopping needs.",
+                        "hero_h1": "Your Local <span class='text-accent'>Family-Owned</span> Liquor Store",
+                        "hero_p": "Serving the Rome community with a wide selection of fine wines and spirits.",
+                        "cta_text": "Call us today for our latest selection",
+                        "services": [
+                            "Wine selection",
+                            "Spirits and liquor",
+                            "Retail shopping",
+                            "Local family-owned service"
+                        ]
+                    },
+                    "media": {
+                        "bota_box_flyer": "https://scontent-ord5-2.xx.fbcdn.net/v/t39.30808-6/748527838_1442235877709899_1101602429740821505_n.jpg?stp=dst-jpg_tt6&cstp=mx1024x1536&ctp=s1024x1536&_nc_cat=102&ccb=1-7&_nc_sid=833d8c&_nc_ohc=79thzaca4SIQ7kNvwHXeBjB&_nc_oc=AdrFYmsKw_-uKi0qyf5a21B81h2_XlYYlu5T9wWej641tdTXEA7hOcKCqEx85AzSX3Y&_nc_zt=23&_nc_ht=scontent-ord5-2.xx&_nc_gid=K6uuQQSLzyNEFWFonoyd4g&_nc_ss=7f2a8&oh=00_AQHN-4hSZDXKNmbNAvIBb6T7ZziWFLqDliakl991ZsFu1A&oe=6A865576",
+                        "superlyte_sale_flyer": "https://scontent-ord5-2.xx.fbcdn.net/v/t39.30808-6/745545604_1439883107945176_5599589060449790361_n.jpg?stp=dst-jpg_tt6&cstp=mx1092x1440&ctp=s1092x1440&_nc_cat=102&ccb=1-7&_nc_sid=833d8c&_nc_ohc=lURRAZMHQ9UQ7kNvwGF1wND&_nc_oc=Adq5teX4FBONQQipzSF6GaogheMcVznE2VjIeNasBGRwB2Qgct62w8rYJ_HBgz-32Io&_nc_zt=23&_nc_ht=scontent-ord5-2.xx&_nc_gid=b57kQqDJw04E6F_Lkj4PAA&_nc_ss=7f2a8&oh=00_AQGtLnrAPDITIlc_mAPAlrL8hUJq3yx4aEyRLLbNuyMSXA&oe=6A8660B2",
+                        "holiday_flyer": "https://scontent-ord5-1.xx.fbcdn.net/v/t39.30808-6/739362972_1432288938704593_3554992241496861256_n.jpg?stp=dst-jpg_tt6&cstp=mx1023x1537&ctp=s1023x1537&_nc_cat=108&ccb=1-7&_nc_sid=833d8c&_nc_ohc=JAhYV1H05JoQ7kNvwEoixeZ&_nc_oc=Adp4lAHS6Wl7D3P6PgaWOyVAdhQWKqEx6Wra07rX-ngAC4EKDvEH649rCRC_uF2OJeY&_nc_zt=23&_nc_ht=scontent-ord5-1.xx&_nc_gid=ZyziFfYA5jx0I5cZM9n1RQ&_nc_ss=7f2a8&oh=00_AQFvzV8iCfQXsMS5d2ZmpCigQVBgfcsbDzSo0tSdgJY5hA&oe=6A8661B1",
+                        "campo_bravo_flyer": "https://scontent-ord5-2.xx.fbcdn.net/v/t39.30808-6/729148568_1429241209009366_4810529419041136623_n.jpg?stp=dst-jpg_tt6&cstp=mx1024x1536&ctp=s1024x1536&_nc_cat=110&ccb=1-7&_nc_sid=833d8c&_nc_ohc=Un967jHLKEMQ7kNvwFRUnmY&_nc_oc=AdorcmvR4zpWc36OY4SlSS9TS_lejwfmOm2ZsyGVQ064VLI5xnKbmanFnJGzoAK-_vw&_nc_zt=23&_nc_ht=scontent-ord5-2.xx&_nc_gid=XedSD-8ZtiyUluUz4xMWfA&_nc_ss=7f2a8&oh=00_AQGcukcsYdLe7PGP7MMJ2f_tnBHALEdY-tbYqH-z6C2o9w&oe=6A86456B",
+                        "peach_margarita_flyer": "https://scontent-ord5-2.xx.fbcdn.net/v/t39.30808-6/733737279_1429073475692806_8356944789223677167_n.jpg?stp=dst-jpg_tt6&cstp=mx1024x1536&ctp=s1024x1536&_nc_cat=107&ccb=1-7&_nc_sid=833d8c&_nc_ohc=5dfrEtIir30Q7kNvwFo9QIs&_nc_oc=Adr6IAplsBOrCfQGcOe9MaaNgXv4yWOMnFh7omwc3Dft1qcNY6WxA7t6Axas4pXphwI&_nc_zt=23&_nc_ht=scontent-ord5-2.xx&_nc_gid=7lcZHpvIFrVaWy7Wxx2GcQ&_nc_ss=7f2a8&oh=00_AQGrmnsNNBbRPPZDsgACdy8US12-ZUlbkrc_1HsOqzGzHQ&oe=6A865756",
+                        "buzzballz_flyer": "https://scontent-ord5-2.xx.fbcdn.net/v/t39.30808-6/733095681_1425709136029240_1294883815633957910_n.jpg?stp=dst-jpg_tt6&cstp=mx1254x1254&ctp=s1254x1254&_nc_cat=105&ccb=1-7&_nc_sid=833d8c&_nc_ohc=oT1jOgXtpiEQ7kNvwH5yRyP&_nc_oc=Adq10oV9KsXlksTv5dfOMYjzIY1btUb7ZQCadR3Dxhe2blWwBM2ijmtXTcjQiYCZ_Ag&_nc_zt=23&_nc_ht=scontent-ord5-2.xx&_nc_gid=pc_I9EC57Lu6rWI0WUqAhQ&_nc_ss=7f2a8&oh=00_AQHvdoiin_H_GiC47ljdc_AWPbaHlOLb1E6cgmGj_-E1kQ&oe=6A86595A",
+                        "johnnie_walker_flyer": "https://scontent-ord5-2.xx.fbcdn.net/v/t39.30808-6/730749830_1424045822862238_2246119781434869647_n.jpg?stp=dst-jpg_tt6&cstp=mx1023x1537&ctp=s1023x1537&_nc_cat=103&ccb=1-7&_nc_sid=833d8c&_nc_ohc=y9A9se-qB8cQ7kNvwG_q2Zw&_nc_oc=AdpcZ8xTIoNHB743J3E_OFt3W5eODLEyIWJIhs8ZrRl5UR9T8jpd0-hWeZGZ-9urciY&_nc_zt=23&_nc_ht=scontent-ord5-2.xx&_nc_gid=jTgmDBEWnP9vqfCgEtj0ag&_nc_ss=7f2a8&oh=00_AQFWQtwuIcM3UG2LTqPiR1sj8aJgKkD7f8eABN2WW22cCQ&oe=6A865601",
+                        "carbliss_flyer": "https://scontent-ord5-1.xx.fbcdn.net/v/t39.30808-6/727104627_1421773299756157_2312897285837999944_n.jpg?stp=dst-jpg_tt6&cstp=mx1024x1536&ctp=s1024x1536&_nc_cat=101&ccb=1-7&_nc_sid=833d8c&_nc_ohc=Dw4DcoQu3p4Q7kNvwE5cmtY&_nc_oc=Ado9W1cRPyMFG8G1i9ApHZcBKqf_DDxGe8xaH2JW7ujaaJMQODxCA4CkLBlIlgjgVeo&_nc_zt=23&_nc_ht=scontent-ord5-1.xx&_nc_gid=xBbl1nxDTPs4qRKfWOQONA&_nc_ss=7f2a8&oh=00_AQF1xH5800lVPnzc4xin8CZb82fc2vp-HcbaRCoiNPdtNQ&oe=6A867AA8"
+                    },
+                    "media_notes": {
+                        "bota_box_flyer": "GRAPHIC\nThis advertisement promotes Bota Box Limited Reserve Napa Valley Cabernet Sauvignon for $20.99 per 1.5-liter box at Northern Wine & Spirits.\nGRAPHIC: display whole and contained, never crop it, and never place page text on top of it.",
+                        "superlyte_sale_flyer": "GRAPHIC\nThis advertisement promotes SuperLyte Vodka + Ade individual cans for $2.49 each, showcasing four flavors: Orange, Fruit Punch, Lemon Lime, and Blue Chill.\nGRAPHIC: display whole and contained, never crop it, and never place page text on top of it.",
+                        "holiday_flyer": "GRAPHIC\nThis is a promotional flyer for Northern Wine & Spirits in Rome, NY, announcing that the store is open until 10 PM for the Fourth of July.\nGRAPHIC: display whole and contained, never crop it, and never place page text on top of it.",
+                        "campo_bravo_flyer": "GRAPHIC\nThis advertisement promotes Campo Bravo Tequila Plata for $24.99 at Northern Wine & Spirits in Rome, New York.\nGRAPHIC: display whole and contained, never crop it, and never place page text on top of it.",
+                        "peach_margarita_flyer": "GRAPHIC\nThis advertisement promotes a new 2026 release of Cutwater Peach Margarita, priced at $12.99 for a 4-pack of 12 oz cans at Northern Wine & Spirits.\nGRAPHIC: display whole and contained, never crop it, and never place page text on top of it.",
+                        "buzzballz_flyer": "GRAPHIC\nThis advertisement promotes two new BuzzBallz cocktail flavors, Paddle Punch and Hole-in-Fun, available at Northern Wine & Spirits in Rome, NY for $3.59 each.\nGRAPHIC: display whole and contained, never crop it, and never place page text on top of it.",
+                        "johnnie_walker_flyer": "GRAPHIC\nThis advertisement promotes a New York Limited Edition bottle of Johnnie Walker Blue Label Blended Scotch Whisky for $209.99 at Northern Wine & Spirits in Rome, NY.\nGRAPHIC: display whole and contained, never crop it, and never place page text on top of it.",
+                        "carbliss_flyer": "GRAPHIC\nThis advertisement promotes Carbliss premium vodka cocktails, featuring an 8-can \"Americana Backyard Bliss\" variety pack and 4-can packs of Pineapple and Black Cherry flavors available at Northern Wine & Spirits.\nGRAPHIC: display whole and contained, never crop it, and never place page text on top of it."
+                    },
+                    "media_roles": {
+                        "hero_poster": "bota_box_flyer",
+                        "promo_banner": "superlyte_sale_flyer",
+                        "feature_1": "holiday_flyer",
+                        "feature_2": "campo_bravo_flyer",
+                        "feature_3": "peach_margarita_flyer"
+                    }
+                },
+                "payload_key": "filled_config"
+            },
+            "elapsed": 0.001
+        },
+        {
+            "op": "ai.plan",
+            "data": {
+                "status": "ok",
+                "output_key": "generated_data_txt",
+                "length": 2905,
+                "message": "Project: Northern Wine & Spirits\n========================================\n\nGUIDANCE & CONTEXT:\nNorthern Wine & Spirits is a family-owned retailer serving the Rome, NY community with a focus on personalized, accessible service. Unlike large-scale big-box liquor stores, this business prioritizes a curated inventory and a neighborly, approachable shopping experience. Their brand personality is warm, local, and reliable, positioning them as the go-to destination for both everyday spirits and special occasion wine selections.\n- Phone: (315) 336-5530\n- Email: \n- Location: Rome, NY\n- Category: Wine & Spirits Retailer\n- Hours: \n- owner's words:\n\"\"\"\nNorthern Wine & Spirits is a family-owned liquor store dedicated to serving the Rome community. We provide a curated selection of quality wines and spirits for all your shopping needs.\n\"\"\"\n\nDESIGN DIRECTION:\n- #2F4F4F, #C5A059, #F4F1EA\n- Playfair Display, Lato\n- The site must project a sophisticated yet welcoming \"neighborhood boutique\" mood, balancing premium elegance with local accessibility.\n- The site MUST feel bespoke and premium. Do NOT produce a generic template.\n\nSPECIAL INSTRUCTIONS:\n- See README.md, USAGE.md, and other projects for SiteGen best practices.\n- Do not use or create media besides what is provided.\n- The site MUST be unique, bespoke, and production-ready.\n- Do not directly copy the theme/style/layout of existing SiteGen projects.\n\nMEDIA & CONTENT:\n- bota_box_flyer: [GRAPHIC] This advertisement promotes Bota Box Limited Reserve Napa Valley Cabernet Sauvignon for $20.99 per 1.5-liter box at Northern Wine & Spirits.\n- superlyte_sale_flyer: [GRAPHIC] This advertisement promotes SuperLyte Vodka + Ade individual cans for $2.49 each, showcasing four flavors: Orange, Fruit Punch, Lemon Lime, and Blue Chill.\n- holiday_flyer: [GRAPHIC] This is a promotional flyer for Northern Wine & Spirits in Rome, NY, announcing that the store is open until 10 PM for the Fourth of July.\n- campo_bravo_flyer: [GRAPHIC] This advertisement promotes Campo Bravo Tequila Plata for $24.99 at Northern Wine & Spirits in Rome, New York.\n- peach_margarita_flyer: [GRAPHIC] This advertisement promotes a new 2026 release of Cutwater Peach Margarita, priced at $12.99 for a 4-pack of 12 oz cans at Northern Wine & Spirits.\n- buzzballz_flyer: [GRAPHIC] This advertisement promotes two new BuzzBallz cocktail flavors, Paddle Punch and Hole-in-Fun, available at Northern Wine & Spirits in Rome, NY for $3.59 each.\n- johnnie_walker_flyer: [GRAPHIC] This advertisement promotes a New York Limited Edition bottle of Johnnie Walker Blue Label Blended Scotch Whisky for $209.99 at Northern Wine & Spirits in Rome, NY.\n- carbliss_flyer: [GRAPHIC] This advertisement promotes Carbliss premium vodka cocktails, featuring an 8-can \"Americana Backyard Bliss\" variety pack and 4-can packs of Pineapple and Black Cherry flavors available at Northern Wine & Spirits."
+            },
+            "elapsed": 2.558
+        },
+        {
+            "op": "filesystem.write",
+            "data": {
+                "status": "success",
+                "data": {
+                    "path": "C:\\Users\\user\\Documents\\pythons\\test\\SiteGen\\nws\\data.txt",
+                    "content_length": 2905
+                }
+            },
+            "elapsed": 0.001
+        },
+        {
+            "op": "filesystem.copy",
+            "data": {
+                "status": "success",
+                "data": {
+                    "src": "C:\\Users\\user\\Documents\\pythons\\test\\SiteGen\\templates\\sitegen_main.js",
+                    "dst": "C:\\Users\\user\\Documents\\pythons\\test\\SiteGen\\nws\\assets\\js\\main.js",
+                    "content_length": 3163
+                },
+                "message": "Copied C:/Users/user/Documents/pythons/test/SiteGen/templates/sitegen_main.js -> C:/Users/user/Documents/pythons/test/SiteGen/nws/assets/js/main.js (3163 bytes)"
+            },
+            "elapsed": 0.002
+        },
+        {
+            "op": "sys.exec",
+            "data": {
+                "status": "ok",
+                "exit_code": 0,
+                "stdout": "# SiteGen Capability Contract\r\n\r\nAuthoritative and generated from the live addon manifests. If this\r\ndisagrees with anything else, this wins.\r\n\r\n## project.json schema\r\n\r\nRequired keys: `name`, `client`, `entry`, `output`. A missing key is a\r\nhard `ConfigError`.\r\n\r\n```json\r\n{\r\n  \"name\": \"Business Name\",\r\n  \"client\": \"slug\",\r\n  \"description\": \"One-sentence SEO description.\",\r\n  \"entry\": \"index.html\",\r\n  \"pages\": [],\r\n  \"output\": \"dist/site.html\",\r\n  \"addons\": [],\r\n  \"addon_config\": {},\r\n  \"media\"",
+                "stderr": ""
+            },
+            "elapsed": 0.202
+        },
+        {
+            "op": "ai.plan",
+            "data": {
+                "status": "ok",
+                "output_key": "generated_index_html",
+                "length": 5564,
+                "message": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>{{name}} | {{location}}</title>\n    <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n    <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n    <link href=\"https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap\" rel=\"stylesheet\">\n    <link rel=\"stylesheet\" href=\"assets/css/style.css\">\n</head>\n<body>\n    <a href=\"#main-content\" class=\"skip-link\">Skip to content</a>\n\n    <header>\n        <nav>\n            <div class=\"logo\">{{name}}</div>\n            <button class=\"nav-toggle\" aria-label=\"Toggle menu\" aria-expanded=\"false\">Menu</button>\n            <ul>\n                <li><a href=\"#about\">About</a></li>\n                <li><a href=\"#specials\">Specials</a></li>\n                <li><a href=\"#seasonal\">Seasonal</a></li>\n                <li><a href=\"#contact\">Contact</a></li>\n            </ul>\n        </nav>\n    </header>\n\n    <main id=\"main-content\">\n        <section class=\"hero\" data-tour=\"1\">\n            <h1>{{hero_h1}}</h1>\n            <p>{{hero_p}}</p>\n            <div class=\"hero-image-wrapper\">\n                <img src=\"{{media.bota_box_flyer}}\" alt=\"Bota Box Limited Reserve Napa Valley Cabernet Sauvignon\" loading=\"eager\">\n            </div>\n            <p class=\"hero-subtext\">Experience quality curation. {{data.about_summary}}</p>\n        </section>\n\n        <section class=\"split-section\" data-tour=\"2\">\n            <div class=\"content\">\n                <h2>Our Daily Specials</h2>\n                <p>Discover hand-picked value. Our Bota Box Limited Reserve Napa Valley Cabernet Sauvignon is currently available for just $20.99 per 1.5-liter box, perfect for your next gathering.</p>\n                <p>We pride ourselves on providing the Rome community with affordable, high-quality choices that you won't find at the big-box retailers.</p>\n            </div>\n            <div class=\"media-side\">\n                <img src=\"{{media.bota_box_flyer}}\" alt=\"Bota Box Flyer\" loading=\"lazy\">\n            </div>\n        </section>\n\n        <section class=\"full-bleed-band\" data-tour=\"3\">\n            <h2>Ready-to-Drink Refreshments</h2>\n            <p>Whether you're hosting a backyard barbecue or relaxing on the porch, our RTD selection is unmatched. Try the SuperLyte Vodka + Ade cans at $2.49 each, available in Orange, Fruit Punch, Lemon Lime, and Blue Chill.</p>\n            <img src=\"{{media.superlyte_sale_flyer}}\" alt=\"SuperLyte Vodka + Ade flavor varieties\" loading=\"lazy\">\n        </section>\n\n        <section class=\"feature-large\" data-tour=\"4\">\n            <h2>Holiday Hours & Celebrations</h2>\n            <p>Northern Wine & Spirits is committed to being there when you need us most. We are open until 10 PM for the Fourth of July to ensure your holiday festivities are well-stocked.</p>\n            <img src=\"{{media.holiday_flyer}}\" alt=\"Fourth of July store hours announcement\" loading=\"lazy\">\n        </section>\n\n        <section class=\"tight-detail\" data-tour=\"5\">\n            <h2>Premium Spirits Selection</h2>\n            <div class=\"grid-container\">\n                <div class=\"item\">\n                    <img src=\"{{media.campo_bravo_flyer}}\" alt=\"Campo Bravo Tequila Plata\" loading=\"lazy\">\n                    <p>Campo Bravo Tequila Plata is in stock for $24.99. A staple for any home bar.</p>\n                </div>\n                <div class=\"item\">\n                    <img src=\"{{media.peach_margarita_flyer}}\" alt=\"Cutwater Peach Margarita\" loading=\"lazy\">\n                    <p>New 2026 Release: Cutwater Peach Margarita, $12.99 for a 4-pack of 12 oz cans.</p>\n                </div>\n            </div>\n        </section>\n\n        <section class=\"split-section-alt\" data-tour=\"6\">\n            <div class=\"media-side\">\n                <img src=\"{{media.buzzballz_flyer}}\" alt=\"BuzzBallz cocktail flavors\" loading=\"lazy\">\n            </div>\n            <div class=\"content\">\n                <h2>Something Fun for Everyone</h2>\n                <p>Looking for something bold? We now carry new BuzzBallz cocktail flavors, including Paddle Punch and Hole-in-Fun, available for $3.59 each.</p>\n                <p>As a family-owned business, we love bringing these fun, innovative options to our neighbors in Rome.</p>\n            </div>\n        </section>\n\n        <section class=\"feature-single\" data-tour=\"7\">\n            <h2>Limited Edition Finds</h2>\n            <p>For the true connoisseur, we have secured a New York Limited Edition bottle of Johnnie Walker Blue Label Blended Scotch Whisky, priced at $209.99. It is the perfect gift or addition to a serious collection.</p>\n            <img src=\"{{media.johnnie_walker_flyer}}\" alt=\"Johnnie Walker Blue Label Limited Edition\" loading=\"lazy\">\n        </section>\n\n        <section class=\"full-bleed-band\" data-tour=\"8\">\n            <h2>Carbliss Variety Packs</h2>\n            <p>Enjoy premium taste with our Carbliss vodka cocktails. We offer both the 8-can \"Americana Backyard Bliss\" variety pack and 4-can packs in Pineapple and Black Cherry flavors.</p>\n            <img src=\"{{media.carbliss_flyer}}\" alt=\"Carbliss variety packs\" loading=\"lazy\">\n        </section>\n    </main>\n\n    <footer id=\"contact\">\n        <p>{{name}} | {{location}}</p>\n        <p>Call us: {{data.phone}}</p>\n        <p>&copy; 2025 Northern Wine & Spirits</p>\n    </footer>\n\n    <script src=\"assets/js/main.js\"></script>\n</body>\n</html>"
+            },
+            "elapsed": 4.865
+        },
+        {
+            "op": "filesystem.write",
+            "data": {
+                "status": "success",
+                "data": {
+                    "path": "C:\\Users\\user\\Documents\\pythons\\test\\SiteGen\\nws\\index.html",
+                    "content_length": 5564
+                }
+            },
+            "elapsed": 0.001
+        },
+        {
+            "op": "ai.plan",
+            "data": {
+                "status": "ok",
+                "output_key": "generated_index_html",
+                "length": 6146,
+                "message": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>{{name}} | {{location}}</title>\n    <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n    <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n    <link href=\"https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap\" rel=\"stylesheet\">\n    <link rel=\"stylesheet\" href=\"assets/css/style.css\">\n</head>\n<body>\n    <a href=\"#main-content\" class=\"skip-link\">Skip to content</a>\n\n    <header>\n        <nav>\n            <div class=\"logo\">{{name}}</div>\n            <button class=\"nav-toggle\" aria-label=\"Toggle menu\" aria-expanded=\"false\">Menu</button>\n            <ul>\n                <li><a href=\"#about\">About</a></li>\n                <li><a href=\"#specials\">Specials</a></li>\n                <li><a href=\"#seasonal\">Seasonal</a></li>\n                <li><a href=\"#contact\">Contact</a></li>\n            </ul>\n        </nav>\n    </header>\n\n    <main id=\"main-content\">\n        <section class=\"hero\" data-tour=\"1\">\n            <h1>{{hero_h1}}</h1>\n            <p class=\"hero-intro\">{{hero_p}}</p>\n            <div class=\"hero-feature\">\n                <img src=\"{{media.bota_box_flyer}}\" alt=\"Bota Box Limited Reserve Napa Valley Cabernet Sauvignon flyer\" loading=\"eager\">\n                <div class=\"hero-copy\">\n                    <h3>Featured Selection</h3>\n                    <p>We are currently highlighting the Bota Box Limited Reserve Napa Valley Cabernet Sauvignon. At $20.99 for a 1.5-liter box, it offers an exceptional balance of quality and convenience for any occasion.</p>\n                </div>\n            </div>\n        </section>\n\n        <section id=\"about\" class=\"text-section\" data-tour=\"2\">\n            <h2>Your Neighborhood Boutique</h2>\n            <p>{{data.about_summary}}</p>\n            <p>Unlike large-scale retailers, we focus on hand-picking every bottle that hits our shelves. Whether you are looking for a specific vintage or a reliable everyday pour, our staff is here to help you find exactly what you need.</p>\n        </section>\n\n        <section id=\"specials\" class=\"feature-split\" data-tour=\"3\">\n            <div class=\"media-container\">\n                <img src=\"{{media.superlyte_sale_flyer}}\" alt=\"SuperLyte Vodka + Ade flyer\" loading=\"lazy\">\n            </div>\n            <div class=\"content\">\n                <h2>Refreshing RTD Options</h2>\n                <p>Beat the heat with our selection of SuperLyte Vodka + Ade cans. Available for just $2.49 each, these are perfect for summer gatherings.</p>\n                <p>Choose from our four refreshing flavors: Orange, Fruit Punch, Lemon Lime, and the crisp Blue Chill. Stock up today while supplies last.</p>\n            </div>\n        </section>\n\n        <section class=\"grid-section\" data-tour=\"4\">\n            <h2>New Arrivals & Spirits</h2>\n            <div class=\"main-feature\">\n                <img src=\"{{media.campo_bravo_flyer}}\" alt=\"Campo Bravo Tequila Plata flyer\" loading=\"lazy\">\n                <h3>Campo Bravo Tequila Plata</h3>\n                <p>Elevate your cocktail game with Campo Bravo Tequila Plata, now in stock for $24.99. A high-quality spirit that serves as the perfect foundation for any margarita or tequila sunrise.</p>\n            </div>\n            <div class=\"secondary-grid\">\n                <div class=\"card\">\n                    <img src=\"{{media.peach_margarita_flyer}}\" alt=\"Cutwater Peach Margarita flyer\" loading=\"lazy\">\n                    <h4>Cutwater Peach Margarita</h4>\n                    <p>Our 2026 release of the Cutwater Peach Margarita is finally here. Pick up a 4-pack of 12 oz cans for $12.99.</p>\n                </div>\n                <div class=\"card\">\n                    <img src=\"{{media.buzzballz_flyer}}\" alt=\"BuzzBallz flyer\" loading=\"lazy\">\n                    <h4>BuzzBallz Cocktails</h4>\n                    <p>Add some fun to your weekend with new BuzzBallz flavors, including Paddle Punch and Hole-in-Fun. Just $3.59 each.</p>\n                </div>\n            </div>\n        </section>\n\n        <section id=\"seasonal\" class=\"highlight-band\" data-tour=\"5\">\n            <div class=\"content\">\n                <h2>Holiday Celebrations</h2>\n                <p>At Northern Wine & Spirits, we know that holidays are better when you're prepared. We are staying open until 10 PM for the Fourth of July to ensure you have everything you need for your festivities.</p>\n            </div>\n            <img src=\"{{media.holiday_flyer}}\" alt=\"Fourth of July store hours flyer\" loading=\"lazy\">\n        </section>\n\n        <section class=\"premium-showcase\" data-tour=\"6\">\n            <h2>Limited Edition Finds</h2>\n            <div class=\"showcase-content\">\n                <img src=\"{{media.johnnie_walker_flyer}}\" alt=\"Johnnie Walker Blue Label flyer\" loading=\"lazy\">\n                <div class=\"text-block\">\n                    <h3>Johnnie Walker Blue Label</h3>\n                    <p>For the true enthusiast, we have secured a New York Limited Edition bottle of Johnnie Walker Blue Label Blended Scotch Whisky. Available for $209.99, this is a sophisticated addition to any collection or a grand gift for a special milestone.</p>\n                </div>\n            </div>\n        </section>\n\n        <section class=\"full-bleed-band\" data-tour=\"7\">\n            <h2>Carbliss Variety Packs</h2>\n            <p>Experience the premium taste of Carbliss vodka cocktails. We offer the 8-can \"Americana Backyard Bliss\" variety pack for larger gatherings, as well as 4-can packs in refreshing Pineapple and Black Cherry flavors.</p>\n            <img src=\"{{media.carbliss_flyer}}\" alt=\"Carbliss variety packs flyer\" loading=\"lazy\">\n        </section>\n    </main>\n\n    <footer id=\"contact\">\n        <div class=\"footer-content\">\n            <p>{{name}} | {{location}}</p>\n            <p>Call us: {{data.phone}}</p>\n            <p>&copy; 2025 Northern Wine & Spirits</p>\n        </div>\n    </footer>\n\n    <script src=\"assets/js/main.js\"></script>\n</body>\n</html>"
+            },
+            "elapsed": 5.27
+        },
+        {
+            "op": "filesystem.write",
+            "data": {
+                "status": "success",
+                "data": {
+                    "path": "C:\\Users\\user\\Documents\\pythons\\test\\SiteGen\\nws\\index.html",
+                    "content_length": 6146
+                }
+            },
+            "elapsed": 0.002
+        },
+        {
+            "op": "ai.plan",
+            "data": {
+                "status": "ok",
+                "output_key": "generated_style_css",
+                "length": 3652,
+                "message": ":root {\n    --color-dark: #2F4F4F;\n    --color-accent: #C5A059;\n    --color-light: #F4F1EA;\n    --font-heading: 'Playfair Display', serif;\n    --font-body: 'Lato', sans-serif;\n    --space-sm: 1rem;\n    --space-md: 2rem;\n    --space-lg: 4rem;\n    --radius: 4px;\n    --max-width: 65ch;\n}\n\nhtml {\n    overflow-x: clip;\n    scroll-behavior: smooth;\n    background-color: var(--color-light);\n}\n\nbody {\n    margin: 0;\n    font-family: var(--font-body);\n    color: var(--color-dark);\n    line-height: 1.6;\n    font-size: 1.125rem;\n}\n\nh1, h2, h3, h4 {\n    font-family: var(--font-heading);\n    color: var(--color-dark);\n    margin: 0 0 1rem;\n    line-height: 1.2;\n}\n\nh1 { font-size: clamp(2.5rem, 5vw, 4rem); }\nh2 { font-size: clamp(2rem, 3vw, 3rem); }\nh3 { font-size: clamp(1.5rem, 2vw, 2rem); }\n\n.skip-link {\n    position: absolute;\n    left: -10000px;\n    top: auto;\n    width: 1px;\n    height: 1px;\n    overflow: hidden;\n}\n\n.skip-link:focus {\n    position: static;\n    width: auto;\n    height: auto;\n    padding: 1rem;\n    background: var(--color-accent);\n    color: white;\n}\n\nheader {\n    padding: var(--space-md);\n    background: white;\n    border-bottom: 1px solid var(--color-accent);\n}\n\nnav {\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    max-width: 1200px;\n    margin: 0 auto;\n}\n\n.logo { font-family: var(--font-heading); font-weight: 700; font-size: 1.5rem; }\n\nnav ul { display: flex; list-style: none; gap: var(--space-md); margin: 0; padding: 0; }\nnav a { text-decoration: none; color: var(--color-dark); font-weight: 700; padding: 0.5rem; border-radius: var(--radius); }\nnav a:hover, nav a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }\n\nsection { padding: var(--space-lg) var(--space-md); max-width: 1200px; margin: 0 auto; }\n\n.hero { background: var(--color-light); text-align: center; }\n.hero-feature { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: var(--space-lg); margin-top: var(--space-lg); }\n.hero img { width: 100%; height: auto; object-fit: contain; }\n\n.feature-split { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg); background: white; }\n.media-container img { width: 100%; object-fit: contain; }\n\n.grid-section { background: var(--color-light); }\n.main-feature { margin-bottom: var(--space-lg); }\n.secondary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-md); }\n.card { background: white; padding: var(--space-md); border-radius: var(--radius); }\n\n.highlight-band { display: flex; align-items: center; gap: var(--space-lg); background: var(--color-dark); color: white; }\n.highlight-band h2, .highlight-band p { color: white; }\n\n.premium-showcase { background: white; }\n.showcase-content { display: grid; grid-template-columns: 1fr 2fr; gap: var(--space-lg); }\n\n.full-bleed-band { background: var(--color-accent); color: white; text-align: center; }\n.full-bleed-band img { max-width: 400px; margin: var(--space-md) auto; }\n\nfooter { background: var(--color-dark); color: white; padding: var(--space-lg); text-align: center; }\n\nimg { max-width: 100%; height: auto; }\n\nhtml.js .reveal { \n    opacity: 0; \n    transform: translateY(24px); \n    transition: opacity 0.8s ease-out, transform 0.8s ease-out; \n}\nhtml.js .reveal.active { opacity: 1; transform: none; }\n\n@media (prefers-reduced-motion: reduce) {\n    html.js .reveal { transition: none; }\n}\n\n@media (max-width: 768px) {\n    .hero-feature, .feature-split, .showcase-content { grid-template-columns: 1fr; }\n    .nav-toggle { display: block; }\n}\n\nbutton:focus-visible { outline: 2px solid var(--color-accent); }"
+            },
+            "elapsed": 4.184
+        },
+        {
+            "op": "filesystem.write",
+            "data": {
+                "status": "success",
+                "data": {
+                    "path": "C:\\Users\\user\\Documents\\pythons\\test\\SiteGen\\nws\\assets\\css\\style.css",
+                    "content_length": 3652
+                }
+            },
+            "elapsed": 0.001
+        },
+        {
+            "op": "sys.exec",
+            "data": {
+                "status": "error",
+                "exit_code": 1,
+                "stdout": "{\r\n  \"project\": \"nws\",\r\n  \"ok\": false,\r\n  \"error_count\": 1,\r\n  \"warn_count\": 0,\r\n  \"findings\": [\r\n    {\r\n      \"severity\": \"ERROR\",\r\n      \"code\": \"PLACEHOLDER_ORPHAN\",\r\n      \"message\": \"Template references keys absent from project.json: ['hero_h1', 'hero_p', 'location']\",\r\n      \"fix\": \"These ship to production as literal '{{...}}' text. Add the keys or remove the references.\"\r\n    }\r\n  ]\r\n}",
+                "stderr": ""
+            },
+            "elapsed": 0.181
+        },
+        {
+            "op": "sys.exec",
+            "data": {
+                "status": "ok",
+                "exit_code": 0,
+                "stdout": "============================================================\r\n  Building: Northern Wine & Spirits (nws)\r\n============================================================\r\n  Composing pages...\r\n    Note: Entry file has no 'page' containers. Wrapping body as 'page-home'.\r\n  Inlining assets...\r\n    Inlining: assets/css/style.css\r\n    Inlining: assets/js/main.js\r\n  Substituting global variables...\r\n    [WARN] Orphaned placeholders detected: location, hero_h1, hero_p\r\n           Verify these keys are def",
+                "stderr": ""
+            },
+            "elapsed": 0.179
+        },
+        {
+            "op": "web.goto",
+            "data": {
+                "status": 200,
+                "url": "file:///C:/Users/user/Documents/pythons/test/SiteGen/nws/dist/site.html"
+            },
+            "elapsed": 0.238
+        },
+        {
+            "op": "web.wait",
+            "data": {
+                "status": "ok"
+            },
+            "elapsed": 2.51
+        },
+        {
+            "op": "web.snap",
+            "data": {
+                "status": "ok",
+                "key": "site_screenshot",
+                "path": "pipelines/nws_review.png"
+            },
+            "elapsed": 0.22
+        },
+        {
+            "op": "web.snap",
+            "data": {
+                "status": "ok",
+                "key": "site_fullpage",
+                "path": "pipelines/nws_fullpage.png"
+            },
+            "elapsed": 6.36
+        },
+        {
+            "op": "ai.process",
+            "data": {
+                "status": "ok",
+                "key": "site_screenshot",
+                "message": "This website screenshot exhibits several critical failures that indicate an unfinished or broken development state. Below is a professional critique based on your criteria:\n\n### 1. Layout Composition\nThe layout reads as a **stack of disconnected blocks** rather than a deliberate, cohesive composition. The page lacks a clear visual hierarchy; the large, aggressive promotional graphic on the left is visually jarring compared to the sparse, unstyled text block on the right. There is no structural relationship between the hero section and the body content, resulting in a \"floating\" appearance where elements feel like they were dropped onto the page rather than designed into a grid.\n\n### 2. Broken Layout and Stranded Content\n*   **Stranded Content:** The \"Featured Selection\" text block is isolated in a vast expanse of empty, negative space. It lacks a container or visual anchor, making it feel like an afterthought.\n*   **Alignment Issues:** The vertical alignment between the promotional image and the text block is poor. The text block is vertically centered in a way that ignores the top-aligned nature of the hero section, creating an unbalanced, \"lopsided\" aesthetic.\n\n### 3. Placeholder Text\nThe page contains **literal template placeholder code** that has not been rendered or replaced by the CMS:\n*   `{{hero_h1}}` is visible as the primary headline.\n*   `{{hero_p}}` is visible as the sub-headline.\nThis is a critical failure that renders the site non-functional and unprofessional.\n\n### 4. Image Issues\n*   **Content Cropping/Clutter:** The promotional image for the Bota Box is overly busy. The text \"LIMITED. RESERVE.\" and \"EXCEPTIONAL BY DESIGN.\" is visually competing with the product packaging itself.\n*   **Visual Noise:** The image contains its own internal \"price tag\" graphic ($20.99) which is partially cut off at the bottom, suggesting the asset was not properly sized for the container or that the container is clipping the image incorrectly.\n\n### 5. Typography and Palette\n*   **Typography:** The typography feels disjointed. The serif font used for the navigation and headers is elegant, but it clashes with the bold, sans-serif, \"supermarket-style\" typography embedded within the promotional image. There is no typographic system unifying the site's own text with the promotional assets.\n*   **Palette:** While the cream background and dark teal/black text are a classic, sophisticated combination, the \"Bota Box\" promotional image introduces a harsh, high-contrast yellow and black palette that completely undermines the intended brand aesthetic. The site feels like a template that has been \"invaded\" by a low-quality advertisement rather than a curated brand experience.\n\n### Summary of Critical Failures:\n*   **Non-functional state:** The presence of `{{...}}` tags indicates the site is currently in a broken, development-only state.\n*   **Lack of polish:** The clipping of the price at the bottom of the image and the extreme amount of whitespace around the text block indicate a lack of responsive design testing and layout refinement.\n*   **Brand dissonance:** The professional, minimalist header is completely at odds with the aggressive, cluttered promotional graphic.",
+                "data": "This website screenshot exhibits several critical failures that indicate an unfinished or broken development state. Below is a professional critique based on your criteria:\n\n### 1. Layout Composition\nThe layout reads as a **stack of disconnected blocks** rather than a deliberate, cohesive composition. The page lacks a clear visual hierarchy; the large, aggressive promotional graphic on the left is visually jarring compared to the sparse, unstyled text block on the right. There is no structural relationship between the hero section and the body content, resulting in a \"floating\" appearance where elements feel like they were dropped onto the page rather than designed into a grid.\n\n### 2. Broken Layout and Stranded Content\n*   **Stranded Content:** The \"Featured Selection\" text block is isolated in a vast expanse of empty, negative space. It lacks a container or visual anchor, making it feel like an afterthought.\n*   **Alignment Issues:** The vertical alignment between the promotional image and the text block is poor. The text block is vertically centered in a way that ignores the top-aligned nature of the hero section, creating an unbalanced, \"lopsided\" aesthetic.\n\n### 3. Placeholder Text\nThe page contains **literal template placeholder code** that has not been rendered or replaced by the CMS:\n*   `{{hero_h1}}` is visible as the primary headline.\n*   `{{hero_p}}` is visible as the sub-headline.\nThis is a critical failure that renders the site non-functional and unprofessional.\n\n### 4. Image Issues\n*   **Content Cropping/Clutter:** The promotional image for the Bota Box is overly busy. The text \"LIMITED. RESERVE.\" and \"EXCEPTIONAL BY DESIGN.\" is visually competing with the product packaging itself.\n*   **Visual Noise:** The image contains its own internal \"price tag\" graphic ($20.99) which is partially cut off at the bottom, suggesting the asset was not properly sized for the container or that the container is clipping the image incorrectly.\n\n### 5. Typography and Palette\n*   **Typography:** The typography feels disjointed. The serif font used for the navigation and headers is elegant, but it clashes with the bold, sans-serif, \"supermarket-style\" typography embedded within the promotional image. There is no typographic system unifying the site's own text with the promotional assets.\n*   **Palette:** While the cream background and dark teal/black text are a classic, sophisticated combination, the \"Bota Box\" promotional image introduces a harsh, high-contrast yellow and black palette that completely undermines the intended brand aesthetic. The site feels like a template that has been \"invaded\" by a low-quality advertisement rather than a curated brand experience.\n\n### Summary of Critical Failures:\n*   **Non-functional state:** The presence of `{{...}}` tags indicates the site is currently in a broken, development-only state.\n*   **Lack of polish:** The clipping of the price at the bottom of the image and the extreme amount of whitespace around the text block indicate a lack of responsive design testing and layout refinement.\n*   **Brand dissonance:** The professional, minimalist header is completely at odds with the aggressive, cluttered promotional graphic."
+            },
+            "elapsed": 4.633
+        },
+        {
+            "op": "filesystem.write",
+            "data": {
+                "status": "success",
+                "data": {
+                    "path": "C:\\Users\\user\\Documents\\pythons\\test\\IAC\\pipelines\\nws_review.txt",
+                    "content_length": 3211
+                }
+            },
+            "elapsed": 0.001
+        },
+        {
+            "op": "core.log",
+            "data": {
+                "status": "ok",
+                "message": "BUILD COMPLETE \u2014 Northern Wine & Spirits\n\n  SiteGen/nws/project.json      filled from the scrape\n  SiteGen/nws/data.txt          the brief\n  SiteGen/nws/index.html        the page\n  SiteGen/nws/assets/css/style.css\n  SiteGen/nws/dist/site.html    THE SITE\n\n  pipelines/nws_fullpage.png    full-page screenshot\n  pipelines/nws_review.txt      critique\n"
+            },
+            "elapsed": 0.001
+        }
+    ],
+    "final_payload": {
+        "fb_url": "https://www.facebook.com/nws1733",
+        "slug": "nws",
+        "business_name": "Northern Wine & Spirits",
+        "image_count": 15,
+        "image_skip": [],
+        "image_start_index": 0,
+        "sitegen_root": "C:/Users/user/Documents/pythons/test/SiteGen",
+        "info_tabs": [
+            {
+                "route": "about",
+                "key": "fb_about"
+            },
+            {
+                "route": "directory_category",
+                "key": "fb_category"
+            },
+            {
+                "route": "directory_basic_info",
+                "key": "fb_basic_info"
+            },
+            {
+                "route": "directory_links",
+                "key": "fb_links"
+            },
+            {
+                "route": "directory_contact_info",
+                "key": "fb_contact_info"
+            },
+            {
+                "route": "reviews",
+                "key": "fb_reviews"
+            }
+        ],
+        "_last_result": {
+            "status": "ok",
+            "message": "BUILD COMPLETE \u2014 Northern Wine & Spirits\n\n  SiteGen/nws/project.json      filled from the scrape\n  SiteGen/nws/data.txt          the brief\n  SiteGen/nws/index.html        the page\n  SiteGen/nws/assets/css/style.css\n  SiteGen/nws/dist/site.html    THE SITE\n\n  pipelines/nws_fullpage.png    full-page screenshot\n  pipelines/nws_review.txt      critique\n"
+        },
+        "_output": "BUILD COMPLETE \u2014 Northern Wine & Spirits\n\n  SiteGen/nws/project.json      filled from the scrape\n  SiteGen/nws/data.txt          the brief\n  SiteGen/nws/index.html        the page\n  SiteGen/nws/assets/css/style.css\n  SiteGen/nws/dist/site.html    THE SITE\n\n  pipelines/nws_fullpage.png    full-page screenshot\n  pipelines/nws_review.txt      critique\n",
+        "fb_about": "Bio\nFamily Owned Liquor Store In Rome NY\nStop By For All Your Wine And Spirits!!",
+        "fb_category": "Category\nShopping & retail",
+        "fb_basic_info": "Rating and reviews\n100% recommend (5 Reviews)",
+        "fb_links": "",
+        "fb_contact_info": "Phone\n(315) 336-5530\nMobile",
+        "fb_reviews": "",
+        "scaffold_result": {
+            "stdout": "[OK] Scaffolded project: Northern Wine & Spirits",
+            "stderr": "",
+            "exit_code": 0
+        },
+        "scaffold_config": {
+            "name": "Northern Wine & Spirits",
+            "client": "nws",
+            "description": "",
+            "entry": "index.html",
+            "pages": [],
+            "output": "dist/site.html",
+            "addons": [],
+            "addon_config": {},
+            "media": {
+                "logo": "",
+                "banner": ""
+            },
+            "data": {
+                "contact_phone": "",
+                "contact_email": ""
+            }
+        },
+        "generated_project_json": "{\n  \"name\": \"Northern Wine & Spirits\",\n  \"client\": \"nws\",\n  \"description\": \"Northern Wine & Spirits is a family-owned liquor store in Rome, NY, offering a wide selection of wine and spirits for the local community.\",\n  \"entry\": \"index.html\",\n  \"pages\": [],\n  \"output\": \"dist/site.html\",\n  \"addons\": [],\n  \"addon_config\": {},\n  \"data\": {\n    \"phone\": \"(315) 336-5530\",\n    \"email\": \"\",\n    \"location\": \"Rome, NY\",\n    \"hours\": \"\",\n    \"about_summary\": \"Northern Wine & Spirits is a family-owned liquor store dedicated to serving the Rome community. We provide a curated selection of quality wines and spirits for all your shopping needs.\",\n    \"hero_h1\": \"Your Local <span class='text-accent'>Family-Owned</span> Liquor Store\",\n    \"hero_p\": \"Serving the Rome community with a wide selection of fine wines and spirits.\",\n    \"cta_text\": \"Call us today for our latest selection\",\n    \"services\": [\n      \"Wine selection\",\n      \"Spirits and liquor\",\n      \"Retail shopping\",\n      \"Local family-owned service\"\n    ]\n  }\n}",
+        "media_injection_result": {
+            "stdout": "[inject_media] Injected 8 images (8 with descriptions) into C:\\Users\\user\\Documents\\pythons\\test\\SiteGen\\nws\\project.json\r\n[inject_media] media keys: 8 | roles: ['hero_poster', 'promo_banner', 'feature_1', 'feature_2', 'feature_3']",
+            "stderr": "",
+            "exit_code": 0
+        },
+        "filled_config": {
+            "name": "Northern Wine & Spirits",
+            "client": "nws",
+            "description": "Northern Wine & Spirits is a family-owned liquor store in Rome, NY, offering a wide selection of wine and spirits for the local community.",
+            "entry": "index.html",
+            "pages": [],
+            "output": "dist/site.html",
+            "addons": [],
+            "addon_config": {},
+            "data": {
+                "phone": "(315) 336-5530",
+                "email": "",
+                "location": "Rome, NY",
+                "hours": "",
+                "about_summary": "Northern Wine & Spirits is a family-owned liquor store dedicated to serving the Rome community. We provide a curated selection of quality wines and spirits for all your shopping needs.",
+                "hero_h1": "Your Local <span class='text-accent'>Family-Owned</span> Liquor Store",
+                "hero_p": "Serving the Rome community with a wide selection of fine wines and spirits.",
+                "cta_text": "Call us today for our latest selection",
+                "services": [
+                    "Wine selection",
+                    "Spirits and liquor",
+                    "Retail shopping",
+                    "Local family-owned service"
+                ]
+            },
+            "media": {
+                "bota_box_flyer": "https://scontent-ord5-2.xx.fbcdn.net/v/t39.30808-6/748527838_1442235877709899_1101602429740821505_n.jpg?stp=dst-jpg_tt6&cstp=mx1024x1536&ctp=s1024x1536&_nc_cat=102&ccb=1-7&_nc_sid=833d8c&_nc_ohc=79thzaca4SIQ7kNvwHXeBjB&_nc_oc=AdrFYmsKw_-uKi0qyf5a21B81h2_XlYYlu5T9wWej641tdTXEA7hOcKCqEx85AzSX3Y&_nc_zt=23&_nc_ht=scontent-ord5-2.xx&_nc_gid=K6uuQQSLzyNEFWFonoyd4g&_nc_ss=7f2a8&oh=00_AQHN-4hSZDXKNmbNAvIBb6T7ZziWFLqDliakl991ZsFu1A&oe=6A865576",
+                "superlyte_sale_flyer": "https://scontent-ord5-2.xx.fbcdn.net/v/t39.30808-6/745545604_1439883107945176_5599589060449790361_n.jpg?stp=dst-jpg_tt6&cstp=mx1092x1440&ctp=s1092x1440&_nc_cat=102&ccb=1-7&_nc_sid=833d8c&_nc_ohc=lURRAZMHQ9UQ7kNvwGF1wND&_nc_oc=Adq5teX4FBONQQipzSF6GaogheMcVznE2VjIeNasBGRwB2Qgct62w8rYJ_HBgz-32Io&_nc_zt=23&_nc_ht=scontent-ord5-2.xx&_nc_gid=b57kQqDJw04E6F_Lkj4PAA&_nc_ss=7f2a8&oh=00_AQGtLnrAPDITIlc_mAPAlrL8hUJq3yx4aEyRLLbNuyMSXA&oe=6A8660B2",
+                "holiday_flyer": "https://scontent-ord5-1.xx.fbcdn.net/v/t39.30808-6/739362972_1432288938704593_3554992241496861256_n.jpg?stp=dst-jpg_tt6&cstp=mx1023x1537&ctp=s1023x1537&_nc_cat=108&ccb=1-7&_nc_sid=833d8c&_nc_ohc=JAhYV1H05JoQ7kNvwEoixeZ&_nc_oc=Adp4lAHS6Wl7D3P6PgaWOyVAdhQWKqEx6Wra07rX-ngAC4EKDvEH649rCRC_uF2OJeY&_nc_zt=23&_nc_ht=scontent-ord5-1.xx&_nc_gid=ZyziFfYA5jx0I5cZM9n1RQ&_nc_ss=7f2a8&oh=00_AQFvzV8iCfQXsMS5d2ZmpCigQVBgfcsbDzSo0tSdgJY5hA&oe=6A8661B1",
+                "campo_bravo_flyer": "https://scontent-ord5-2.xx.fbcdn.net/v/t39.30808-6/729148568_1429241209009366_4810529419041136623_n.jpg?stp=dst-jpg_tt6&cstp=mx1024x1536&ctp=s1024x1536&_nc_cat=110&ccb=1-7&_nc_sid=833d8c&_nc_ohc=Un967jHLKEMQ7kNvwFRUnmY&_nc_oc=AdorcmvR4zpWc36OY4SlSS9TS_lejwfmOm2ZsyGVQ064VLI5xnKbmanFnJGzoAK-_vw&_nc_zt=23&_nc_ht=scontent-ord5-2.xx&_nc_gid=XedSD-8ZtiyUluUz4xMWfA&_nc_ss=7f2a8&oh=00_AQGcukcsYdLe7PGP7MMJ2f_tnBHALEdY-tbYqH-z6C2o9w&oe=6A86456B",
+                "peach_margarita_flyer": "https://scontent-ord5-2.xx.fbcdn.net/v/t39.30808-6/733737279_1429073475692806_8356944789223677167_n.jpg?stp=dst-jpg_tt6&cstp=mx1024x1536&ctp=s1024x1536&_nc_cat=107&ccb=1-7&_nc_sid=833d8c&_nc_ohc=5dfrEtIir30Q7kNvwFo9QIs&_nc_oc=Adr6IAplsBOrCfQGcOe9MaaNgXv4yWOMnFh7omwc3Dft1qcNY6WxA7t6Axas4pXphwI&_nc_zt=23&_nc_ht=scontent-ord5-2.xx&_nc_gid=7lcZHpvIFrVaWy7Wxx2GcQ&_nc_ss=7f2a8&oh=00_AQGrmnsNNBbRPPZDsgACdy8US12-ZUlbkrc_1HsOqzGzHQ&oe=6A865756",
+                "buzzballz_flyer": "https://scontent-ord5-2.xx.fbcdn.net/v/t39.30808-6/733095681_1425709136029240_1294883815633957910_n.jpg?stp=dst-jpg_tt6&cstp=mx1254x1254&ctp=s1254x1254&_nc_cat=105&ccb=1-7&_nc_sid=833d8c&_nc_ohc=oT1jOgXtpiEQ7kNvwH5yRyP&_nc_oc=Adq10oV9KsXlksTv5dfOMYjzIY1btUb7ZQCadR3Dxhe2blWwBM2ijmtXTcjQiYCZ_Ag&_nc_zt=23&_nc_ht=scontent-ord5-2.xx&_nc_gid=pc_I9EC57Lu6rWI0WUqAhQ&_nc_ss=7f2a8&oh=00_AQHvdoiin_H_GiC47ljdc_AWPbaHlOLb1E6cgmGj_-E1kQ&oe=6A86595A",
+                "johnnie_walker_flyer": "https://scontent-ord5-2.xx.fbcdn.net/v/t39.30808-6/730749830_1424045822862238_2246119781434869647_n.jpg?stp=dst-jpg_tt6&cstp=mx1023x1537&ctp=s1023x1537&_nc_cat=103&ccb=1-7&_nc_sid=833d8c&_nc_ohc=y9A9se-qB8cQ7kNvwG_q2Zw&_nc_oc=AdpcZ8xTIoNHB743J3E_OFt3W5eODLEyIWJIhs8ZrRl5UR9T8jpd0-hWeZGZ-9urciY&_nc_zt=23&_nc_ht=scontent-ord5-2.xx&_nc_gid=jTgmDBEWnP9vqfCgEtj0ag&_nc_ss=7f2a8&oh=00_AQFWQtwuIcM3UG2LTqPiR1sj8aJgKkD7f8eABN2WW22cCQ&oe=6A865601",
+                "carbliss_flyer": "https://scontent-ord5-1.xx.fbcdn.net/v/t39.30808-6/727104627_1421773299756157_2312897285837999944_n.jpg?stp=dst-jpg_tt6&cstp=mx1024x1536&ctp=s1024x1536&_nc_cat=101&ccb=1-7&_nc_sid=833d8c&_nc_ohc=Dw4DcoQu3p4Q7kNvwE5cmtY&_nc_oc=Ado9W1cRPyMFG8G1i9ApHZcBKqf_DDxGe8xaH2JW7ujaaJMQODxCA4CkLBlIlgjgVeo&_nc_zt=23&_nc_ht=scontent-ord5-1.xx&_nc_gid=xBbl1nxDTPs4qRKfWOQONA&_nc_ss=7f2a8&oh=00_AQF1xH5800lVPnzc4xin8CZb82fc2vp-HcbaRCoiNPdtNQ&oe=6A867AA8"
+            },
+            "media_notes": {
+                "bota_box_flyer": "GRAPHIC\nThis advertisement promotes Bota Box Limited Reserve Napa Valley Cabernet Sauvignon for $20.99 per 1.5-liter box at Northern Wine & Spirits.\nGRAPHIC: display whole and contained, never crop it, and never place page text on top of it.",
+                "superlyte_sale_flyer": "GRAPHIC\nThis advertisement promotes SuperLyte Vodka + Ade individual cans for $2.49 each, showcasing four flavors: Orange, Fruit Punch, Lemon Lime, and Blue Chill.\nGRAPHIC: display whole and contained, never crop it, and never place page text on top of it.",
+                "holiday_flyer": "GRAPHIC\nThis is a promotional flyer for Northern Wine & Spirits in Rome, NY, announcing that the store is open until 10 PM for the Fourth of July.\nGRAPHIC: display whole and contained, never crop it, and never place page text on top of it.",
+                "campo_bravo_flyer": "GRAPHIC\nThis advertisement promotes Campo Bravo Tequila Plata for $24.99 at Northern Wine & Spirits in Rome, New York.\nGRAPHIC: display whole and contained, never crop it, and never place page text on top of it.",
+                "peach_margarita_flyer": "GRAPHIC\nThis advertisement promotes a new 2026 release of Cutwater Peach Margarita, priced at $12.99 for a 4-pack of 12 oz cans at Northern Wine & Spirits.\nGRAPHIC: display whole and contained, never crop it, and never place page text on top of it.",
+                "buzzballz_flyer": "GRAPHIC\nThis advertisement promotes two new BuzzBallz cocktail flavors, Paddle Punch and Hole-in-Fun, available at Northern Wine & Spirits in Rome, NY for $3.59 each.\nGRAPHIC: display whole and contained, never crop it, and never place page text on top of it.",
+                "johnnie_walker_flyer": "GRAPHIC\nThis advertisement promotes a New York Limited Edition bottle of Johnnie Walker Blue Label Blended Scotch Whisky for $209.99 at Northern Wine & Spirits in Rome, NY.\nGRAPHIC: display whole and contained, never crop it, and never place page text on top of it.",
+                "carbliss_flyer": "GRAPHIC\nThis advertisement promotes Carbliss premium vodka cocktails, featuring an 8-can \"Americana Backyard Bliss\" variety pack and 4-can packs of Pineapple and Black Cherry flavors available at Northern Wine & Spirits.\nGRAPHIC: display whole and contained, never crop it, and never place page text on top of it."
+            },
+            "media_roles": {
+                "hero_poster": "bota_box_flyer",
+                "promo_banner": "superlyte_sale_flyer",
+                "feature_1": "holiday_flyer",
+                "feature_2": "campo_bravo_flyer",
+                "feature_3": "peach_margarita_flyer"
+            }
+        },
+        "generated_data_txt": "Project: Northern Wine & Spirits\n========================================\n\nGUIDANCE & CONTEXT:\nNorthern Wine & Spirits is a family-owned retailer serving the Rome, NY community with a focus on personalized, accessible service. Unlike large-scale big-box liquor stores, this business prioritizes a curated inventory and a neighborly, approachable shopping experience. Their brand personality is warm, local, and reliable, positioning them as the go-to destination for both everyday spirits and special occasion wine selections.\n- Phone: (315) 336-5530\n- Email: \n- Location: Rome, NY\n- Category: Wine & Spirits Retailer\n- Hours: \n- owner's words:\n\"\"\"\nNorthern Wine & Spirits is a family-owned liquor store dedicated to serving the Rome community. We provide a curated selection of quality wines and spirits for all your shopping needs.\n\"\"\"\n\nDESIGN DIRECTION:\n- #2F4F4F, #C5A059, #F4F1EA\n- Playfair Display, Lato\n- The site must project a sophisticated yet welcoming \"neighborhood boutique\" mood, balancing premium elegance with local accessibility.\n- The site MUST feel bespoke and premium. Do NOT produce a generic template.\n\nSPECIAL INSTRUCTIONS:\n- See README.md, USAGE.md, and other projects for SiteGen best practices.\n- Do not use or create media besides what is provided.\n- The site MUST be unique, bespoke, and production-ready.\n- Do not directly copy the theme/style/layout of existing SiteGen projects.\n\nMEDIA & CONTENT:\n- bota_box_flyer: [GRAPHIC] This advertisement promotes Bota Box Limited Reserve Napa Valley Cabernet Sauvignon for $20.99 per 1.5-liter box at Northern Wine & Spirits.\n- superlyte_sale_flyer: [GRAPHIC] This advertisement promotes SuperLyte Vodka + Ade individual cans for $2.49 each, showcasing four flavors: Orange, Fruit Punch, Lemon Lime, and Blue Chill.\n- holiday_flyer: [GRAPHIC] This is a promotional flyer for Northern Wine & Spirits in Rome, NY, announcing that the store is open until 10 PM for the Fourth of July.\n- campo_bravo_flyer: [GRAPHIC] This advertisement promotes Campo Bravo Tequila Plata for $24.99 at Northern Wine & Spirits in Rome, New York.\n- peach_margarita_flyer: [GRAPHIC] This advertisement promotes a new 2026 release of Cutwater Peach Margarita, priced at $12.99 for a 4-pack of 12 oz cans at Northern Wine & Spirits.\n- buzzballz_flyer: [GRAPHIC] This advertisement promotes two new BuzzBallz cocktail flavors, Paddle Punch and Hole-in-Fun, available at Northern Wine & Spirits in Rome, NY for $3.59 each.\n- johnnie_walker_flyer: [GRAPHIC] This advertisement promotes a New York Limited Edition bottle of Johnnie Walker Blue Label Blended Scotch Whisky for $209.99 at Northern Wine & Spirits in Rome, NY.\n- carbliss_flyer: [GRAPHIC] This advertisement promotes Carbliss premium vodka cocktails, featuring an 8-can \"Americana Backyard Bliss\" variety pack and 4-can packs of Pineapple and Black Cherry flavors available at Northern Wine & Spirits.",
+        "sitegen_capabilities": {
+            "stdout": "# SiteGen Capability Contract\r\n\r\nAuthoritative and generated from the live addon manifests. If this\r\ndisagrees with anything else, this wins.\r\n\r\n## project.json schema\r\n\r\nRequired keys: `name`, `client`, `entry`, `output`. A missing key is a\r\nhard `ConfigError`.\r\n\r\n```json\r\n{\r\n  \"name\": \"Business Name\",\r\n  \"client\": \"slug\",\r\n  \"description\": \"One-sentence SEO description.\",\r\n  \"entry\": \"index.html\",\r\n  \"pages\": [],\r\n  \"output\": \"dist/site.html\",\r\n  \"addons\": [],\r\n  \"addon_config\": {},\r\n  \"media\": {},\r\n  \"media_notes\": {},\r\n  \"data\": {}\r\n}\r\n```\r\n\r\n## Addon contract -- all three parts are REQUIRED\r\n\r\nAn addon only works when all three of these are present. Miss one and you get\r\neither a hard build failure or a silently dead feature:\r\n\r\n1. `addons: [\"<slug>\"]`                       -- declares it\r\n2. `addon_config: {\"<slug>\": { ... }}`        -- every `required_config` key\r\n3. `<div id=\"<container_id>\"></div>` in HTML  -- where it mounts\r\n\r\nMissing #2 raises `AddonError` and the build fails.\r\nMissing #3 builds cleanly and the addon does nothing at all -- the worst case,\r\nbecause it looks like success.\r\n\r\nOnly use slugs from the registry below. There is no `contact-form`, no\r\n`maps-embed`, no `testimonials`. Inventing a slug fails the build.\r\n\r\n## Addon registry (6 available)\r\n\r\n### `content-rotator`\r\nRotates text content in elements with specified data-choices-id.\r\n\r\n- Injects: js, css\r\n- `required_config`: `data`\r\n- **You must supply**: `data` (no usable default)\r\n- Defaults: `{\"data\": {}}`\r\n\r\n```json\r\n{\r\n  \"addons\": [\r\n    \"content-rotator\"\r\n  ],\r\n  \"addon_config\": {\r\n    \"content-rotator\": {\r\n      \"data\": \"<data>\"\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n### `dynamic-shop`\r\nDynamically builds custom themed product cards from configured products or registry.\r\n\r\n- Injects: js, css\r\n- `required_config`: `container_id`\r\n- **You must supply**: `container_id` (no usable default)\r\n- Mount point: a `container_id` you choose; the matching div must exist in your HTML\r\n\r\n```json\r\n{\r\n  \"addons\": [\r\n    \"dynamic-shop\"\r\n  ],\r\n  \"addon_config\": {\r\n    \"dynamic-shop\": {\r\n      \"container_id\": \"<container_id>\"\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n### `gallery-loader`\r\nLoads a tabbed image gallery from a Google Apps Script endpoint\r\n\r\n- Injects: js, css\r\n- `required_config`: `gas_url`, `container_id`\r\n- **You must supply**: `gas_url` (no usable default)\r\n- Defaults: `{\"container_id\": \"gallery-tabs-container\"}`\r\n- Mount point: `<div id=\"gallery-tabs-container\"></div>` must exist in your HTML\r\n\r\n```json\r\n{\r\n  \"addons\": [\r\n    \"gallery-loader\"\r\n  ],\r\n  \"addon_config\": {\r\n    \"gallery-loader\": {\r\n      \"container_id\": \"gallery-tabs-container\",\r\n      \"gas_url\": \"<gas_url>\"\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n### `google-maps`\r\nEmbeds a Google Map into the page\r\n\r\n- Injects: js\r\n- `required_config`: `embed_src`, `container_id`\r\n- **You must supply**: `embed_src` (no usable default)\r\n- Defaults: `{\"container_id\": \"google-map-container\"}`\r\n- Mount point: `<div id=\"google-map-container\"></div>` must exist in your HTML\r\n\r\n```json\r\n{\r\n  \"addons\": [\r\n    \"google-maps\"\r\n  ],\r\n  \"addon_config\": {\r\n    \"google-maps\": {\r\n      \"container_id\": \"google-map-container\",\r\n      \"embed_src\": \"<embed_src>\"\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n### `scheduling`\r\nEmbeds a D-Net scheduling widget into the page\r\n\r\n- Injects: js\r\n- `required_config`: `client_id`, `widget_url`, `container_id`\r\n- **You must supply**: `client_id` (no usable default)\r\n- Defaults: `{\"widget_url\": \"https://dnet.live/scheduler/static/js/scheduler-widget.js\", \"container_id\": \"booking-widget-container\"}`\r\n- Mount point: `<div id=\"booking-widget-container\"></div>` must exist in your HTML\r\n\r\n```json\r\n{\r\n  \"addons\": [\r\n    \"scheduling\"\r\n  ],\r\n  \"addon_config\": {\r\n    \"scheduling\": {\r\n      \"widget_url\": \"https://dnet.live/scheduler/static/js/scheduler-widget.js\",\r\n      \"container_id\": \"booking-widget-container\",\r\n      \"client_id\": \"<client_id>\"\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n### `stripe-components`\r\nLoads the Stripe Buy Button components script and self-assembles configured buy buttons.\r\n\r\n- Injects: js\r\n- `required_config`: `container_id`, `publishable_key`, `button_ids`\r\n- **You must supply**: `container_id`, `publishable_key`, `button_ids` (no usable default)\r\n- Mount point: a `container_id` you choose; the matching div must exist in your HTML\r\n\r\n```json\r\n{\r\n  \"addons\": [\r\n    \"stripe-components\"\r\n  ],\r\n  \"addon_config\": {\r\n    \"stripe-components\": {\r\n      \"container_id\": \"<container_id>\",\r\n      \"publishable_key\": \"<publishable_key>\",\r\n      \"button_ids\": \"<button_ids>\"\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n## Template variables\r\n\r\nResolved at build time by `_substitute_global_vars` against the whole\r\nproject.json. Anything in project.json is addressable:\r\n\r\n| Syntax | Resolves to |\r\n|---|---|\r\n| `{{name}}` | top-level `name` |\r\n| `{{description}}` | top-level `description` |\r\n| `{{media.KEY}}` | `media.KEY` -- image/video URLs |\r\n| `{{data.KEY}}` | `data.KEY` -- copy, contact details |\r\n| `{{data.services.0}}` | index into a `data` array |\r\n| `{{data.services}}` | the whole array, JSON-encoded |\r\n\r\nRules:\r\n- NEVER hardcode a URL or a phone number in HTML. Reference the variable.\r\n- An unresolved `{{...}}` ships to production as literal text. The build prints\r\n  `[WARN] Orphaned placeholders detected` -- treat that as an error.\r\n- Values are substituted literally, so URLs containing backslash sequences are\r\n  safe.\r\n\r\n## Build pipeline order\r\n\r\n`sitegen.py --build <slug>` runs, in this order:\r\n\r\n1. **Compose** -- `entry` is the shell. Every other `*.html` in the project root\r\n   (or the explicit `pages` list) is wrapped as `<div id=\"page-<stem>\" class=\"page\">`\r\n   and injected. If the shell has no `.page` container, its `<body>` is wrapped\r\n   as `page-home`.\r\n2. **Inject addons** -- in `addons` order; config validated here.\r\n3. **Inline assets** -- local `<link rel=stylesheet>` and `<script src>` are\r\n   inlined into the single output file. Remote URLs are left alone.\r\n4. **Substitute variables** -- `{{...}}` resolved against project.json.\r\n5. **Write** -- to `output` (default `dist/site.html`), one self-contained file.\r\n\r\nBecause step 3 inlines everything, the deliverable is a single portable HTML\r\nfile. Keep CSS in `assets/css/style.css` and JS in `assets/js/main.js`; do not\r\ninline them by hand.\r\n\r\n## Media conventions\r\n\r\n- `media` maps a stable key to a URL. Scraped media is injected by\r\n  `templates/inject_media.py` as `image_0..image_N`, plus role aliases\r\n  `hero_poster`, `promo_banner`, `feature_1..3` for the first five.\r\n- `media_notes` (optional, parallel to `media`) holds AI descriptions of each\r\n  asset. Use it to decide placement -- it is design guidance, NOT label text to\r\n  render on the page.\r\n- **Every key in `media` must appear in the markup.** Unused media is the\r\n  clearest signal of a lazy layout; `--validate` reports it.\r\n- Assets are portrait/vertical JPEG unless the key says otherwise\r\n  (`_sqr`, `_horiz`).\r\n\r\n## Known failure modes\r\n\r\nObserved in real generated projects. Check for each before declaring done:\r\n\r\n| Symptom | Cause | Fix |\r\n|---|---|---|\r\n| `AddonError: requires config keys` | slug declared, `addon_config` missing | add every `required_config` key |\r\n| `Addon 'X' not found` | invented slug | use only registry slugs |\r\n| Addon present, nothing renders | no matching `container_id` div in HTML | add the mount point |\r\n| Site looks empty / generic | `media` is `{}` | run `inject_media.py`; verify non-zero |\r\n| Literal `{{data.phone}}` on the page | key absent from project.json | add key or remove reference |\r\n| Build crashes on a URL | (fixed) regex escape in substitution | ensure sitegen is current |\r\n\r\n## Verification\r\n\r\n```bash\r\npython3 sitegen.py --validate <slug>    # gate before building\r\npython3 sitegen.py --build <slug>\r\n```\r\n\r\n`--validate` exits non-zero and prints actionable errors. Automation\r\nshould gate on it and repair rather than building broken output.",
+            "stderr": "",
+            "exit_code": 0
+        },
+        "generated_index_html": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>{{name}} | {{location}}</title>\n    <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n    <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n    <link href=\"https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap\" rel=\"stylesheet\">\n    <link rel=\"stylesheet\" href=\"assets/css/style.css\">\n</head>\n<body>\n    <a href=\"#main-content\" class=\"skip-link\">Skip to content</a>\n\n    <header>\n        <nav>\n            <div class=\"logo\">{{name}}</div>\n            <button class=\"nav-toggle\" aria-label=\"Toggle menu\" aria-expanded=\"false\">Menu</button>\n            <ul>\n                <li><a href=\"#about\">About</a></li>\n                <li><a href=\"#specials\">Specials</a></li>\n                <li><a href=\"#seasonal\">Seasonal</a></li>\n                <li><a href=\"#contact\">Contact</a></li>\n            </ul>\n        </nav>\n    </header>\n\n    <main id=\"main-content\">\n        <section class=\"hero\" data-tour=\"1\">\n            <h1>{{hero_h1}}</h1>\n            <p class=\"hero-intro\">{{hero_p}}</p>\n            <div class=\"hero-feature\">\n                <img src=\"{{media.bota_box_flyer}}\" alt=\"Bota Box Limited Reserve Napa Valley Cabernet Sauvignon flyer\" loading=\"eager\">\n                <div class=\"hero-copy\">\n                    <h3>Featured Selection</h3>\n                    <p>We are currently highlighting the Bota Box Limited Reserve Napa Valley Cabernet Sauvignon. At $20.99 for a 1.5-liter box, it offers an exceptional balance of quality and convenience for any occasion.</p>\n                </div>\n            </div>\n        </section>\n\n        <section id=\"about\" class=\"text-section\" data-tour=\"2\">\n            <h2>Your Neighborhood Boutique</h2>\n            <p>{{data.about_summary}}</p>\n            <p>Unlike large-scale retailers, we focus on hand-picking every bottle that hits our shelves. Whether you are looking for a specific vintage or a reliable everyday pour, our staff is here to help you find exactly what you need.</p>\n        </section>\n\n        <section id=\"specials\" class=\"feature-split\" data-tour=\"3\">\n            <div class=\"media-container\">\n                <img src=\"{{media.superlyte_sale_flyer}}\" alt=\"SuperLyte Vodka + Ade flyer\" loading=\"lazy\">\n            </div>\n            <div class=\"content\">\n                <h2>Refreshing RTD Options</h2>\n                <p>Beat the heat with our selection of SuperLyte Vodka + Ade cans. Available for just $2.49 each, these are perfect for summer gatherings.</p>\n                <p>Choose from our four refreshing flavors: Orange, Fruit Punch, Lemon Lime, and the crisp Blue Chill. Stock up today while supplies last.</p>\n            </div>\n        </section>\n\n        <section class=\"grid-section\" data-tour=\"4\">\n            <h2>New Arrivals & Spirits</h2>\n            <div class=\"main-feature\">\n                <img src=\"{{media.campo_bravo_flyer}}\" alt=\"Campo Bravo Tequila Plata flyer\" loading=\"lazy\">\n                <h3>Campo Bravo Tequila Plata</h3>\n                <p>Elevate your cocktail game with Campo Bravo Tequila Plata, now in stock for $24.99. A high-quality spirit that serves as the perfect foundation for any margarita or tequila sunrise.</p>\n            </div>\n            <div class=\"secondary-grid\">\n                <div class=\"card\">\n                    <img src=\"{{media.peach_margarita_flyer}}\" alt=\"Cutwater Peach Margarita flyer\" loading=\"lazy\">\n                    <h4>Cutwater Peach Margarita</h4>\n                    <p>Our 2026 release of the Cutwater Peach Margarita is finally here. Pick up a 4-pack of 12 oz cans for $12.99.</p>\n                </div>\n                <div class=\"card\">\n                    <img src=\"{{media.buzzballz_flyer}}\" alt=\"BuzzBallz flyer\" loading=\"lazy\">\n                    <h4>BuzzBallz Cocktails</h4>\n                    <p>Add some fun to your weekend with new BuzzBallz flavors, including Paddle Punch and Hole-in-Fun. Just $3.59 each.</p>\n                </div>\n            </div>\n        </section>\n\n        <section id=\"seasonal\" class=\"highlight-band\" data-tour=\"5\">\n            <div class=\"content\">\n                <h2>Holiday Celebrations</h2>\n                <p>At Northern Wine & Spirits, we know that holidays are better when you're prepared. We are staying open until 10 PM for the Fourth of July to ensure you have everything you need for your festivities.</p>\n            </div>\n            <img src=\"{{media.holiday_flyer}}\" alt=\"Fourth of July store hours flyer\" loading=\"lazy\">\n        </section>\n\n        <section class=\"premium-showcase\" data-tour=\"6\">\n            <h2>Limited Edition Finds</h2>\n            <div class=\"showcase-content\">\n                <img src=\"{{media.johnnie_walker_flyer}}\" alt=\"Johnnie Walker Blue Label flyer\" loading=\"lazy\">\n                <div class=\"text-block\">\n                    <h3>Johnnie Walker Blue Label</h3>\n                    <p>For the true enthusiast, we have secured a New York Limited Edition bottle of Johnnie Walker Blue Label Blended Scotch Whisky. Available for $209.99, this is a sophisticated addition to any collection or a grand gift for a special milestone.</p>\n                </div>\n            </div>\n        </section>\n\n        <section class=\"full-bleed-band\" data-tour=\"7\">\n            <h2>Carbliss Variety Packs</h2>\n            <p>Experience the premium taste of Carbliss vodka cocktails. We offer the 8-can \"Americana Backyard Bliss\" variety pack for larger gatherings, as well as 4-can packs in refreshing Pineapple and Black Cherry flavors.</p>\n            <img src=\"{{media.carbliss_flyer}}\" alt=\"Carbliss variety packs flyer\" loading=\"lazy\">\n        </section>\n    </main>\n\n    <footer id=\"contact\">\n        <div class=\"footer-content\">\n            <p>{{name}} | {{location}}</p>\n            <p>Call us: {{data.phone}}</p>\n            <p>&copy; 2025 Northern Wine & Spirits</p>\n        </div>\n    </footer>\n\n    <script src=\"assets/js/main.js\"></script>\n</body>\n</html>",
+        "generated_style_css": ":root {\n    --color-dark: #2F4F4F;\n    --color-accent: #C5A059;\n    --color-light: #F4F1EA;\n    --font-heading: 'Playfair Display', serif;\n    --font-body: 'Lato', sans-serif;\n    --space-sm: 1rem;\n    --space-md: 2rem;\n    --space-lg: 4rem;\n    --radius: 4px;\n    --max-width: 65ch;\n}\n\nhtml {\n    overflow-x: clip;\n    scroll-behavior: smooth;\n    background-color: var(--color-light);\n}\n\nbody {\n    margin: 0;\n    font-family: var(--font-body);\n    color: var(--color-dark);\n    line-height: 1.6;\n    font-size: 1.125rem;\n}\n\nh1, h2, h3, h4 {\n    font-family: var(--font-heading);\n    color: var(--color-dark);\n    margin: 0 0 1rem;\n    line-height: 1.2;\n}\n\nh1 { font-size: clamp(2.5rem, 5vw, 4rem); }\nh2 { font-size: clamp(2rem, 3vw, 3rem); }\nh3 { font-size: clamp(1.5rem, 2vw, 2rem); }\n\n.skip-link {\n    position: absolute;\n    left: -10000px;\n    top: auto;\n    width: 1px;\n    height: 1px;\n    overflow: hidden;\n}\n\n.skip-link:focus {\n    position: static;\n    width: auto;\n    height: auto;\n    padding: 1rem;\n    background: var(--color-accent);\n    color: white;\n}\n\nheader {\n    padding: var(--space-md);\n    background: white;\n    border-bottom: 1px solid var(--color-accent);\n}\n\nnav {\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    max-width: 1200px;\n    margin: 0 auto;\n}\n\n.logo { font-family: var(--font-heading); font-weight: 700; font-size: 1.5rem; }\n\nnav ul { display: flex; list-style: none; gap: var(--space-md); margin: 0; padding: 0; }\nnav a { text-decoration: none; color: var(--color-dark); font-weight: 700; padding: 0.5rem; border-radius: var(--radius); }\nnav a:hover, nav a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }\n\nsection { padding: var(--space-lg) var(--space-md); max-width: 1200px; margin: 0 auto; }\n\n.hero { background: var(--color-light); text-align: center; }\n.hero-feature { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: var(--space-lg); margin-top: var(--space-lg); }\n.hero img { width: 100%; height: auto; object-fit: contain; }\n\n.feature-split { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg); background: white; }\n.media-container img { width: 100%; object-fit: contain; }\n\n.grid-section { background: var(--color-light); }\n.main-feature { margin-bottom: var(--space-lg); }\n.secondary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-md); }\n.card { background: white; padding: var(--space-md); border-radius: var(--radius); }\n\n.highlight-band { display: flex; align-items: center; gap: var(--space-lg); background: var(--color-dark); color: white; }\n.highlight-band h2, .highlight-band p { color: white; }\n\n.premium-showcase { background: white; }\n.showcase-content { display: grid; grid-template-columns: 1fr 2fr; gap: var(--space-lg); }\n\n.full-bleed-band { background: var(--color-accent); color: white; text-align: center; }\n.full-bleed-band img { max-width: 400px; margin: var(--space-md) auto; }\n\nfooter { background: var(--color-dark); color: white; padding: var(--space-lg); text-align: center; }\n\nimg { max-width: 100%; height: auto; }\n\nhtml.js .reveal { \n    opacity: 0; \n    transform: translateY(24px); \n    transition: opacity 0.8s ease-out, transform 0.8s ease-out; \n}\nhtml.js .reveal.active { opacity: 1; transform: none; }\n\n@media (prefers-reduced-motion: reduce) {\n    html.js .reveal { transition: none; }\n}\n\n@media (max-width: 768px) {\n    .hero-feature, .feature-split, .showcase-content { grid-template-columns: 1fr; }\n    .nav-toggle { display: block; }\n}\n\nbutton:focus-visible { outline: 2px solid var(--color-accent); }",
+        "validation": {
+            "stdout": "{\r\n  \"project\": \"nws\",\r\n  \"ok\": false,\r\n  \"error_count\": 1,\r\n  \"warn_count\": 0,\r\n  \"findings\": [\r\n    {\r\n      \"severity\": \"ERROR\",\r\n      \"code\": \"PLACEHOLDER_ORPHAN\",\r\n      \"message\": \"Template references keys absent from project.json: ['hero_h1', 'hero_p', 'location']\",\r\n      \"fix\": \"These ship to production as literal '{{...}}' text. Add the keys or remove the references.\"\r\n    }\r\n  ]\r\n}",
+            "stderr": "",
+            "exit_code": 1
+        },
+        "build_result": {
+            "stdout": "============================================================\r\n  Building: Northern Wine & Spirits (nws)\r\n============================================================\r\n  Composing pages...\r\n    Note: Entry file has no 'page' containers. Wrapping body as 'page-home'.\r\n  Inlining assets...\r\n    Inlining: assets/css/style.css\r\n    Inlining: assets/js/main.js\r\n  Substituting global variables...\r\n    [WARN] Orphaned placeholders detected: location, hero_h1, hero_p\r\n           Verify these keys are defined in project.json.\r\n  Output: C:\\Users\\user\\Documents\\pythons\\test\\SiteGen\\nws\\dist\\site.html\r\n  [OK] Build complete.",
+            "stderr": "",
+            "exit_code": 0
+        },
+        "site_screenshot": {
+            "src": "pipelines/nws_review.png",
+            "site_review": "This website screenshot exhibits several critical failures that indicate an unfinished or broken development state. Below is a professional critique based on your criteria:\n\n### 1. Layout Composition\nThe layout reads as a **stack of disconnected blocks** rather than a deliberate, cohesive composition. The page lacks a clear visual hierarchy; the large, aggressive promotional graphic on the left is visually jarring compared to the sparse, unstyled text block on the right. There is no structural relationship between the hero section and the body content, resulting in a \"floating\" appearance where elements feel like they were dropped onto the page rather than designed into a grid.\n\n### 2. Broken Layout and Stranded Content\n*   **Stranded Content:** The \"Featured Selection\" text block is isolated in a vast expanse of empty, negative space. It lacks a container or visual anchor, making it feel like an afterthought.\n*   **Alignment Issues:** The vertical alignment between the promotional image and the text block is poor. The text block is vertically centered in a way that ignores the top-aligned nature of the hero section, creating an unbalanced, \"lopsided\" aesthetic.\n\n### 3. Placeholder Text\nThe page contains **literal template placeholder code** that has not been rendered or replaced by the CMS:\n*   `{{hero_h1}}` is visible as the primary headline.\n*   `{{hero_p}}` is visible as the sub-headline.\nThis is a critical failure that renders the site non-functional and unprofessional.\n\n### 4. Image Issues\n*   **Content Cropping/Clutter:** The promotional image for the Bota Box is overly busy. The text \"LIMITED. RESERVE.\" and \"EXCEPTIONAL BY DESIGN.\" is visually competing with the product packaging itself.\n*   **Visual Noise:** The image contains its own internal \"price tag\" graphic ($20.99) which is partially cut off at the bottom, suggesting the asset was not properly sized for the container or that the container is clipping the image incorrectly.\n\n### 5. Typography and Palette\n*   **Typography:** The typography feels disjointed. The serif font used for the navigation and headers is elegant, but it clashes with the bold, sans-serif, \"supermarket-style\" typography embedded within the promotional image. There is no typographic system unifying the site's own text with the promotional assets.\n*   **Palette:** While the cream background and dark teal/black text are a classic, sophisticated combination, the \"Bota Box\" promotional image introduces a harsh, high-contrast yellow and black palette that completely undermines the intended brand aesthetic. The site feels like a template that has been \"invaded\" by a low-quality advertisement rather than a curated brand experience.\n\n### Summary of Critical Failures:\n*   **Non-functional state:** The presence of `{{...}}` tags indicates the site is currently in a broken, development-only state.\n*   **Lack of polish:** The clipping of the price at the bottom of the image and the extreme amount of whitespace around the text block indicate a lack of responsive design testing and layout refinement.\n*   **Brand dissonance:** The professional, minimalist header is completely at odds with the aggressive, cluttered promotional graphic."
+        },
+        "site_fullpage": {
+            "src": "pipelines/nws_fullpage.png"
+        },
+        "image_0": {
+            "src": "https://scontent-ord5-2.xx.fbcdn.net/v/t39.30808-6/748527838_1442235877709899_1101602429740821505_n.jpg?stp=dst-jpg_tt6&cstp=mx1024x1536&ctp=s1024x1536&_nc_cat=102&ccb=1-7&_nc_sid=833d8c&_nc_ohc=79thzaca4SIQ7kNvwHXeBjB&_nc_oc=AdrFYmsKw_-uKi0qyf5a21B81h2_XlYYlu5T9wWej641tdTXEA7hOcKCqEx85AzSX3Y&_nc_zt=23&_nc_ht=scontent-ord5-2.xx&_nc_gid=K6uuQQSLzyNEFWFonoyd4g&_nc_ss=7f2a8&oh=00_AQHN-4hSZDXKNmbNAvIBb6T7ZziWFLqDliakl991ZsFu1A&oe=6A865576",
+            "desc": "bota_box_flyer\nGRAPHIC\nThis advertisement promotes Bota Box Limited Reserve Napa Valley Cabernet Sauvignon for $20.99 per 1.5-liter box at Northern Wine & Spirits.\nGRAPHIC: display whole and contained, never crop it, and never place page text on top of it."
+        },
+        "image_1": {
+            "src": "https://scontent-ord5-2.xx.fbcdn.net/v/t39.30808-6/745545604_1439883107945176_5599589060449790361_n.jpg?stp=dst-jpg_tt6&cstp=mx1092x1440&ctp=s1092x1440&_nc_cat=102&ccb=1-7&_nc_sid=833d8c&_nc_ohc=lURRAZMHQ9UQ7kNvwGF1wND&_nc_oc=Adq5teX4FBONQQipzSF6GaogheMcVznE2VjIeNasBGRwB2Qgct62w8rYJ_HBgz-32Io&_nc_zt=23&_nc_ht=scontent-ord5-2.xx&_nc_gid=b57kQqDJw04E6F_Lkj4PAA&_nc_ss=7f2a8&oh=00_AQGtLnrAPDITIlc_mAPAlrL8hUJq3yx4aEyRLLbNuyMSXA&oe=6A8660B2",
+            "desc": "superlyte_sale_flyer\nGRAPHIC\nThis advertisement promotes SuperLyte Vodka + Ade individual cans for $2.49 each, showcasing four flavors: Orange, Fruit Punch, Lemon Lime, and Blue Chill.\nGRAPHIC: display whole and contained, never crop it, and never place page text on top of it."
+        },
+        "image_2": {
+            "src": "https://scontent-ord5-1.xx.fbcdn.net/v/t39.30808-6/739362972_1432288938704593_3554992241496861256_n.jpg?stp=dst-jpg_tt6&cstp=mx1023x1537&ctp=s1023x1537&_nc_cat=108&ccb=1-7&_nc_sid=833d8c&_nc_ohc=JAhYV1H05JoQ7kNvwEoixeZ&_nc_oc=Adp4lAHS6Wl7D3P6PgaWOyVAdhQWKqEx6Wra07rX-ngAC4EKDvEH649rCRC_uF2OJeY&_nc_zt=23&_nc_ht=scontent-ord5-1.xx&_nc_gid=ZyziFfYA5jx0I5cZM9n1RQ&_nc_ss=7f2a8&oh=00_AQFvzV8iCfQXsMS5d2ZmpCigQVBgfcsbDzSo0tSdgJY5hA&oe=6A8661B1",
+            "desc": "holiday_flyer\nGRAPHIC\nThis is a promotional flyer for Northern Wine & Spirits in Rome, NY, announcing that the store is open until 10 PM for the Fourth of July.\nGRAPHIC: display whole and contained, never crop it, and never place page text on top of it."
+        },
+        "image_3": {
+            "src": "https://scontent-ord5-2.xx.fbcdn.net/v/t39.30808-6/729148568_1429241209009366_4810529419041136623_n.jpg?stp=dst-jpg_tt6&cstp=mx1024x1536&ctp=s1024x1536&_nc_cat=110&ccb=1-7&_nc_sid=833d8c&_nc_ohc=Un967jHLKEMQ7kNvwFRUnmY&_nc_oc=AdorcmvR4zpWc36OY4SlSS9TS_lejwfmOm2ZsyGVQ064VLI5xnKbmanFnJGzoAK-_vw&_nc_zt=23&_nc_ht=scontent-ord5-2.xx&_nc_gid=XedSD-8ZtiyUluUz4xMWfA&_nc_ss=7f2a8&oh=00_AQGcukcsYdLe7PGP7MMJ2f_tnBHALEdY-tbYqH-z6C2o9w&oe=6A86456B",
+            "desc": "campo_bravo_flyer\nGRAPHIC\nThis advertisement promotes Campo Bravo Tequila Plata for $24.99 at Northern Wine & Spirits in Rome, New York.\nGRAPHIC: display whole and contained, never crop it, and never place page text on top of it."
+        },
+        "image_4": {
+            "src": "https://scontent-ord5-2.xx.fbcdn.net/v/t39.30808-6/733737279_1429073475692806_8356944789223677167_n.jpg?stp=dst-jpg_tt6&cstp=mx1024x1536&ctp=s1024x1536&_nc_cat=107&ccb=1-7&_nc_sid=833d8c&_nc_ohc=5dfrEtIir30Q7kNvwFo9QIs&_nc_oc=Adr6IAplsBOrCfQGcOe9MaaNgXv4yWOMnFh7omwc3Dft1qcNY6WxA7t6Axas4pXphwI&_nc_zt=23&_nc_ht=scontent-ord5-2.xx&_nc_gid=7lcZHpvIFrVaWy7Wxx2GcQ&_nc_ss=7f2a8&oh=00_AQGrmnsNNBbRPPZDsgACdy8US12-ZUlbkrc_1HsOqzGzHQ&oe=6A865756",
+            "desc": "peach_margarita_flyer\nGRAPHIC\nThis advertisement promotes a new 2026 release of Cutwater Peach Margarita, priced at $12.99 for a 4-pack of 12 oz cans at Northern Wine & Spirits.\nGRAPHIC: display whole and contained, never crop it, and never place page text on top of it."
+        },
+        "image_5": {
+            "src": "https://scontent-ord5-2.xx.fbcdn.net/v/t39.30808-6/733095681_1425709136029240_1294883815633957910_n.jpg?stp=dst-jpg_tt6&cstp=mx1254x1254&ctp=s1254x1254&_nc_cat=105&ccb=1-7&_nc_sid=833d8c&_nc_ohc=oT1jOgXtpiEQ7kNvwH5yRyP&_nc_oc=Adq10oV9KsXlksTv5dfOMYjzIY1btUb7ZQCadR3Dxhe2blWwBM2ijmtXTcjQiYCZ_Ag&_nc_zt=23&_nc_ht=scontent-ord5-2.xx&_nc_gid=pc_I9EC57Lu6rWI0WUqAhQ&_nc_ss=7f2a8&oh=00_AQHvdoiin_H_GiC47ljdc_AWPbaHlOLb1E6cgmGj_-E1kQ&oe=6A86595A",
+            "desc": "buzzballz_flyer\nGRAPHIC\nThis advertisement promotes two new BuzzBallz cocktail flavors, Paddle Punch and Hole-in-Fun, available at Northern Wine & Spirits in Rome, NY for $3.59 each.\nGRAPHIC: display whole and contained, never crop it, and never place page text on top of it."
+        },
+        "image_6": {
+            "src": "https://scontent-ord5-2.xx.fbcdn.net/v/t39.30808-6/730749830_1424045822862238_2246119781434869647_n.jpg?stp=dst-jpg_tt6&cstp=mx1023x1537&ctp=s1023x1537&_nc_cat=103&ccb=1-7&_nc_sid=833d8c&_nc_ohc=y9A9se-qB8cQ7kNvwG_q2Zw&_nc_oc=AdpcZ8xTIoNHB743J3E_OFt3W5eODLEyIWJIhs8ZrRl5UR9T8jpd0-hWeZGZ-9urciY&_nc_zt=23&_nc_ht=scontent-ord5-2.xx&_nc_gid=jTgmDBEWnP9vqfCgEtj0ag&_nc_ss=7f2a8&oh=00_AQFWQtwuIcM3UG2LTqPiR1sj8aJgKkD7f8eABN2WW22cCQ&oe=6A865601",
+            "desc": "johnnie_walker_flyer\nGRAPHIC\nThis advertisement promotes a New York Limited Edition bottle of Johnnie Walker Blue Label Blended Scotch Whisky for $209.99 at Northern Wine & Spirits in Rome, NY.\nGRAPHIC: display whole and contained, never crop it, and never place page text on top of it."
+        },
+        "image_7": {
+            "src": "https://scontent-ord5-1.xx.fbcdn.net/v/t39.30808-6/727104627_1421773299756157_2312897285837999944_n.jpg?stp=dst-jpg_tt6&cstp=mx1024x1536&ctp=s1024x1536&_nc_cat=101&ccb=1-7&_nc_sid=833d8c&_nc_ohc=Dw4DcoQu3p4Q7kNvwE5cmtY&_nc_oc=Ado9W1cRPyMFG8G1i9ApHZcBKqf_DDxGe8xaH2JW7ujaaJMQODxCA4CkLBlIlgjgVeo&_nc_zt=23&_nc_ht=scontent-ord5-1.xx&_nc_gid=xBbl1nxDTPs4qRKfWOQONA&_nc_ss=7f2a8&oh=00_AQF1xH5800lVPnzc4xin8CZb82fc2vp-HcbaRCoiNPdtNQ&oe=6A867AA8",
+            "desc": "carbliss_flyer\nGRAPHIC\nThis advertisement promotes Carbliss premium vodka cocktails, featuring an 8-can \"Americana Backyard Bliss\" variety pack and 4-can packs of Pineapple and Black Cherry flavors available at Northern Wine & Spirits.\nGRAPHIC: display whole and contained, never crop it, and never place page text on top of it."
+        }
+    },
+    "meta": {
+        "iac_version": "2.0",
+        "source": "sitegen",
+        "total_time": 99.83,
+        "operations": 34
+    }
+}

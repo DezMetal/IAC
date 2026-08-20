@@ -1,0 +1,19 @@
+{
+  "keep": [
+    "media.new_arrival_flyer",
+    "media.northern_logo",
+    "media.bourbon_flyer",
+    "media.johnnie_walker_flyer",
+    "media.peach_margarita_flyer",
+    "media.superlyte_flyer"
+  ],
+  "hero": "media.new_arrival_flyer",
+  "why": {
+    "media.new_arrival_flyer": "Acts as the primary announcement for current inventory updates.",
+    "media.northern_logo": "Establishes brand identity for the family-owned business.",
+    "media.bourbon_flyer": "Highlights the store's selection of premium and allocated spirits.",
+    "media.johnnie_walker_flyer": "Showcases a high-end, limited-edition product to elevate the store's profile.",
+    "media.peach_margarita_flyer": "Features a popular, seasonal-style cocktail option for customers.",
+    "media.superlyte_flyer": "Provides a clear look at value-priced, ready-to-drink options."
+  }
+}
