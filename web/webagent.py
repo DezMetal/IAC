@@ -5,6 +5,7 @@
 # Attribution is required on redistribution; the D-Net Lab name is not
 # licensed by Apache-2.0 (see TRADEMARKS.md).
 import json, os, sys, time, argparse, subprocess, requests, base64, threading
+import urllib.parse
 from urllib.parse import quote_plus
 from pathlib import Path
 from playwright.sync_api import sync_playwright
@@ -363,22 +364,47 @@ class WebAgent:
         self._log("VISION", f"Snapshot saved to {key} (Full: {full})", s)
         return {"status": "ok", "key": key, "path": path}
 
+    # Result blocks, read STRUCTURALLY: a heading inside a link, with the text
+    # around it. Engine markup is obfuscated and renamed without notice, but
+    # "the headline is a link" has held for as long as search has existed, so
+    # this works across engines and keeps working when classes churn.
+    _SEARCH_JS = """(arg) => {
+        const txt = (el) => ((el && (el.innerText || el.textContent)) || '')
+                              .replace(/\s+/g, ' ').trim();
+        const out = [], seen = new Set();
+        for (const el of document.querySelectorAll('h2 a, h3 a, a h2, a h3')) {
+            if (out.length >= arg.limit) break;
+            const link = el.tagName === 'A' ? el : el.closest('a');
+            if (!link || !link.href || !/^https?:/.test(link.href)) continue;
+            if (seen.has(link.href)) continue;
+            const title = txt(el) || txt(link);
+            if (!title) continue;
+            seen.add(link.href);
+            let blk = link.closest('li,article,div');
+            for (let i = 0; i < 3 && blk && txt(blk).length < title.length + 60; i++) {
+                blk = blk.parentElement;
+            }
+            const snip = txt(blk).replace(title, '').trim();
+            out.push({title: title.slice(0, 140), url: link.href,
+                      snippet: snip.slice(0, 240)});
+        }
+        return out;
+    }"""
+
     def _cmd_search(self, args):
         """Search the web and return titles, links and snippets.
 
         Exists because an agent asked to "look up X" reaches for a search
-        operation, and there was not one. Watching it fail was instructive: it
-        analysed the blank browser twice at twelve seconds each, then emitted
-        `web.search` anyway and had the call dropped as unregistered. The plan
-        was right every time; the operation was missing.
+        operation and there was not one -- it analysed the blank browser twice
+        at twelve seconds each, then emitted `web.search` anyway and had the
+        call dropped as unregistered. The plan was right every time.
 
-        Runs in the real browser, carrying the saved session, because that is
-        what makes a search engine answer at all -- a cold client gets a bot
-        challenge instead of results, and defeating that is not something this
-        should do.
-
-        `search_url` in the web config overrides the engine; `{q}` is replaced
-        with the url-encoded query.
+        Defaults to Bing. Google and Startpage answer an automated client with
+        a human-verification page for this network; Bing answers with results.
+        Defeating a challenge is not something this does, and picking an engine
+        that will simply talk to us is the honest way through. `search_url` in
+        the web config overrides it -- `{q}` is the encoded query -- so pointing
+        at Google, or at a commercial search API, is a config change.
         """
         s = time.time()
         query = (args.get("query") or args.get("q") or "").strip()
@@ -388,37 +414,28 @@ class WebAgent:
         key = args.get("payload_key", "search_results")
 
         template = (args.get("search_url") or self.web_cfg.get("search_url")
-                    or "https://www.google.com/search?q={q}&num=20")
+                    or "https://www.bing.com/search?q={q}")
         url = template.replace("{q}", quote_plus(query))
+        engine = urllib.parse.urlparse(url).netloc.replace("www.", "")
         self._cmd_goto({"url": url, "wait_until": "domcontentloaded"})
 
-        # Read the results structurally rather than by CSS class. Engine markup
-        # is obfuscated and changes without notice; "a heading inside a link,
-        # with some text near it" has held for twenty years.
-        js = """(limit) => {
-            const out = [];
-            const seen = new Set();
-            for (const h of document.querySelectorAll('a h3, a h2')) {
-                if (out.length >= limit) break;
-                const a = h.closest('a');
-                if (!a || !a.href || a.href.startsWith('javascript')) continue;
-                if (seen.has(a.href)) continue;
-                seen.add(a.href);
-                let block = a.closest('div');
-                for (let i = 0; i < 4 && block && block.innerText.length < 80; i++) {
-                    block = block.parentElement;
-                }
-                let snippet = block ? block.innerText : '';
-                snippet = snippet.replace(h.innerText, '').trim().slice(0, 300);
-                out.push({title: h.innerText.trim(), url: a.href, snippet: snippet});
-            }
-            return out;
-        }"""
-        try:
-            results = self.page.evaluate(js, limit) or []
-        except Exception as e:
-            self._log("SEARCH", f"Result parse failed: {e}", s)
-            results = []
+        # Engines redirect after domcontentloaded, which destroys the execution
+        # context mid-read. Let it settle, and read again if it moved anyway.
+        results = []
+        for attempt in (1, 2):
+            try:
+                self.page.wait_for_load_state("load", timeout=8000)
+            except Exception:
+                pass
+            try:
+                results = self.page.evaluate(
+                    self._SEARCH_JS, {"limit": limit, "engine": engine}) or []
+                break
+            except Exception as e:
+                if attempt == 2:
+                    self._log("SEARCH", f"Result parse failed: {e}")
+                else:
+                    self.page.wait_for_timeout(700)
 
         blocked = False
         if not results:
@@ -426,7 +443,7 @@ class WebAgent:
                 body = (self.page.inner_text("body") or "").lower()
                 blocked = any(w in body for w in (
                     "unusual traffic", "not a robot", "captcha",
-                    "confirm this search was made by a human"))
+                    "verify you are human", "confirm this search"))
             except Exception:
                 pass
 
@@ -434,15 +451,12 @@ class WebAgent:
         self._log("SEARCH", f"{query!r} -> {len(results)} result(s)"
                             + (" (challenged)" if blocked else ""), s)
         if blocked:
-            # Say so plainly. An empty list reads as "the web has nothing",
-            # which sends the agent looking for a different question to ask.
             return {"status": "error", "key": key, "count": 0, "results": [],
-                    "error": ("The search engine served a human-verification "
-                              "challenge instead of results. The saved session "
-                              "may have expired -- sign in in a browser and "
-                              "call web.save_state to refresh it.")}
+                    "error": (f"{engine} served a human-verification page "
+                              f"instead of results. Set web.search_url to a "
+                              f"different engine or a search API.")}
         return {"status": "ok", "key": key, "count": len(results),
-                "results": results}
+                "query": query, "results": results}
 
 
     def _cmd_extract(self, args):
