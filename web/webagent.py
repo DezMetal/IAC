@@ -5,6 +5,7 @@
 # Attribution is required on redistribution; the D-Net Lab name is not
 # licensed by Apache-2.0 (see TRADEMARKS.md).
 import json, os, sys, time, argparse, subprocess, requests, base64, threading
+from urllib.parse import quote_plus
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
@@ -64,6 +65,24 @@ class WebAgent:
         # sandbox launch you need in order to log in and produce a good file.
         # A bad session is a reason to start clean and say so, never a reason
         # to be unable to start at all.
+        # A signed-in session by default, if one has been saved.
+        #
+        # Search engines serve a bot challenge to a cold browser -- the HTML
+        # endpoint answered a query with "select all squares containing a
+        # duck". Nothing here should be in the business of defeating that.
+        # Carrying the cookies from a real sign-in is the supported way to be
+        # a recognised client, and it is the difference between search
+        # working and search silently returning nothing.
+        if not self.web_cfg.get("storage_state"):
+            # IAC/auth/session.json is THE location. One canonical path, and
+            # `web.save_state` writes there, so a saved sign-in is picked up
+            # without anyone having to wire it. A second copy elsewhere only
+            # creates the chance of a stale one shadowing the real thing.
+            default_state = os.path.join(os.path.dirname(__file__), "..",
+                                         "auth", "session.json")
+            if os.path.exists(default_state):
+                self.web_cfg["storage_state"] = os.path.abspath(default_state)
+
         if self.web_cfg.get("storage_state"):
             state_path = os.path.abspath(self.web_cfg["storage_state"])
             if os.path.exists(state_path):
@@ -126,6 +145,7 @@ class WebAgent:
             "analyze": self._cmd_analyze,
             "snap": self._cmd_snap,
             "extract": self._cmd_extract,
+            "search": self._cmd_search,
             "push": self._cmd_push,
             "eval": self._cmd_eval,
             "brain": self._cmd_brain,
@@ -265,7 +285,25 @@ class WebAgent:
         try:
             res = self.page.goto(url, wait_until=wait, timeout=timeout)
             self._log("NETWORK", f"URL: {url} ({wait})", s)
-            return {"status": res.status if res else 200, "url": self.page.url}
+            # Come back with something to SAY, not just a status code.
+            #
+            # `goto` returned {status, url} and nothing else, so "go to X and
+            # check it out" ended with the agent arriving and reporting that
+            # it could not see any content -- which was true, and which is a
+            # silly place for the system to leave it. The page was fully
+            # loaded; nobody had read it. A title and the opening text make a
+            # single navigation answerable, and web.extract is still there
+            # when more than the opening is wanted.
+            out = {"status": res.status if res else 200, "url": self.page.url}
+            try:
+                out["title"] = self.page.title()
+                text = (self.page.inner_text("body") or "").strip()
+                if text:
+                    out["chars"] = len(text)
+                    out["preview"] = text[:800]
+            except Exception:
+                pass
+            return out
             
         except Exception as e:
             err_str = str(e)
@@ -324,6 +362,88 @@ class WebAgent:
         self.payload[key] = {"src": path}
         self._log("VISION", f"Snapshot saved to {key} (Full: {full})", s)
         return {"status": "ok", "key": key, "path": path}
+
+    def _cmd_search(self, args):
+        """Search the web and return titles, links and snippets.
+
+        Exists because an agent asked to "look up X" reaches for a search
+        operation, and there was not one. Watching it fail was instructive: it
+        analysed the blank browser twice at twelve seconds each, then emitted
+        `web.search` anyway and had the call dropped as unregistered. The plan
+        was right every time; the operation was missing.
+
+        Runs in the real browser, carrying the saved session, because that is
+        what makes a search engine answer at all -- a cold client gets a bot
+        challenge instead of results, and defeating that is not something this
+        should do.
+
+        `search_url` in the web config overrides the engine; `{q}` is replaced
+        with the url-encoded query.
+        """
+        s = time.time()
+        query = (args.get("query") or args.get("q") or "").strip()
+        if not query:
+            return {"status": "error", "error": "search needs a query"}
+        limit = int(args.get("limit", 8) or 8)
+        key = args.get("payload_key", "search_results")
+
+        template = (args.get("search_url") or self.web_cfg.get("search_url")
+                    or "https://www.google.com/search?q={q}&num=20")
+        url = template.replace("{q}", quote_plus(query))
+        self._cmd_goto({"url": url, "wait_until": "domcontentloaded"})
+
+        # Read the results structurally rather than by CSS class. Engine markup
+        # is obfuscated and changes without notice; "a heading inside a link,
+        # with some text near it" has held for twenty years.
+        js = """(limit) => {
+            const out = [];
+            const seen = new Set();
+            for (const h of document.querySelectorAll('a h3, a h2')) {
+                if (out.length >= limit) break;
+                const a = h.closest('a');
+                if (!a || !a.href || a.href.startsWith('javascript')) continue;
+                if (seen.has(a.href)) continue;
+                seen.add(a.href);
+                let block = a.closest('div');
+                for (let i = 0; i < 4 && block && block.innerText.length < 80; i++) {
+                    block = block.parentElement;
+                }
+                let snippet = block ? block.innerText : '';
+                snippet = snippet.replace(h.innerText, '').trim().slice(0, 300);
+                out.push({title: h.innerText.trim(), url: a.href, snippet: snippet});
+            }
+            return out;
+        }"""
+        try:
+            results = self.page.evaluate(js, limit) or []
+        except Exception as e:
+            self._log("SEARCH", f"Result parse failed: {e}", s)
+            results = []
+
+        blocked = False
+        if not results:
+            try:
+                body = (self.page.inner_text("body") or "").lower()
+                blocked = any(w in body for w in (
+                    "unusual traffic", "not a robot", "captcha",
+                    "confirm this search was made by a human"))
+            except Exception:
+                pass
+
+        self.payload[key] = {"query": query, "results": results}
+        self._log("SEARCH", f"{query!r} -> {len(results)} result(s)"
+                            + (" (challenged)" if blocked else ""), s)
+        if blocked:
+            # Say so plainly. An empty list reads as "the web has nothing",
+            # which sends the agent looking for a different question to ask.
+            return {"status": "error", "key": key, "count": 0, "results": [],
+                    "error": ("The search engine served a human-verification "
+                              "challenge instead of results. The saved session "
+                              "may have expired -- sign in in a browser and "
+                              "call web.save_state to refresh it.")}
+        return {"status": "ok", "key": key, "count": len(results),
+                "results": results}
+
 
     def _cmd_extract(self, args):
         """Universal text/data extraction from the DOM. Handles multiple matches and unified payload elements."""
@@ -385,6 +505,25 @@ class WebAgent:
         else:
             # If no payload key, snapshot the LIVE view immediately
             path = args.get("src", "temp_vision.png")
+            # Refuse to analyse a page that was never loaded.
+            #
+            # A fresh browser sits on about:blank, so this screenshotted pure
+            # white and sent it to a vision model, which spent twelve seconds
+            # writing a thoughtful description of a white rectangle. Twice.
+            # The agent then had no idea why it had learned nothing and tried
+            # again. An empty page is a precondition failure, not a picture,
+            # and saying so costs nothing and takes no time.
+            current = ""
+            try:
+                current = self.page.url or ""
+            except Exception:
+                current = ""
+            if (not current) or current.startswith("about:") or current == "chrome://newtab/":
+                self._log("VISION", "No page loaded; nothing to analyse")
+                return {"status": "error",
+                        "error": "No page is loaded, so there is nothing to "
+                                 "analyse. Call web.goto with a URL first, "
+                                 "then analyse or extract from it."}
             self.page.screenshot(path=path)
             info = {"src": path}
             self._log("VISION", f"Captured {path} for analysis")
@@ -493,10 +632,31 @@ class WebAgent:
         tasks = local_ai.get("tasks", ["encode", "ai_process"])
         registry = {"encode": task_encode, "ai_process": task_ai_process}
         
+        # WHAT to sweep.
+        #
+        # `prefix` defaults to "image_", but `web.extract` writes `data_0`,
+        # `data_1`... so the chain a model naturally reaches for -- extract,
+        # then brain -- matched nothing at all and reported "Processed 0
+        # items" while looking like it had run. The plan was right; the two
+        # halves just disagreed about the key names.
+        #
+        # So: honour an EXPLICIT prefix exactly, because a caller that named
+        # one meant it. Otherwise, if nothing matches the default, sweep
+        # whatever the payload actually holds -- which is the thing the
+        # operation was asked to think about.
+        explicit_prefix = "prefix" in args
+        keys = [k for k, v in self.payload.items()
+                if k.startswith(prefix) and isinstance(v, dict)]
+        if not keys and not explicit_prefix:
+            keys = [k for k, v in self.payload.items() if isinstance(v, dict)]
+            if keys:
+                self._log("BRAIN", f"No '{prefix}*' items; sweeping "
+                                   f"{len(keys)} payload item(s) instead")
+
         count = 0
-        for key in list(self.payload.keys()):
-            info = self.payload[key]
-            if key.startswith(prefix) and isinstance(info, dict):
+        for key in list(keys):
+            info = self.payload.get(key)
+            if isinstance(info, dict):
                 # 1. Duplicate Check
                 if get_skip_duplicates_option(local_ai):
                     src = info.get("src")

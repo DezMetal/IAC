@@ -36,7 +36,10 @@ DEFAULT_AI_CONFIG = {
     "retries": 3,
     "temp": 0.2,
     "drop": ["encoded"],
-    "output_key": "raw_output"
+    "output_key": "raw_output",
+    # Filled in per turn by the caller with the active persona's standing
+    # prompt. Empty means "no session", which is what caused the cache thrash.
+    "session_prefix": ""
 }
 
 # Cached endpoint capability per host
@@ -262,23 +265,44 @@ def _merge_defaults(options: dict = None, extras: dict = None):
 
 
 def ollama_request(host: str, model: str, prompt: str, images: list = None,
-                   options: dict = None, extras: dict = None, timeout: int = 300) -> str:
-    """Unified Ollama request handler. Auto-detects /api/chat vs /api/generate."""
+                   options: dict = None, extras: dict = None, timeout: int = 300,
+                   session_prefix: str = "") -> str:
+    """Unified Ollama request handler. Auto-detects /api/chat vs /api/generate.
+
+    `session_prefix` is the ACTIVE PERSONA'S standing prompt, and passing it is
+    what keeps this call on her session rather than on one of its own.
+
+    The provider caches by prompt prefix. This client used to send a bare
+    single-user-message payload with no system block at all, so every ai.* /
+    prism.* / web.brain call presented a completely different prefix, landed on
+    a different cache track, and left the next thing the person said to be
+    reprocessed from scratch -- measured at ~6.5s on the first call of every
+    turn that had used a tool. Sharing the prefix costs a few cached tokens and
+    saves the whole reprocess. It also stops the problem compounding: every new
+    agent or tool that talks to the provider would otherwise add another track
+    competing with hers.
+    """
     global _ollama_capabilities
     host = host.rstrip("/")
 
     use_chat = _ollama_capabilities.get(host, True)
     options, extras = _merge_defaults(options, extras)
 
+    chat_messages = []
+    if session_prefix:
+        chat_messages.append({"role": "system", "content": session_prefix})
+    chat_messages.append({"role": "user", "content": prompt, "images": images or []})
     messages_payload = {
         "model": model,
-        "messages": [{"role": "user", "content": prompt, "images": images or []}],
+        "messages": chat_messages,
         "stream": False,
         "options": options
     }
     generate_payload = {
         "model": model,
-        "prompt": prompt,
+        # /api/generate has no roles, so the prefix leads the prompt. Same
+        # bytes in the same order, which is all the cache is matching on.
+        "prompt": (session_prefix + chr(10) * 2 + prompt) if session_prefix else prompt,
         "images": images or [],
         "stream": False,
         "options": options
@@ -309,7 +333,28 @@ def ollama_request(host: str, model: str, prompt: str, images: list = None,
             if res.status_code == 404 and "model" not in err_msg.lower():
                 raise
             raise RuntimeError(f"Ollama Error {res.status_code}: {err_msg}")
-        return parse_fn(res.json())
+        data = res.json()
+        # Every call to the provider must be visible, whoever makes it.
+        # This client is SEPARATE from llm_backends and sends a bare
+        # single-user-message payload with no system prompt -- a completely
+        # different prefix from the persona conversation. That means any
+        # ai.* / prism.* / web.brain call lands on a different cache track and
+        # the next thing the person says is reprocessed from scratch. It was
+        # invisible in the trace, so it could only be inferred.
+        try:
+            from aether_trace import trace
+            ns = 1_000_000_000.0
+            trace("model.offsession",
+                  "IAC %s prefill=%.2fs" % (endpoint,
+                                            data.get("prompt_eval_duration", 0) / ns),
+                  endpoint=endpoint, model=model,
+                  prefill=round(data.get("prompt_eval_duration", 0) / ns, 3),
+                  gen=round(data.get("eval_duration", 0) / ns, 3),
+                  tokens_in=data.get("prompt_eval_count", 0),
+                  tokens_out=data.get("eval_count", 0))
+        except Exception:
+            pass
+        return parse_fn(data)
 
     try:
         if use_chat:
@@ -362,8 +407,12 @@ def ai_process(key: str, info: Dict[str, Any], config: Dict[str, Any]) -> bool:
     if merged.get("options"):
         ai_options.update(merged["options"])
 
+    # `enable_thinking` and `keep_alive` were dropped here, so a caller that
+    # switched thinking off got it switched off in name only: `think` went
+    # through, its cross-compatible twin did not, and a provider reading the
+    # other one still emitted a full trace before the answer.
     extras = {}
-    for extra in ["think", "stream"]:
+    for extra in ["think", "enable_thinking", "keep_alive", "stream"]:
         if extra in merged:
             extras[extra] = merged[extra]
 
@@ -389,7 +438,8 @@ def ai_process(key: str, info: Dict[str, Any], config: Dict[str, Any]) -> bool:
                 images=images,
                 options=ai_options,
                 extras=extras if extras else None,
-                timeout=merged.get("ai_timeout", 300)
+                timeout=merged.get("ai_timeout", 300),
+                session_prefix=merged.get("session_prefix", "")
             )
             print(f"    [AI-RES] Received in {time.time()-s_time:.2f}s")
 
@@ -460,7 +510,8 @@ class OllamaProvider(InferenceProvider):
                 prompt=final_prompt,
                 images=images,
                 options={"temperature": cfg.get("temp", 0.2)},
-                timeout=cfg.get("ai_timeout", 300)
+                timeout=cfg.get("ai_timeout", 300),
+                session_prefix=cfg.get("session_prefix", "")
             )
             return {"success": True, "content": content}
         except Exception as e:

@@ -616,6 +616,25 @@ def task_ai_plan(args: dict, payload: dict, config: dict) -> dict:
                                 TOP_LEVEL_EXTRAS)
 
     settings = resolve_provider(config, args, has_images=bool(images))
+
+    # Per-task settings from config.json (llm.tasks.plan).
+    #
+    # Every other call to the provider uses the selected model profile
+    # verbatim -- one model, one set of settings, no invisible second
+    # configuration. Planning is the deliberate exception: letting a small
+    # model think before it writes a project.json or an index.html is the one
+    # place those extra tokens buy something, so it is the one task allowed
+    # to turn thinking back on. It must be asked for in config.json; it is
+    # never the default.
+    task_cfg = (config.get("tasks") or {}).get("plan")
+    if isinstance(task_cfg, dict) and task_cfg:
+        merged_opts = dict(settings.get("options") or {})
+        merged_opts.update(task_cfg.get("options") or {})
+        settings = {**settings,
+                    **{k: v for k, v in task_cfg.items()
+                       if k != "options" and not k.endswith("_note")}}
+        if merged_opts:
+            settings["options"] = merged_opts
     kind = settings["kind"]
     model = settings["model"]
 
@@ -637,6 +656,10 @@ def task_ai_plan(args: dict, payload: dict, config: dict) -> dict:
     for key_extra in TOP_LEVEL_EXTRAS + ("stream",):
         if key_extra in args:
             extras[key_extra] = args[key_extra]
+        elif key_extra in settings:
+            # ...and from the resolved profile / task settings, or a
+            # `think: true` set in config.json would never reach the request.
+            extras.setdefault(key_extra, settings[key_extra])
 
     api_key = args.get("api_key") or settings.get("api_key") \
         or config.get(f"{kind}_api_key") or config.get("api_key")

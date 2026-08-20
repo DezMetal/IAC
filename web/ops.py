@@ -4,7 +4,8 @@
 # Part of IAC (Integrated Agent Core), created and maintained by D-Net Lab.
 # Attribution is required on redistribution; the D-Net Lab name is not
 # licensed by Apache-2.0 (see TRADEMARKS.md).
-import os, sys, json, time
+import os, sys, json, time, threading
+from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, Any, Optional
 
 try:
@@ -14,6 +15,28 @@ except ImportError:
     from web.webagent import WebAgent
 
 _agent_instance: Optional[WebAgent] = None
+
+# ONE thread owns the browser, for the life of the process.
+#
+# Playwright's SYNC api may only be driven from the thread that started it.
+# Aether runs turns on a pool, so op 1 of a turn could start the browser on
+# worker A and op 2 could touch it from worker B -- and once worker A retired,
+# the failure read "cannot switch to a different thread (which happens to have
+# exited)". Nothing was wrong with the browser or the plan; the calls simply
+# arrived from the wrong place.
+#
+# Every web operation is therefore marshalled onto this single worker. It is
+# created once, never replaced, and outlives any individual turn, so the
+# browser it owns stays usable across a whole session. The caller still blocks
+# on the result, so ordering and error handling are exactly as before.
+_web_thread = ThreadPoolExecutor(max_workers=1, thread_name_prefix="iac_web")
+
+
+def _on_browser_thread(fn, *args, **kwargs):
+    """Run `fn` on the thread that owns the browser and return its result."""
+    if threading.current_thread().name.startswith("iac_web"):
+        return fn(*args, **kwargs)      # already home; do not deadlock
+    return _web_thread.submit(fn, *args, **kwargs).result()
 
 def get_web_agent(context: dict = None) -> WebAgent:
     global _agent_instance
@@ -34,6 +57,13 @@ def get_web_agent(context: dict = None) -> WebAgent:
     return _agent_instance
 
 def close_web_agent():
+    # Teardown touches the context too, so it goes home as well. Closing from
+    # a cleanup thread is what produced an alarming traceback after runs that
+    # had otherwise succeeded.
+    return _on_browser_thread(_close_web_agent)
+
+
+def _close_web_agent():
     global _agent_instance
     if _agent_instance is not None:
         try:
@@ -50,10 +80,32 @@ def register_web_operations(registry):
     
     def make_web_handler(op_name):
         def handler(args, context):
+            # Hop to the browser's own thread before touching anything
+            # Playwright owns -- including creating the agent in the first
+            # place, so the browser is born on the thread that will drive it.
+            return _on_browser_thread(_handle, args, context)
+
+        def _handle(args, context):
             agent = get_web_agent(context)
             
             # Auto-routing for 'analyze' if no payload_key is provided
             if op_name == "analyze" and not args.get("payload_key"):
+                # ...but not onto a page that was never loaded. A fresh browser
+                # sits on about:blank, so this snapped pure white and sent it
+                # to a vision model, which spent twelve seconds describing a
+                # white rectangle. Twice. The agent learned nothing and tried
+                # again. An empty page is a precondition failure, not a
+                # picture, and saying so is instant.
+                current = ""
+                try:
+                    current = agent.page.url or ""
+                except Exception:
+                    current = ""
+                if (not current) or current.startswith("about:"):
+                    return {"status": "error",
+                            "error": "No page is loaded, so there is nothing "
+                                     "to analyse. Use web.search for a lookup, "
+                                     "or web.goto a URL first."}
                 # Take a quick snapshot to the payload
                 snap_res = agent._cmd_snap({"payload_key": "live_view"})
                 args["payload_key"] = "live_view"
@@ -81,6 +133,14 @@ def register_web_operations(registry):
         return handler
 
     web_schemas = {
+        "search": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "What to search the web for"},
+                "limit": {"type": "integer", "description": "Max results", "default": 8}
+            },
+            "required": ["query"]
+        },
         "goto": {
             "type": "object",
             "properties": {
@@ -202,14 +262,14 @@ def register_web_operations(registry):
     }
 
     web_ops = [
-        ("goto", "Navigate to a URL"),
+        ("goto", "Navigate to a URL and return its title and opening text"),
         ("click", "Click an element by selector"),
         ("type", "Type value into an element"),
         ("wait", "Wait for specified milliseconds"),
         ("scroll", "Scroll the page"),
         ("tour", "Execute an automated guided tour"),
         ("snap", "Take a screenshot"),
-        ("analyze", "Analyze the page or element via AI"),
+        ("analyze", "Analyze the CURRENTLY LOADED page via AI -- goto or search first"),
         ("extract", "Extract data from the DOM"),
         ("heartbeat", "Enable high-FPS canvas heartbeat"),
         ("probe", "Discover interactive elements"),
@@ -221,7 +281,12 @@ def register_web_operations(registry):
         # chain exported with either of them failed on replay with
         # "Unregistered operation". Anything the sandbox can do, a plan can do.
         ("modify", "Set text, value or an attribute on a DOM element"),
-        ("brain", "Run the AI sweep over every matching payload item")
+        ("brain", "Run the AI sweep over every matching payload item"),
+        # Named the way an agent asks for it. Without this, "look up X on the
+        # web" had no operation to land on: it analysed the blank browser
+        # twice, then emitted `web.search` anyway and had the call dropped as
+        # unregistered.
+        ("search", "Search the web and return result titles, links and snippets")
     ]
 
     for op_name, desc in web_ops:

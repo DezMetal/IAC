@@ -261,7 +261,18 @@ Requires an `IntelligenceCore` provider (Ollama, Gemini, Persona).
 ### Web Operations (`web`)
 Requires a `WebAgent` browser runtime.
 
-- **`web.goto`**: Navigate to `url`
+- **`web.goto`**: Navigate to `url`. Returns `status`, `url`, `title`, `chars`
+  and a `preview` of the opening text, so a single navigation is answerable
+  without a second call. Use `web.extract` when more than the opening is
+  wanted.
+- **`web.search`**: Search the web for `query` (optional `limit`). Runs in the
+  browser carrying the saved session from `IAC/auth/session.json`, because a
+  cold client gets a human-verification challenge instead of results. Returns
+  `title` / `url` / `snippet` per result, read structurally rather than by CSS
+  class. The engine comes from `search_url` (`{q}` is the encoded query), so it
+  can be pointed at a search API without changing the operation. If a challenge
+  is served it returns an ERROR saying so — an empty list would read as "the
+  web has nothing about this".
 - **`web.click`**: Click element by `selector`
 - **`web.type`**: Type `text` into `selector`
 - **`web.snap`**: Capture screenshot and store in `payload_key`
@@ -314,6 +325,24 @@ rides along with the capability injection, and the full body is fetched only
 when `skill.load` is called. Per-turn cost stays flat as the library grows.
 
 ---
+
+
+> **The browser lives on ONE thread.** Playwright's sync API may only be
+> driven from the thread that started it, so every `web.*` operation is
+> marshalled onto a single dedicated worker (see `web/ops.py`). Hosts that run
+> turns on a thread pool would otherwise start the browser on one worker and
+> touch it from another, failing with "cannot switch to a different thread
+> (which happens to have exited)".
+
+> **`web.analyze` needs a loaded page.** A fresh browser sits on `about:blank`;
+> analysing it sends a white rectangle to a vision model and costs ~12s to be
+> told it is white. It now refuses immediately and says to `goto` or `search`
+> first.
+
+> **`web.brain` sweeps `prefix` (default `image_`).** `web.extract` writes
+> `data_0`, `data_1`, so an explicit prefix matters; with no match and no
+> explicit prefix it falls back to sweeping whatever the payload holds, which
+> is what makes extract → brain work as an agent expects.
 
 ## Writing Reliable Pipelines
 
