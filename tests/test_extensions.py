@@ -280,6 +280,12 @@ def test_discovery_suggests_real_operations_and_never_invents_them():
     assert found["chains"] and found["chains"][0]["steps"] == [
         "filesystem.write", "sys.exec"]
     assert "GUIDANCE" in found["note"]
+    # The MATCHES are ranked by wording and carry no order; reading them as a
+    # sequence would have you run a script before writing it. Only the chain
+    # is a sequence, and it must be in the order the work happens.
+    assert "no order" in found["note"] or "carry no order" in found["note"]
+    steps = found["chains"][0]["steps"]
+    assert steps.index("filesystem.write") < steps.index("sys.exec")
 
     # A recipe naming an operation this host lacks must not be offered.
     class Bare:

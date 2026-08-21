@@ -97,10 +97,15 @@ HOST, plus the chain such tasks usually take:
 
     { "op": "iac.search", "args": { "goal": "write a script and run it" } }
 
-    sys.exec(cmd, cwd, timeout) -- Run a shell command
-    filesystem.write(path, content) -- Writes content to a specified file
-    chain: filesystem.write -> sys.exec
-           exec runs in the workspace, so a file written there is runnable by name.
+    MATCHES (no order -- ranked by wording, NOT the sequence to run them in):
+      sys.exec(cmd, cwd, timeout) -- Run a shell command
+      filesystem.write(path, content) -- Writes content to a specified file
+    SUGGESTED ORDER (this one IS a sequence): filesystem.write -> sys.exec
+      exec runs in the workspace, so a file written there is runnable by name.
+
+The two lists are labelled apart on purpose. Matches are ranked by how closely
+the words fit, so reading them top to bottom would have you run a script before
+writing it. Only a chain is ordered.
 
 No model is involved -- it is string matching over the loaded registry, so it
 can only ever name operations that are really there, and a suggested chain

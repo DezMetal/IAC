@@ -196,10 +196,12 @@ def suggest(goal, registry, limit=6):
         "operations": operations,
         "chains": chains,
         "note": ("GUIDANCE, not instruction. These operations exist on this "
-                 "host and their descriptions resemble the goal. You decide "
-                 "what the task actually needs -- a suggested chain is the "
-                 "shape such tasks usually take, not the shape this one must "
-                 "take."),
+                 "host and their descriptions resemble the goal. The MATCHES "
+                 "carry no order -- they are ranked by wording, and reading "
+                 "them as a sequence would have you run a script before "
+                 "writing it. Only a suggested chain is ordered, and even that "
+                 "is the shape such tasks usually take, not the shape this one "
+                 "must take. You decide what the task actually needs."),
     }
 
 
@@ -218,7 +220,9 @@ def register_discovery_operations(registry):
         except (TypeError, ValueError):
             limit = 6
         found = suggest(goal, registry, limit=limit)
-        lines = ["Operations that may fit %r:" % goal]
+        lines = ["Operations that may fit %r." % goal,
+                 "MATCHES (no order -- ranked by how closely the words fit, "
+                 "NOT the sequence to run them in):"]
         for item in found["operations"]:
             hint = ", ".join(item["args"][:6]) or "no arguments"
             lines.append("  %s(%s) -- %s" % (item["op"], hint,
@@ -227,7 +231,8 @@ def register_discovery_operations(registry):
             lines.append("  (nothing matched -- the operation index is the "
                          "full list; this only matches words)")
         for chain in found["chains"]:
-            lines.append("  chain: %s" % " -> ".join(chain["steps"]))
+            lines.append("SUGGESTED ORDER (this one IS a sequence): %s"
+                         % " -> ".join(chain["steps"]))
             lines.append("         %s" % chain["why"])
         lines.append(found["note"])
         return {"status": "ok", "data": found,
