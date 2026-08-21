@@ -90,6 +90,27 @@ Numeric iteration.
 
 ---
 
+## Finding an operation: `iac.search`
+
+Describe what you are trying to do and get back operations that exist ON THIS
+HOST, plus the chain such tasks usually take:
+
+    { "op": "iac.search", "args": { "goal": "write a script and run it" } }
+
+    sys.exec(cmd, cwd, timeout) -- Run a shell command
+    filesystem.write(path, content) -- Writes content to a specified file
+    chain: filesystem.write -> sys.exec
+           exec runs in the workspace, so a file written there is runnable by name.
+
+No model is involved -- it is string matching over the loaded registry, so it
+can only ever name operations that are really there, and a suggested chain
+naming something this host lacks is dropped rather than offered.
+
+It exists because agents that cannot find an operation invent one: `execute_shell`
+was called and refused while `sys.exec` sat available, and `web.search` was
+emitted before it existed. Every result is labelled GUIDANCE, not instruction --
+the caller knows what the task needs; this only knows which words look similar.
+
 ## Default Operations by Domain
 
 ### Core Operations (`core`)

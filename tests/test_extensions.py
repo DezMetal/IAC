@@ -248,3 +248,50 @@ def _run():
 
 if __name__ == "__main__":
     sys.exit(_run())
+
+
+def test_discovery_suggests_real_operations_and_never_invents_them():
+    """An agent that cannot find an operation invents one.
+
+    Observed: execute_shell called and refused while sys.exec sat available,
+    and web.search emitted before it existed. Discovery answers that WITHOUT a
+    model, by matching words against the registry actually loaded -- so it can
+    only ever name operations that exist on this host.
+    """
+    from discover import suggest
+
+    class Registry:
+        def list_operations(self):
+            return [
+                {"op": "web.search", "domain": "web",
+                 "description": "Search the web and return titles and links",
+                 "parameters": {"properties": {"query": 1}, "required": ["query"]}},
+                {"op": "sys.exec", "domain": "sys",
+                 "description": "Run a shell command",
+                 "parameters": {"properties": {"cmd": 1}, "required": ["cmd"]}},
+                {"op": "filesystem.write", "domain": "filesystem",
+                 "description": "Write content to a file",
+                 "parameters": {"properties": {"path": 1}, "required": ["path"]}},
+            ]
+
+    found = suggest("write a script and run it", Registry())
+    names = [o["op"] for o in found["operations"]]
+    assert "sys.exec" in names and "filesystem.write" in names
+    assert found["chains"] and found["chains"][0]["steps"] == [
+        "filesystem.write", "sys.exec"]
+    assert "GUIDANCE" in found["note"]
+
+    # A recipe naming an operation this host lacks must not be offered.
+    class Bare:
+        def list_operations(self):
+            return [{"op": "filesystem.write", "domain": "filesystem",
+                     "description": "Write content to a file",
+                     "parameters": {}}]
+
+    thin = suggest("write a script and run it", Bare())
+    assert thin["chains"] == [], thin["chains"]
+
+    # Nothing matched is an honest answer, not an invented one.
+    empty = suggest("xyzzy plugh", Bare())
+    assert empty["operations"] == [] or all(
+        o["op"] == "filesystem.write" for o in empty["operations"])

@@ -413,6 +413,19 @@ def bootstrap(safe_mode=False):
     for op in ["goto", "click", "type", "wait", "scroll", "tour", "snap", "analyze", "extract", "probe", "eval", "stop", "sandbox"]:
         registry.alias(op, f"web.{op}")
     
+    # Capability discovery. Registered for EVERY host, safe mode included:
+    # it only reads the registry and runs no operation, and an agent that
+    # cannot find out what it can do is the failure this whole module exists
+    # to stop.
+    try:
+        try:
+            from .discover import register_discovery_operations
+        except ImportError:
+            from discover import register_discovery_operations
+        register_discovery_operations(registry)
+    except Exception as _e:
+        print(f"    [!] Discovery unavailable: {_e}")
+
     if not safe_mode:
         registry.alias("exec", "sys.exec")
         # The names a model reaches for when it wants a shell. It asked for
