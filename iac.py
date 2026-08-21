@@ -372,6 +372,17 @@ def bootstrap(safe_mode=False):
                 if context and "payload" in context:
                     agent.payload = context["payload"]
 
+                # A script written to the workspace has to be runnable from
+                # the workspace. Without this the shell inherits the HOST's
+                # working directory, so `python3 script.py` fails on a file
+                # that was just created successfully -- which reads as the
+                # write having failed, and sends the agent back to rewrite a
+                # file that was already there.
+                if op_name == "exec" and not args.get("cwd"):
+                    where = (context or {}).get("workspace_dir")
+                    if where:
+                        args = {**args, "cwd": where}
+
                 if op_name in agent.registry:
                     return agent.registry[op_name](args)
                 return {"status": "error", "error": f"Unknown sys operation: {op_name}"}
@@ -404,6 +415,15 @@ def bootstrap(safe_mode=False):
     
     if not safe_mode:
         registry.alias("exec", "sys.exec")
+        # The names a model reaches for when it wants a shell. It asked for
+        # `execute_shell`, got "not in the allowed set", and concluded it had
+        # no permission to run anything -- then said so, out loud, twice. The
+        # operation was there the whole time under a different name. Teaching
+        # the registry the synonyms is cheaper than teaching every model the
+        # vocabulary, and it fails loudly if the target ever disappears.
+        for _spoken in ("execute_shell", "run_command", "shell", "bash",
+                        "run_shell", "terminal", "sys.execute", "sys.shell"):
+            registry.alias(_spoken, "sys.exec")
 
     # 4. Register Control Flow Operations (handled natively by runner)
     flow_noop = lambda a, c: {"status": "ok", "note": "handled by runner"}
