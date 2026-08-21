@@ -75,6 +75,21 @@ def task_encode(key: str, info: Dict[str, Any], config: Dict[str, Any]) -> bool:
         info["encoded"] = base64.b64encode(info["raw_bytes"]).decode('utf-8')
         return True
 
+    # 2a. `path` counts as a source.
+    #
+    # sense.capture stores the screenshot it took under `path`, not `src`.
+    # The encoder only looked at `src`, so it found nothing, returned False,
+    # and -- because vision had not been REQUESTED explicitly, only detected
+    # -- ai.process carried on with zero images and asked the model to
+    # analyse nothing. Observed: seven captures processed in 37s, each
+    # answering 'please provide the image you would like me to analyze'.
+    # A picture that was taken, saved, and then not sent is the worst of
+    # every option.
+    if not info.get('src') and info.get('path'):
+        candidate = info['path']
+        if isinstance(candidate, str) and os.path.exists(candidate):
+            sources.append(candidate)
+
     # 2. Gather potential sources from 'src'
     if info.get("src"):
         if isinstance(info["src"], list):
@@ -339,7 +354,7 @@ def task_ai_process(key: str, info: Dict[str, Any], config: Dict[str, Any]) -> b
     # Auto-detect vision if not explicitly set
     if not is_vision:
         is_img_ext = isinstance(key, str) and any(key.lower().endswith(ext) for ext in (".png", ".jpg", ".jpeg", ".webp", ".gif"))
-        if info.get("src") or info.get("encoded") or is_img_ext or any(x in str(key).lower() for x in ("image", "photo", "pic", "src")):
+        if info.get("src") or info.get("path") or info.get("encoded") or is_img_ext or any(x in str(key).lower() for x in ("image", "photo", "pic", "src")):
             is_vision = True
         else:
             for k, v in info.items():
@@ -351,9 +366,15 @@ def task_ai_process(key: str, info: Dict[str, Any], config: Dict[str, Any]) -> b
 
     if is_vision and not info.get("encoded"):
         if not task_encode(key, info, config):
-            if config.get("vision") is True or info.get("vision") is True:
-                print(f"    [!] AI Aborted: Vision requested but encoding failed for {key}")
-                return False
+            # Do NOT quietly analyse nothing. This looked like a working call
+            # that produced 600 characters of "please provide the image you
+            # would like me to analyze" -- indistinguishable from a real answer
+            # to anything reading the summary, and repeated seven times.
+            print(f"    [!] AI Aborted: {key} looks like an image but could "
+                  f"not be encoded; refusing to analyse an empty request")
+            info["error"] = (f"{key} could not be encoded, so there was no "
+                             f"image to look at.")
+            return False
 
     prompt = info.get("prompt") or config.get("prompt", "Analyze this.")
 
