@@ -29,6 +29,52 @@ except ImportError:
     from runner import execute
     import agent_tools
 
+def search(goal, limit=6, quiet=False):
+    """Find operations that fit a goal. Usable from a REPL or any script.
+
+    The discovery OPERATION (iac.search) is for an agent inside a plan. This
+    is the same thing for whoever is at a keyboard:
+
+        >>> import iac
+        >>> iac.search("create a script to read these csv")
+
+    Bootstraps on first use, because requiring that first is exactly the kind
+    of knowledge this function exists to stop needing. Prints the readable
+    form and returns the structured one, so it is useful typed and useful
+    imported.
+    """
+    registry = get_registry()
+    try:
+        loaded = bool(registry.list_operations())
+    except Exception:
+        loaded = False
+    if not loaded:
+        bootstrap()
+        registry = get_registry()
+
+    try:
+        from .discover import suggest
+    except ImportError:
+        from discover import suggest
+
+    found = suggest(goal, registry, limit=limit)
+    if not quiet:
+        print("MATCHES (no order -- ranked by wording, NOT a sequence):")
+        for item in found["operations"]:
+            hint = ", ".join(item["args"][:6]) or "no arguments"
+            print("  %s(%s)" % (item["op"], hint))
+            if item["description"]:
+                print("      %s" % item["description"])
+        if not found["operations"]:
+            print("  (nothing matched -- try plainer words)")
+        for chain in found["chains"]:
+            print("SUGGESTED ORDER (this one IS a sequence): %s"
+                  % " -> ".join(chain["steps"]))
+            print("      %s" % chain["why"])
+        print(found["note"])
+    return found
+
+
 def bootstrap(safe_mode=False):
     """Initialize the global registry with all available operations."""
     registry = get_registry()
@@ -486,11 +532,24 @@ def main():
     parser.add_argument("--list-ops", action="store_true", help="List all registered operations and exit")
     parser.add_argument("--resume", action="store_true", help="Resume previous execution from output file if it exists")
     parser.add_argument("--resume-from", help="Specify step index, operation name, or phase name to force-resume execution from")
+    parser.add_argument("--search", metavar="GOAL",
+                        help="Describe what you are trying to do and get "
+                             "operations that fit, plus the usual order. "
+                             "Guidance, not instruction.")
+    parser.add_argument("--limit", type=int, default=6,
+                        help="How many matches --search returns (default 6)")
     
     args = parser.parse_args()
 
     bootstrap()
     registry = get_registry()
+
+    # Discovery before execution: someone reaching for the CLI to ask "what
+    # can this thing do about X" should not have to read the whole operation
+    # index and match it themselves.
+    if args.search:
+        search(args.search, limit=args.limit)
+        sys.exit(0)
 
     if args.list_ops:
         print(registry.to_prompt_block())
