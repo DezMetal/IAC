@@ -62,6 +62,23 @@ class OperationRegistry:
     def register_operation(self, op: Operation):
         self._ops[op.qualified_name] = op
 
+    def unregister(self, op_name: str) -> bool:
+        """Remove an operation, and any alias that pointed at it.
+
+        Capability can now arrive at runtime -- an MCP server added while the
+        app is running can be removed while it is running too. An operation
+        left in the index after its provider is gone is worse than one that
+        was never there: it advertises something that will fail.
+        """
+        op = self.resolve(op_name)
+        if op is None:
+            return False
+        self._ops.pop(op.qualified_name, None)
+        for alias_name, target in list(self._aliases.items()):
+            if target in (op.qualified_name, op_name):
+                self._aliases.pop(alias_name, None)
+        return True
+
     def alias(self, alias_name: str, target_name: str):
         self._aliases[alias_name] = target_name
 
