@@ -255,6 +255,17 @@ Operations that interact with a browser instance. Requires a `WebAgent` runtime.
 | `web.probe` | Discover interactive elements |
 | `web.eval`  | Execute custom JavaScript |
 | `web.stop`  | Finalize and close session |
+| `web.show`  | Bring the browser window on screen, keeping the page and session |
+| `web.hide`  | Put it back out of sight |
+| `web.visible` | Whether the window is on screen, and what page it is on |
+
+Browsing is **headless by default** and nothing changes that implicitly -- a
+window that opens on every lookup is intolerable. `web.show` exists for the
+times someone wants to watch, or needs to take over a step the agent should
+not decide alone, such as signing in. Playwright fixes headless at launch, so
+this relaunches the browser; the current page and the stored session are
+carried across, and asking for a state that already holds is a no-op rather
+than a flicker.
 
 ### AI Operations (Domain: `ai`)
 Cognitive and vision processing tasks. Requires an `IntelligenceCore` provider.

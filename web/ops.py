@@ -38,6 +38,79 @@ def _on_browser_thread(fn, *args, **kwargs):
         return fn(*args, **kwargs)      # already home; do not deadlock
     return _web_thread.submit(fn, *args, **kwargs).result()
 
+#: None = whatever config says (headless, normally). True/False = the person
+#: asked to watch, or asked to stop watching.
+#:
+#: A browser that pops open on every lookup is intolerable, so headless stays
+#: the default and nothing changes it implicitly. But "pull up the pricing
+#: page" is a request to SEE something, and answering it with a text summary
+#: of a page nobody can look at is the wrong shape of help. So the window is
+#: switchable, deliberately, on request.
+_visible_override = None
+
+
+def browser_is_visible(config: dict = None) -> bool:
+    """Whether the next launch will show a window."""
+    if _visible_override is not None:
+        return bool(_visible_override)
+    web_cfg = ((config or {}).get("web") or {})
+    return not web_cfg.get("headless", True)
+
+
+def set_browser_visible(visible: bool, context: dict = None) -> dict:
+    """Show or hide the browser, carrying the session and page across.
+
+    Playwright fixes headless at launch, so this relaunches. The two things
+    worth keeping are kept: cookies (saved on close, reloaded on start, which
+    is why a signed-in session survives) and wherever the page had got to.
+
+    Relaunching an unchanged state would be a visible flicker for nothing, so
+    a no-op returns early.
+    """
+    global _visible_override, _agent_instance
+
+    config = (context or {}).get("config", {}) or {}
+    already = browser_is_visible(config)
+    if bool(visible) == already and _agent_instance is not None:
+        return {"status": "ok", "visible": already, "changed": False,
+                "message": "The browser is already %s."
+                           % ("visible" if already else "running out of sight")}
+
+    was_at = None
+    if _agent_instance is not None and not getattr(_agent_instance, "closed", True):
+        try:
+            url = _agent_instance.page.url
+            if url and not url.startswith("about:"):
+                was_at = url
+        except Exception:
+            was_at = None
+        try:
+            # close() saves the storage state, so the next launch is still
+            # signed in to whatever this one was.
+            _agent_instance.close()
+        except Exception:
+            pass
+        _agent_instance = None
+
+    _visible_override = bool(visible)
+
+    agent = get_web_agent(context)
+    if was_at:
+        try:
+            agent.execute("goto", {"url": was_at})
+        except Exception:
+            pass
+
+    return {"status": "ok", "visible": bool(visible), "changed": True,
+            "url": was_at,
+            "message": ("The browser window is open and on screen%s. You are "
+                        "both looking at the same page."
+                        % (" at %s" % was_at if was_at else "")) if visible else
+                       ("The browser is out of sight again%s; it keeps working "
+                        "exactly the same."
+                        % (" (still at %s)" % was_at if was_at else ""))}
+
+
 def get_web_agent(context: dict = None) -> WebAgent:
     global _agent_instance
     if _agent_instance is not None:
@@ -53,6 +126,14 @@ def get_web_agent(context: dict = None) -> WebAgent:
     if _agent_instance is None:
         # Pull configuration from context if available
         config = (context or {}).get("config", {})
+        if _visible_override is not None:
+            # Copied rather than mutated: the caller's config is not ours to
+            # edit, and a stale override written into it would outlive the
+            # request that asked for it.
+            config = dict(config or {})
+            web_cfg = dict(config.get("web") or {})
+            web_cfg["headless"] = not _visible_override
+            config["web"] = web_cfg
         _agent_instance = WebAgent(config)
     return _agent_instance
 
@@ -298,4 +379,59 @@ def register_web_operations(registry):
             handler=make_web_handler(op_name)
         )
 
+    # SHOWING THE WORK.
+    #
+    # Registered separately because these do not go through the WebAgent
+    # command table -- they replace the agent underneath it.
+    def _show(args, context=None):
+        return _on_browser_thread(set_browser_visible, True, context)
+
+    def _hide(args, context=None):
+        return _on_browser_thread(set_browser_visible, False, context)
+
+    def _where(args, context=None):
+        config = (context or {}).get("config", {}) or {}
+        visible = browser_is_visible(config)
+        url = None
+        agent = _agent_instance
+        if agent is not None and not getattr(agent, "closed", True):
+            try:
+                url = agent.page.url
+            except Exception:
+                url = None
+        return {"status": "ok", "visible": visible, "url": url,
+                "message": ("The browser is on screen%s -- they can see what "
+                            "you are doing." % (" at %s" % url if url else ""))
+                           if visible else
+                           ("The browser is working out of sight%s. Use "
+                            "web.show if they want to watch or take over."
+                            % (" (at %s)" % url if url else ""))}
+
+    for name, desc, fn in (
+            ("show",
+             "Bring the browser window on screen, keeping the page and the "
+             "signed-in session you already have. Use it when they ask to SEE "
+             "something, want to watch, or need to take over -- logging in, "
+             "clicking something you should not decide alone. Browsing is "
+             "invisible by default; this is how it stops being.",
+             _show),
+            ("hide",
+             "Put the browser back out of sight. Work continues exactly the "
+             "same, without a window in their way.",
+             _hide),
+            ("visible",
+             "Whether the browser is on screen right now, and what page it is "
+             "on.",
+             _where)):
+        registry.register(name=name, domain="web", description=desc,
+                          parameters={"type": "object", "properties": {},
+                                      "required": []},
+                          handler=fn)
+
     registry.alias("web_agent", "web.goto") # Backward compatibility if needed
+    for _spoken, _target in (("web.open_window", "web.show"),
+                             ("browser.show", "web.show"),
+                             ("web.headful", "web.show"),
+                             ("browser.hide", "web.hide"),
+                             ("web.headless", "web.hide")):
+        registry.alias(_spoken, _target)
