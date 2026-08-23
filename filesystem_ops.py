@@ -215,7 +215,40 @@ def register_filesystem_operations(registry):
                     if isinstance(content, str) and (offset or limit is not None):
                         lines = content.splitlines()
                         total_lines = len(lines)
-                        window = lines[offset:] if limit is None                             else lines[offset:offset + limit]
+
+                        # OFFSET AND LIMIT COUNT LINES, NOT BYTES.
+                        #
+                        # Observed: an agent read offset 0 / limit 4096, got
+                        # the whole 1850-line file, then asked for offset 4096,
+                        # 8192, 16384 -- reading them as byte positions, which
+                        # is what almost every other read API means. Each of
+                        # those returned an EMPTY window with status success,
+                        # so it saw nothing, tried again, and eventually said
+                        # it was stuck in a loop. It was: we put it there.
+                        #
+                        # Reading past the end is now a refusal that says how
+                        # long the file actually is, which turns a silent dead
+                        # end into a correctable mistake.
+                        if offset >= total_lines and total_lines:
+                            return {"status": "error",
+                                    "error": ("offset %d is past the end of "
+                                              "'%s': the file is %d LINES long "
+                                              "(offset and limit count lines, "
+                                              "not bytes or characters). Use an "
+                                              "offset below %d."
+                                              % (offset, path, total_lines,
+                                                 total_lines))}
+
+                        # A window no larger than one chunk, so what the caller
+                        # is TOLD it received matches what it can actually
+                        # read. limit=4096 previously sliced 1850 lines and
+                        # reported all of them, while everything downstream
+                        # showed the first 6000 characters -- the count said
+                        # the whole file had arrived when it had not.
+                        if limit is None or limit > AUTO_CHUNK_LINES:
+                            limit = AUTO_CHUNK_LINES
+
+                        window = lines[offset:offset + limit]
                         end = offset + len(window)
                         truncated = end < total_lines or offset > 0
                         if end < total_lines:
@@ -419,8 +452,8 @@ def register_filesystem_operations(registry):
             "type": "object",
             "properties": {
                 "path": {"type": "string", "description": "The path of the file to read, relative to workspace."},
-                "offset": {"type": "integer", "description": "First line to return (0-based). Use with limit to read a large file in parts."},
-                "limit": {"type": "integer", "description": "How many lines to return. Omit and a large file is chunked automatically (400 lines) with next_offset telling you how to continue; pass 0 to force the entire file."},
+                "offset": {"type": "integer", "description": "First LINE to return, 0-based. Counts lines, NOT bytes or characters. Use the next_offset the previous read gave you."},
+                "limit": {"type": "integer", "description": "How many LINES to return, capped at 400. Omit and a large file is chunked automatically, with next_offset telling you how to continue."},
                 "full": {"type": "boolean", "description": "Return the whole file even if it is large. Only when you genuinely need all of it at once."},
                 "payload_key": {"type": "string", "description": "Store the file content under this payload key so later steps can reference it as {{key}}."}
             },
