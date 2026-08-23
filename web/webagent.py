@@ -371,21 +371,42 @@ class WebAgent:
     _SEARCH_JS = """(arg) => {
         const txt = (el) => ((el && (el.innerText || el.textContent)) || '')
                               .replace(/\s+/g, ' ').trim();
+        // THE REAL DESTINATION, not the tracker.
+        //
+        // Bing wraps every result in /ck/a?...&u=<base64>, so a search handed
+        // back eight `bing.com/ck/a?!&&p=45d13a0a...` links. Useless twice
+        // over: the caller cannot tell one result from another by looking,
+        // and passing one to web.goto fetches a redirect page. The true URL
+        // is in the `u` parameter, base64url with a two-character prefix.
+        const real = (href) => {
+            try {
+                const u = new URL(href);
+                if (!/(^|\.)bing\.com$/.test(u.hostname)) return href;
+                let p = u.searchParams.get('u');
+                if (!p) return href;
+                if (/^a\d/.test(p)) p = p.slice(2);
+                p = p.replace(/-/g, '+').replace(/_/g, '/');
+                while (p.length % 4) p += '=';
+                const decoded = atob(p);
+                return /^https?:/i.test(decoded) ? decoded : href;
+            } catch (e) { return href; }
+        };
         const out = [], seen = new Set();
         for (const el of document.querySelectorAll('h2 a, h3 a, a h2, a h3')) {
             if (out.length >= arg.limit) break;
             const link = el.tagName === 'A' ? el : el.closest('a');
             if (!link || !link.href || !/^https?:/.test(link.href)) continue;
-            if (seen.has(link.href)) continue;
+            const href = real(link.href);
+            if (seen.has(href)) continue;
             const title = txt(el) || txt(link);
             if (!title) continue;
-            seen.add(link.href);
+            seen.add(href);
             let blk = link.closest('li,article,div');
             for (let i = 0; i < 3 && blk && txt(blk).length < title.length + 60; i++) {
                 blk = blk.parentElement;
             }
             const snip = txt(blk).replace(title, '').trim();
-            out.push({title: title.slice(0, 140), url: link.href,
+            out.push({title: title.slice(0, 140), url: href,
                       snippet: snip.slice(0, 240)});
         }
         return out;
