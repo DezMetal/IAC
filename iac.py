@@ -484,6 +484,21 @@ def bootstrap(safe_mode=False):
                         "run_shell", "terminal", "sys.execute", "sys.shell"):
             registry.alias(_spoken, "sys.exec")
 
+    # The same lesson, for the camera. Asked to read the desktop, a model
+    # reached for `desktop.capture` -- twice in one call list -- and got
+    # "unavailable operation skipped" both times. `desktop.snap` and
+    # `sense.capture` were both sitting there; the name it guessed is the
+    # obvious compound of the two that exist, which makes it a naming gap
+    # rather than a mistake.
+    for _guessed, _target in (("desktop.capture", "sense.capture"),
+                              ("screen.capture", "sense.capture"),
+                              ("screenshot", "sense.capture"),
+                              ("take_screenshot", "sense.capture"),
+                              ("capture_screen", "sense.capture"),
+                              ("sense.screenshot", "sense.capture")):
+        if registry.has(_target):
+            registry.alias(_guessed, _target)
+
     # 4. Register Control Flow Operations (handled natively by runner)
     flow_noop = lambda a, c: {"status": "ok", "note": "handled by runner"}
     flow_schemas = {
