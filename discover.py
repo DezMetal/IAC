@@ -186,6 +186,10 @@ def suggest(goal, registry, limit=6):
         schema = spec.get("parameters") or {}
         operations.append({
             "op": name,
+            # How well this matched, so a caller can tell a real hit from the
+            # best of a bad set. Without it every query returns its top few
+            # rows and "hey how are you" looks as answerable as "read the log".
+            "score": _score,
             "description": spec.get("description", ""),
             "args": list(schema.get("properties") or {}),
             "required": list(schema.get("required") or []),

@@ -129,7 +129,21 @@ def register_filesystem_operations(registry):
 
                     if content is None:
                         if not os.path.isfile(target_path):
-                            return {"status": "error", "error": f"File not found: '{path}'"}
+                            # Say WHERE it looked. "File not found: notes.md"
+                            # is indistinguishable from "the file is gone"
+                            # when the real problem is that a relative path
+                            # was resolved against a root the caller did not
+                            # have in mind. Naming the resolved path turns an
+                            # apparent dead end into an obvious correction.
+                            resolved = os.path.abspath(target_path).replace(chr(92), "/")
+                            hint = ""
+                            if not os.path.isabs(path):
+                                hint = (" -- that is a RELATIVE path, resolved "
+                                        "against the default root. Give the "
+                                        "full path instead.")
+                            return {"status": "error",
+                                    "error": "File not found: '%s' (looked in %s)%s"
+                                             % (path, resolved, hint)}
                         with open(target_path, 'r', encoding='utf-8') as f:
                             content = f.read()
 
@@ -148,9 +162,85 @@ def register_filesystem_operations(registry):
                     if dest_key:
                         payload[dest_key] = content
 
+                    # WINDOWED READS.
+                    #
+                    # A whole file was the only thing on offer, so reading
+                    # anything large meant handing the caller more than it
+                    # could hold. Downstream that arrives as a truncated blob
+                    # with no way to ask for the rest, and the caller either
+                    # gives up or reads the same file again expecting a
+                    # different answer. A person in that position would just
+                    # read it in pieces; the operation has to make that
+                    # possible before anyone can be blamed for not doing it.
+                    #
+                    # Line-based, because lines are what a caller can reason
+                    # about and cite. Only applied to text -- parsed JSON is
+                    # an object and slicing it by line would be nonsense.
+                    total_lines = None
+                    truncated = False
+                    next_offset = None
+                    try:
+                        offset = max(0, int(args.get("offset") or 0))
+                    except (TypeError, ValueError):
+                        offset = 0
+                    limit_raw = args.get("limit")
+                    try:
+                        limit = int(limit_raw) if limit_raw is not None else None
+                    except (TypeError, ValueError):
+                        limit = None
+                    if limit is not None:
+                        limit = max(1, limit)
+
+                    # AUTOMATIC CHUNKING, WITH A HARD CAP.
+                    #
+                    # Asking for a whole file is the natural thing to ask for,
+                    # and for most files it is the right answer. For a large
+                    # one it hands back more than any caller can hold, and the
+                    # damage happens downstream where it is hard to attribute.
+                    # So a read with no limit still gets a limit -- enough to
+                    # work with, and the result says plainly that there is
+                    # more and how to reach it. Nobody has to opt in, and
+                    # nobody is asked a question.
+                    #
+                    # `limit: 0` (or full: true) means literally all of it,
+                    # for a caller that has decided it wants that.
+                    AUTO_CHUNK_LINES = 400
+                    wants_everything = (limit_raw == 0
+                                        or bool(args.get("full")))
+                    if (limit is None and not wants_everything
+                            and isinstance(content, str)
+                            and content.count(chr(10)) >= AUTO_CHUNK_LINES):
+                        limit = AUTO_CHUNK_LINES
+
+                    if isinstance(content, str) and (offset or limit is not None):
+                        lines = content.splitlines()
+                        total_lines = len(lines)
+                        window = lines[offset:] if limit is None                             else lines[offset:offset + limit]
+                        end = offset + len(window)
+                        truncated = end < total_lines or offset > 0
+                        if end < total_lines:
+                            next_offset = end
+                        content = chr(10).join(window)
+
                     payload["_output"] = content
-                    return {"status": "success", "data": content,
-                            "payload_key": dest_key}
+                    result = {"status": "success", "data": content,
+                              "payload_key": dest_key}
+                    if total_lines is not None:
+                        result.update({"path": path, "offset": offset,
+                                       "lines_returned": len(content.splitlines()) if content else 0,
+                                       "total_lines": total_lines,
+                                       "truncated": truncated})
+                        if next_offset is not None:
+                            # Name the exact next call. "There is more" that
+                            # does not say how to get it is not help.
+                            result["next_offset"] = next_offset
+                            result["more"] = (
+                                "%d of %d lines. For the next part call "
+                                "filesystem.read with path '%s', offset %d, "
+                                "limit %s."
+                                % (end, total_lines, path, next_offset,
+                                   limit if limit is not None else 200))
+                    return result
 
                 elif action == "write":
                     path = args.get("path")
@@ -329,6 +419,9 @@ def register_filesystem_operations(registry):
             "type": "object",
             "properties": {
                 "path": {"type": "string", "description": "The path of the file to read, relative to workspace."},
+                "offset": {"type": "integer", "description": "First line to return (0-based). Use with limit to read a large file in parts."},
+                "limit": {"type": "integer", "description": "How many lines to return. Omit and a large file is chunked automatically (400 lines) with next_offset telling you how to continue; pass 0 to force the entire file."},
+                "full": {"type": "boolean", "description": "Return the whole file even if it is large. Only when you genuinely need all of it at once."},
                 "payload_key": {"type": "string", "description": "Store the file content under this payload key so later steps can reference it as {{key}}."}
             },
             "required": ["path"]
@@ -363,7 +456,7 @@ def register_filesystem_operations(registry):
 
     filesystem_ops = [
         ("list", "Lists files and directories in a given path."),
-        ("read", "Reads the entire content of a specified file."),
+        ("read", "Reads a file. Returns the whole thing by default; pass offset and limit to read a large one in line-sized parts, and the result tells you the next offset."),
         ("write", "Writes content to a specified file, either inline or from a payload key."),
         ("copy", "Copies a file from one path to another, creating parent directories."),
         ("grep", "Searches for a pattern within a file and returns matching lines.")
