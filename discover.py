@@ -56,6 +56,14 @@ _SYNONYMS = {
     "click": {"press", "tap", "select"},
     "capture": {"screenshot", "snap", "grab"},
     "screenshot": {"capture", "snap", "grab"},
+    # The verbs of MAKING. Every synonym above maps a noun or a verb of
+    # looking; "make me a beat" matched list_chords and list_scales on the
+    # word "music" and ranked the reference material above the operation
+    # that produces something.
+    "make": {"generate", "create", "build", "write", "compose"},
+    "build": {"generate", "create", "make", "write"},
+    "create": {"generate", "make", "build", "write"},
+    "generate": {"create", "make", "build"},
 }
 
 
@@ -63,15 +71,18 @@ def _tokens(text):
     """Words worth matching on, with common synonyms folded in."""
     words = set()
     for word in _WORD.findall(str(text or "").lower()):
+        # A stop word matches nothing itself, but what it stands for still
+        # counts: "make" is too common to match on, and "make a beat" still
+        # means generate one.
+        syns = _SYNONYMS.get(word)
+        if syns:
+            words.update(syns)
         if word in _STOP or len(word) < 2:
             continue
         words.add(word)
         for part in word.replace(".", " ").split():
             if part not in _STOP and len(part) > 1:
                 words.add(part)
-        syns = _SYNONYMS.get(word)
-        if syns:
-            words.update(syns)
     return words
 
 
