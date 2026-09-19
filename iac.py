@@ -67,18 +67,26 @@ def search(goal, limit=6, quiet=False):
                 print("      %s" % item["description"])
         if not found["operations"]:
             print("  (nothing matched -- try plainer words)")
-        for chain in found["chains"]:
-            print("SUGGESTED ORDER (this one IS a sequence): %s"
-                  % " -> ".join(chain["steps"]))
-            print("      %s" % chain["why"])
+
         print(found["note"])
     return found
 
 
-def bootstrap(safe_mode=False):
-    """Initialize the global registry with all available operations."""
+def bootstrap(safe_mode=False, exclude=None):
+    """Initialize the global registry with all available operations.
+
+    `exclude` is a list of glob patterns for operations this host does not
+    want registered at all -- typically because the host serves that domain
+    another way (a browser from an MCP server, say) and does not want the
+    built-in one in the index competing with it. IAC does not read any host
+    configuration to find these; the host knows its own policy and passes
+    the patterns in. With no `exclude`, every operation this module can
+    provide is registered, which is what a standalone IAC should do.
+    """
     registry = get_registry()
-    
+    if exclude:
+        registry.exclude(exclude)
+
     # 0. Register Core Operations
     core_schemas = {
         "push": {

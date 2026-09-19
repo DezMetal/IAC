@@ -277,17 +277,16 @@ def test_discovery_suggests_real_operations_and_never_invents_them():
     found = suggest("write a script and run it", Registry())
     names = [o["op"] for o in found["operations"]]
     assert "sys.exec" in names and "filesystem.write" in names
-    assert found["chains"] and found["chains"][0]["steps"] == [
-        "filesystem.write", "sys.exec"]
     assert "GUIDANCE" in found["note"]
     # The MATCHES are ranked by wording and carry no order; reading them as a
-    # sequence would have you run a script before writing it. Only the chain
-    # is a sequence, and it must be in the order the work happens.
+    # sequence would have you run a script before writing it. Discovery used
+    # to offer canned "chains" alongside; those are gone, because the order
+    # work happens in is the agent's to decide (or a skill's to teach), and
+    # the note has to say so in as many words.
     assert "no order" in found["note"] or "carry no order" in found["note"]
-    steps = found["chains"][0]["steps"]
-    assert steps.index("filesystem.write") < steps.index("sys.exec")
+    assert "chains" not in found
 
-    # A recipe naming an operation this host lacks must not be offered.
+    # Only what this host has can be named.
     class Bare:
         def list_operations(self):
             return [{"op": "filesystem.write", "domain": "filesystem",
@@ -295,7 +294,7 @@ def test_discovery_suggests_real_operations_and_never_invents_them():
                      "parameters": {}}]
 
     thin = suggest("write a script and run it", Bare())
-    assert thin["chains"] == [], thin["chains"]
+    assert [o["op"] for o in thin["operations"]] == ["filesystem.write"]
 
     # Nothing matched is an honest answer, not an invented one.
     empty = suggest("xyzzy plugh", Bare())
