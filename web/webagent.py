@@ -4,7 +4,7 @@
 # Part of IAC (Integrated Agent Core), created and maintained by D-Net Lab.
 # Attribution is required on redistribution; the D-Net Lab name is not
 # licensed by Apache-2.0 (see TRADEMARKS.md).
-import json, os, sys, time, argparse, subprocess, requests, base64, threading
+import json, os, re, sys, time, argparse, subprocess, requests, base64, threading
 import urllib.parse
 from urllib.parse import quote_plus
 from pathlib import Path
@@ -18,6 +18,16 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
     from agent_tools import task_ai_process, task_encode, resolve_resource, get_skip_duplicates_option, _seen_hashes, get_duplicate_threshold_option
     from inference import DEFAULT_AI_CONFIG
+
+# Words too common to prove a result is on topic. Deliberately short: the
+# check asks whether ANY distinctive word survived, so over-trimming here
+# would start calling good searches bad.
+_QUERY_STOPWORDS = frozenset("""
+the a an and or of for to in on at is are was were be been how what why when
+where which who site www com net org official website page find search show
+tell me my your our their this that with from about into over under best top
+new latest guide tutorial docs documentation info information
+""".split())
 
 class WebAgent:
     def __init__(self, master_input):
@@ -256,6 +266,12 @@ class WebAgent:
         dur = f" ({time.time()-start:.2f}s)" if start else ""
         print(f"[{cat:^10}] {msg}{dur}")
 
+    # How much page text one read returns. Roughly 1,000 tokens -- enough
+    # that an article's substance arrives in the first call, small enough that
+    # a single page cannot evict the persona and the operations index from the
+    # prompt. `offset` pages through the rest.
+    PAGE_TEXT_BUDGET = 4000
+
     def _cmd_goto(self, args):
         s = time.time()
         url = args.get("url") or args.get("query") or args.get("input") or args.get("search") or ""
@@ -300,8 +316,44 @@ class WebAgent:
                 out["title"] = self.page.title()
                 text = (self.page.inner_text("body") or "").strip()
                 if text:
+                    # THE PAGE, not a glimpse of it.
+                    #
+                    # This returned `preview: text[:800]` and called it done.
+                    # Eight hundred characters of a fifty-thousand character
+                    # page is the masthead and a cookie notice -- so "open
+                    # their site and tell me the motto" arrived, loaded
+                    # correctly, and handed back the top of the header. She
+                    # cannot research from that, and the failure looks like
+                    # her not reading rather than the page never having been
+                    # given to her.
+                    #
+                    # Windowed exactly like filesystem.read, because it is the
+                    # same problem and she already knows that shape: a real
+                    # budget, and when there is more, the offset that
+                    # continues it. Paging costs a round trip; being handed
+                    # the wrong 800 characters costs the whole task.
+                    budget = int(args.get("limit") or self.PAGE_TEXT_BUDGET)
+                    start = max(0, int(args.get("offset") or 0))
+                    window = text[start:start + budget]
                     out["chars"] = len(text)
-                    out["preview"] = text[:800]
+                    out["offset"] = start
+                    out["text"] = window
+                    # `preview` kept: callers and prompts still name it, and a
+                    # key that quietly vanishes is its own outage.
+                    out["preview"] = window
+                    if start + budget < len(text):
+                        out["next_offset"] = start + budget
+                        out["more"] = (
+                            "Showing characters %d-%d of %d. To continue, call "
+                            "web.goto again with this same url and offset=%d. "
+                            "To find something specific instead of reading on, "
+                            "use web.extract with a selector."
+                            % (start, start + len(window), len(text),
+                               start + budget))
+                    elif start:
+                        out["more"] = ("Characters %d-%d of %d -- this is the "
+                                       "end of the page."
+                                       % (start, start + len(window), len(text)))
             except Exception:
                 pass
             return out
@@ -314,28 +366,53 @@ class WebAgent:
                 return {"status": 200, "url": self.page.url, "warning": "Page load timed out (likely a live stream)"}
             return {"status": "error", "url": self.page.url, "error": err_str}
 
+    @staticmethod
+    def _target_of(args):
+        """The element an action is aimed at, under whichever key it arrived.
+
+        `selector` is the documented name; `target`, `ref` and `element` are
+        what other tool vocabularies call the same thing, and a call that
+        names the right element under the wrong key should act, not fail.
+        """
+        for key in ("selector", "target", "ref", "element"):
+            if args.get(key):
+                return args[key]
+        return None
+
     def _cmd_click(self, args):
         s = time.time()
-        selector = args.get("selector")
-        
+        selector = self._target_of(args)
+        if not selector:
+            return {"status": "error", "error": "web.click needs a selector"}
+
         js_check = "(s) => window.IAC_PAYLOAD && window.IAC_PAYLOAD[s] instanceof Node"
         if self.page.evaluate(js_check, selector):
             self.page.evaluate("(s) => window.IAC_PAYLOAD[s].click()", selector)
         else:
             self.page.click(selector)
-        self._log("CLICK", selector, s)
+        self._log("CLICK", str(selector), s)
         return {"status": "ok"}
 
     def _cmd_type(self, args):
         s = time.time()
-        selector = args.get("selector")
-        val = args.get("value", "")
-        
+        selector = self._target_of(args)
+        if not selector:
+            return {"status": "error", "error": "web.type needs a selector"}
+        val = args.get("value")
+        if val is None:
+            val = args.get("text", args.get("val", ""))
+        val = "" if val is None else str(val)
+        # fill() replaces the field's contents; clear=false appends keystrokes
+        # to whatever is already there.
+        clear_first = args.get("clear", True)
+
         js_check = "(s) => window.IAC_PAYLOAD && window.IAC_PAYLOAD[s] instanceof Node"
         if self.page.evaluate(js_check, selector):
             self.page.evaluate("(args) => window.IAC_PAYLOAD[args.s].value = args.val", {"s": selector, "val": val})
-        else:
+        elif clear_first:
             self.page.fill(selector, val)
+        else:
+            self.page.type(selector, val)
         self._log("TYPE", f"{selector} -> {val}", s)
         return {"status": "ok"}
 
@@ -412,6 +489,96 @@ class WebAgent:
         return out;
     }"""
 
+    #: Sent on the plain-HTTP search. Without one, urllib announces itself as
+    #: Python and Chromium announces itself as headless -- and an engine that
+    #: knows it is talking to a robot answers like it.
+    _DESKTOP_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                   "AppleWebKit/537.36 (KHTML, like Gecko) "
+                   "Chrome/125.0.0.0 Safari/537.36")
+
+    def _search_via_feed(self, query, limit):
+        """Bing's own RSS for the same search. Returns rows, or None.
+
+        None means "could not", never "found nothing" -- an empty result set
+        is an answer and must not silently fall through to the scraper and be
+        asked twice.
+        """
+        url = ("https://www.bing.com/search?q=%s&format=rss&count=%d"
+               % (quote_plus(query), max(1, min(int(limit or 8), 20))))
+        try:
+            reply = requests.get(
+                url, timeout=12,
+                headers={"User-Agent": self._DESKTOP_UA,
+                         "Accept-Language": "en-US,en;q=0.9"})
+            if reply.status_code != 200 or "<item>" not in reply.text:
+                return None
+            body = reply.text
+        except Exception as e:
+            self._log("SEARCH", "RSS unavailable (%s); using the page"
+                                % str(e).splitlines()[0][:60])
+            return None
+
+        def unescape(raw):
+            import html as _html
+            return _html.unescape(re.sub(r"<[^>]+>", "", raw or "")).strip()
+
+        rows = []
+        for item in re.findall(r"<item>(.*?)</item>", body, re.S):
+            title = re.search(r"<title>(.*?)</title>", item, re.S)
+            link = re.search(r"<link>(.*?)</link>", item, re.S)
+            desc = re.search(r"<description>(.*?)</description>", item, re.S)
+            href = unescape(link.group(1)) if link else ""
+            if not href.startswith("http"):
+                continue
+            rows.append({"title": unescape(title.group(1))[:140] if title else "",
+                         "url": href,
+                         "snippet": unescape(desc.group(1))[:400] if desc else ""})
+            if len(rows) >= limit:
+                break
+        return rows or None
+
+    def _searched(self, key, query, results, engine):
+        """One shape for a completed search, whichever path produced it."""
+        note = None
+        if results:
+            terms = [w for w in re.findall(r"[A-Za-z0-9][\w.\-]{2,}", query.lower())
+                     if w not in _QUERY_STOPWORDS]
+            if terms:
+                blob = " ".join(
+                    "%s %s %s" % (r.get("title", ""), r.get("url", ""),
+                                  r.get("snippet", "")) for r in results).lower()
+                hits = [t for t in terms if t in blob]
+                # A MINORITY is still a failed search.
+                #
+                # This asked whether ANY distinctive word survived, which a
+                # degraded engine passes trivially: 'ollama num_ctx kv cache
+                # vram' returns the Ollama homepage and its download page,
+                # 'ollama' appears, and the check stays quiet about results
+                # that answered none of the actual question. Bing degrades
+                # a client that has queried it steadily -- measured here on
+                # queries never sent before, python.org for an asyncio
+                # question, sqlite.org for a WAL question -- and the shape
+                # it degrades INTO is always the first noun's home page.
+                # One word out of five matching is the signature of that,
+                # not of a search worth reading.
+                if len(hits) * 2 < len(terms):
+                    note = (
+                        "Only %d of the %d distinctive words in this query "
+                        "(%s) appear anywhere in these %d results, so %s almost "
+                        "certainly answered a broader query than the one "
+                        "asked. Treat these as unrelated. Searching again with "
+                        "similar words will return the same thing -- go "
+                        "straight to a known URL with web.goto if you have "
+                        "one, or say the search is not finding it."
+                        % (len(hits), len(terms), ", ".join(terms[:6]),
+                           len(results), engine))
+        out = {"status": "ok", "key": key, "count": len(results),
+               "query": query, "results": results}
+        if note:
+            out["relevance"] = "none"
+            out["message"] = note
+        return out
+
     def _cmd_search(self, args):
         """Search the web and return titles, links and snippets.
 
@@ -438,6 +605,47 @@ class WebAgent:
                     or "https://www.bing.com/search?q={q}")
         url = template.replace("{q}", quote_plus(query))
         engine = urllib.parse.urlparse(url).netloc.replace("www.", "")
+
+        # THE FEED FIRST, THE BROWSER ONLY IF IT FAILS.
+        #
+        # Scraping the search PAGE gets the page a bot is served: measured
+        # here, "ollama num_ctx kv cache vram" came back as the Ollama
+        # homepage and its download link, and "playwright sync api cannot
+        # switch to a different thread" as playwright.dev and the repo. One
+        # query word in six survived. Not a parsing fault -- those were the
+        # real organic results, and plain curl with a desktop user agent got
+        # the same, so it is what the HTML endpoint serves, not something a
+        # better selector or a fresh session could fix.
+        #
+        # Bing publishes the same search as RSS. Same engine, no key, nobody
+        # else in the loop, and it answers the actual question: the same two
+        # queries return 6/6 and 3/3 of their words, the exact GitHub issue
+        # and Stack Overflow thread for the first, real tuning articles for
+        # the second -- each with a description worth reading rather than a
+        # bare title.
+        #
+        # It also needs no browser at all, so a search no longer waits on
+        # Playwright, cannot be broken by the browser being wedged, and costs
+        # a fraction of the time. The page scrape stays as the fallback, and
+        # is still the path when someone points search_url somewhere else.
+        # Gated on WHICH ENGINE, not on whether anyone wrote the setting
+        # down. This first read `if not search_url`, treating any configured
+        # value as "the operator wants the page scraped" -- and config.json
+        # here already contained the default Bing URL, written out in full.
+        # So the feed was skipped on the one machine it was built for, and
+        # the fix would have looked like it did nothing at all.
+        #
+        # RSS is a Bing feature, so the real question is only ever whether
+        # Bing is the target. Point search_url anywhere else and the page
+        # scrape runs, exactly as intended.
+        if "bing.com" in urllib.parse.urlparse(url).netloc:
+            feed = self._search_via_feed(query, limit)
+            if feed:
+                self.payload[key] = {"query": query, "results": feed}
+                self._log("SEARCH", "%r -> %d result(s) via rss"
+                                    % (query, len(feed)), s)
+                return self._searched(key, query, feed, "bing.com")
+
         self._cmd_goto({"url": url, "wait_until": "domcontentloaded"})
 
         # Engines redirect after domcontentloaded, which destroys the execution
@@ -476,8 +684,9 @@ class WebAgent:
                     "error": (f"{engine} served a human-verification page "
                               f"instead of results. Set web.search_url to a "
                               f"different engine or a search API.")}
-        return {"status": "ok", "key": key, "count": len(results),
-                "query": query, "results": results}
+        # Same shaping as the feed path, including the relevance
+        # check -- see `_searched`.
+        return self._searched(key, query, results, engine)
 
 
     def _cmd_extract(self, args):
