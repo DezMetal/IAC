@@ -111,7 +111,43 @@ def set_browser_visible(visible: bool, context: dict = None) -> dict:
                         % (" (still at %s)" % was_at if was_at else ""))}
 
 
+#: Guards the create-or-reuse decision. Two turns can ask at once, and two
+#: browsers would be one more than anybody wants.
+_agent_lock = threading.RLock()
+
+
 def get_web_agent(context: dict = None) -> WebAgent:
+    """The browser, created on ITS OWN THREAD no matter who asks.
+
+    The hop used to live only in the web op handlers, which was right for
+    every caller that went through them and useless against the one that did
+    not. `sys.*` is implemented as methods on WebAgent -- shell commands live
+    on the same object as the browser -- so `sys.exec` called this directly
+    from whatever pool thread the turn was running on, and constructing a
+    WebAgent starts Playwright.
+
+    So a shell command launched the browser, bound it to a worker thread, and
+    that worker retired when the turn ended. Every web operation afterwards
+    was marshalled correctly onto the browser thread, found an object owned by
+    a thread that no longer existed, and failed in one hundredth of a second
+    with "cannot switch to a different thread (which happens to have exited)".
+    One `echo` poisoned browsing for the rest of the session, and nothing in
+    the message pointed anywhere near the shell.
+
+    Putting the hop HERE makes it unconditional: it no longer matters whether
+    a caller knew to marshal, because birth happens on the owning thread
+    either way. Only construction is marshalled -- a shell command that merely
+    needs the object still runs on the caller's thread rather than queueing
+    behind browser work.
+    """
+    with _agent_lock:
+        if _needs_new_agent():
+            _on_browser_thread(_create_agent, context)
+        return _agent_instance
+
+
+def _needs_new_agent() -> bool:
+    """Whether the cached agent is missing or no longer usable."""
     global _agent_instance
     if _agent_instance is not None:
         if getattr(_agent_instance, "closed", False):
@@ -122,7 +158,12 @@ def get_web_agent(context: dict = None) -> WebAgent:
             except Exception:
                 pass
             _agent_instance = None
+    return _agent_instance is None
 
+
+def _create_agent(context: dict = None) -> WebAgent:
+    """Runs ONLY on the browser thread -- see `get_web_agent`."""
+    global _agent_instance
     if _agent_instance is None:
         # Pull configuration from context if available
         config = (context or {}).get("config", {})
