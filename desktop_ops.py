@@ -90,7 +90,7 @@ def register_desktop_operations(registry):
                     x = args.get("x", 0)
                     y = args.get("y", 0)
                     duration = args.get("duration", 0.0)
-                    relative = args.get("relative", False)
+                    relative = args.get("relative", True)
                     
                     if relative:
                         pyautogui.move(int(x), int(y), duration=duration)
@@ -143,16 +143,17 @@ def register_desktop_operations(registry):
                 "x": {"type": "integer", "description": "X coordinate"},
                 "y": {"type": "integer", "description": "Y coordinate"},
                 "duration": {"type": "number", "description": "Movement duration in seconds", "default": 0.0},
-                "relative": {"type": "boolean", "description": "Move relative to current position", "default": False}
+                "relative": {"type": "boolean", "description": "Move relative to current position", "default": True}
             },
             "required": ["x", "y"]
         }
     }
 
     desktop_ops = [
-        ("snap", "DEPRECATED -- use sense.capture. Takes a screenshot of the "
-                 "primary desktop only; sense.capture can address any screen, "
-                 "a region of one, or a camera"),
+        ("snap", "Screenshot of the whole primary desktop (delegates to "
+                 "sense.capture). For detail, use sense.capture with a "
+                 "square region crop instead of reading a full-screen image; "
+                 "sense.capture can also address any screen or a camera"),
         ("click", "Click the mouse at specific coordinates or current location"),
         ("type", "Type text simulating keyboard input"),
         ("hotkey", "Press a combination of keys"),

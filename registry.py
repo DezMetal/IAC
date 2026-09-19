@@ -11,6 +11,7 @@ Any D-Net node can register operations organized by domain.
 The registry provides discovery, validation, and execution.
 """
 
+import fnmatch
 import json
 from typing import Any, Callable, Dict, List, Optional
 
@@ -45,6 +46,9 @@ class Operation:
 
 class OperationRegistry:
     _instance = None
+    # Reassigned by `exclude`, never mutated, so a class default is safe --
+    # and a subclass that skips `__new__` for isolation still has one.
+    _excluded = ()
 
     def __new__(cls):
         if cls._instance is None:
@@ -53,13 +57,40 @@ class OperationRegistry:
             cls._instance._aliases: Dict[str, str] = {}
         return cls._instance
 
+    def exclude(self, patterns):
+        """Operations this host will never carry, as glob patterns.
+
+        A policy that DENIES an operation at call time still advertises it in
+        the index, and an agent will keep reaching for what it can see. When
+        the host has replaced a whole domain -- a browser served by an MCP
+        server instead of the built-in one, say -- the built-in should not be
+        in the index at all. Anything already registered that matches is
+        removed; anything registered later that matches is dropped silently.
+        The host decides the patterns; this module knows nothing about where
+        they came from.
+        """
+        self._excluded = [str(p).strip().lower() for p in (patterns or [])
+                          if str(p).strip()]
+        for qn in [qn for qn in list(self._ops) if self.is_excluded(qn)]:
+            self.unregister(qn)
+
+    def is_excluded(self, op_name: str) -> bool:
+        if not self._excluded or not op_name:
+            return False
+        low = str(op_name).strip().lower()
+        return any(fnmatch.fnmatch(low, pat) for pat in self._excluded)
+
     def register(self, name: str, domain: str, description: str,
-                 parameters: dict, handler: Callable) -> Operation:
+                 parameters: dict, handler: Callable) -> Optional[Operation]:
         op = Operation(name, domain, description, parameters, handler)
+        if self.is_excluded(op.qualified_name):
+            return None
         self._ops[op.qualified_name] = op
         return op
 
     def register_operation(self, op: Operation):
+        if self.is_excluded(op.qualified_name):
+            return
         self._ops[op.qualified_name] = op
 
     def unregister(self, op_name: str) -> bool:
@@ -80,6 +111,8 @@ class OperationRegistry:
         return True
 
     def alias(self, alias_name: str, target_name: str):
+        if self.is_excluded(target_name) or self.is_excluded(alias_name):
+            return
         self._aliases[alias_name] = target_name
 
     def resolve(self, op_name: str) -> Optional[Operation]:

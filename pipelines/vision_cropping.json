@@ -1,0 +1,397 @@
+{
+  "source": "human",
+  "target": "local",
+  "config": {
+    "headless": true,
+    "ai_config": {
+      "provider": "ollama",
+      "host": "http://100.92.31.18:11434",
+      "model": "Gemma4:E4B",
+      "text_model": "Gemma4:E4B",
+      "vision_model": "SmolVLM2:latest",
+      "api_key": "",
+      "ai_timeout": 300,
+      "drop": [
+        "encoded",
+        "desc"
+      ]
+    },
+    "security": {
+      "allow_eval": true
+    }
+  },
+  "plan": [
+    {
+      "op": "core.log",
+      "args": {
+        "dump_key": "",
+        "level": "info",
+        "message": "Scanning Screen.."
+      }
+    },
+    {
+      "op": "sense.capture",
+      "args": {
+        "path": "left.png",
+        "payload_key": "screen_left",
+        "region": {
+          "x": 0,
+          "y": -60,
+          "w": 1200,
+          "h": 1200
+        },
+        "target": "screen-1"
+      }
+    },
+    {
+      "op": "core.log",
+      "args": {
+        "dump_key": "",
+        "level": "info",
+        "message": "screen_left captured.."
+      }
+    },
+    {
+      "op": "ai.process",
+      "args": {
+        "api_key": "no-key",
+        "host": "http://100.92.31.18:11434",
+        "model": "Gemma4:E4B",
+        "options": {
+          "num_ctx": 8192,
+          "num_predict": 100,
+          "temperature": 0,
+          "top_p": 0.1
+        },
+        "payload_key": "screen_left",
+        "prompt": "in 3 sentences max:\nwhat do you see?",
+        "provider": "",
+        "temperature": 0.2,
+        "think": false
+      }
+    },
+    {
+      "op": "sense.capture",
+      "args": {
+        "path": "mid.png",
+        "payload_key": "screen_mid",
+        "region": {
+          "x": 360,
+          "y": -60,
+          "w": 1200,
+          "h": 1200
+        },
+        "target": "screen-1"
+      }
+    },
+    {
+      "op": "core.log",
+      "args": {
+        "dump_key": "",
+        "level": "info",
+        "message": "screen_mid captured.."
+      }
+    },
+    {
+      "op": "ai.process",
+      "args": {
+        "api_key": "no-key",
+        "host": "http://100.92.31.18:11434",
+        "model": "Gemma4:E4B",
+        "options": {
+          "num_ctx": 8192,
+          "num_predict": 100,
+          "temperature": 0,
+          "top_p": 0.1
+        },
+        "payload_key": "screen_mid",
+        "prompt": "in 3 sentences max:\nwhat do you see?",
+        "provider": "",
+        "temperature": 0.2,
+        "think": false
+      }
+    },
+    {
+      "op": "sense.capture",
+      "args": {
+        "path": "right.png",
+        "payload_key": "screen_right",
+        "region": {
+          "x": 720,
+          "y": -60,
+          "w": 1200,
+          "h": 1200
+        },
+        "target": "screen-1"
+      }
+    },
+    {
+      "op": "core.log",
+      "args": {
+        "dump_key": "",
+        "level": "info",
+        "message": "screen_right captured.."
+      }
+    },
+    {
+      "op": "ai.process",
+      "args": {
+        "api_key": "no-key",
+        "host": "http://100.92.31.18:11434",
+        "model": "Gemma4:E4B",
+        "options": {
+          "num_ctx": 8192,
+          "num_predict": 100,
+          "temperature": 0,
+          "top_p": 0.1
+        },
+        "payload_key": "screen_right",
+        "prompt": "in 3 sentences max:\nwhat do you see?",
+        "provider": "",
+        "temperature": 0.2,
+        "think": false
+      }
+    }
+  ],
+  "data_payload": {
+    "_last_result": {
+      "data": "",
+      "key": "screen_right",
+      "message": "",
+      "status": "ok"
+    },
+    "_output": "",
+    "screen_left": {
+      "raw_output": "I see a complex visual programming interface, likely for AI or robotics, featuring nodes connected by lines. The left panel displays various available \"IAC Nodes\" like 'drop', 'wait', and 'process'. On the right, there are several interconnected blocks labeled 'ai' and 'vision_crop.json', suggesting an automated workflow involving image processing and AI models.",
+      "src": "C:\\Users\\user\\Documents\\pythons\\test\\Aether\\IAC\\left.png"
+    },
+    "screen_mid": {
+      "raw_output": "I see a complex software interface, likely for an AI or machine learning workflow. It features several interconnected modules labeled \"NET IAC Core\" and multiple instances of \"ai_process,\" suggesting data processing pipelines are being configured. The overall layout indicates a system designed to manage and execute automated tasks using various models (like Gemma).",
+      "src": "C:\\Users\\user\\Documents\\pythons\\test\\Aether\\IAC\\mid.png"
+    },
+    "screen_right": {
+      "src": "C:\\Users\\user\\Documents\\pythons\\test\\Aether\\IAC\\right.png"
+    }
+  },
+  "_gui_layout": {
+    "nodes": [
+      {
+        "id": 21,
+        "op": "sense.capture",
+        "x": 260,
+        "y": 11,
+        "args": {
+          "path": "left.png",
+          "payload_key": "screen_left",
+          "region": {
+            "x": 0,
+            "y": -60,
+            "w": 1200,
+            "h": 1200
+          },
+          "target": "screen-1"
+        }
+      },
+      {
+        "id": 22,
+        "op": "sense.capture",
+        "x": 264,
+        "y": 204,
+        "args": {
+          "path": "mid.png",
+          "payload_key": "screen_mid",
+          "region": {
+            "x": 360,
+            "y": -60,
+            "w": 1200,
+            "h": 1200
+          },
+          "target": "screen-1"
+        }
+      },
+      {
+        "id": 23,
+        "op": "core.log",
+        "x": 1,
+        "y": 24,
+        "args": {
+          "dump_key": "",
+          "level": "info",
+          "message": "Scanning Screen.."
+        }
+      },
+      {
+        "id": 24,
+        "op": "sense.capture",
+        "x": 264,
+        "y": 394,
+        "args": {
+          "path": "right.png",
+          "payload_key": "screen_right",
+          "region": {
+            "x": 720,
+            "y": -60,
+            "w": 1200,
+            "h": 1200
+          },
+          "target": "screen-1"
+        }
+      },
+      {
+        "id": 31,
+        "op": "core.log",
+        "x": 518,
+        "y": 38,
+        "args": {
+          "dump_key": "",
+          "level": "info",
+          "message": "screen_left captured.."
+        }
+      },
+      {
+        "id": 32,
+        "op": "core.log",
+        "x": 518,
+        "y": 227,
+        "args": {
+          "dump_key": "",
+          "level": "info",
+          "message": "screen_mid captured.."
+        }
+      },
+      {
+        "id": 33,
+        "op": "core.log",
+        "x": 521,
+        "y": 405,
+        "args": {
+          "dump_key": "",
+          "level": "info",
+          "message": "screen_right captured.."
+        }
+      },
+      {
+        "id": 37,
+        "op": "ai.process",
+        "x": 800,
+        "y": 31,
+        "args": {
+          "api_key": "no-key",
+          "host": "http://100.92.31.18:11434",
+          "model": "Gemma4:E4B",
+          "options": {
+            "num_ctx": 8192,
+            "num_predict": 100,
+            "temperature": 0,
+            "top_p": 0.1
+          },
+          "payload_key": "screen_left",
+          "prompt": "in 3 sentences max:\nwhat do you see?",
+          "provider": "",
+          "temperature": 0.2,
+          "think": false
+        }
+      },
+      {
+        "id": 39,
+        "op": "ai.process",
+        "x": 793,
+        "y": 247,
+        "args": {
+          "api_key": "no-key",
+          "host": "http://100.92.31.18:11434",
+          "model": "Gemma4:E4B",
+          "options": {
+            "num_ctx": 8192,
+            "num_predict": 100,
+            "temperature": 0,
+            "top_p": 0.1
+          },
+          "payload_key": "screen_mid",
+          "prompt": "in 3 sentences max:\nwhat do you see?",
+          "provider": "",
+          "temperature": 0.2,
+          "think": false
+        }
+      },
+      {
+        "id": 40,
+        "op": "ai.process",
+        "x": 793,
+        "y": 469,
+        "args": {
+          "api_key": "no-key",
+          "host": "http://100.92.31.18:11434",
+          "model": "Gemma4:E4B",
+          "options": {
+            "num_ctx": 8192,
+            "num_predict": 100,
+            "temperature": 0,
+            "top_p": 0.1
+          },
+          "payload_key": "screen_right",
+          "prompt": "in 3 sentences max:\nwhat do you see?",
+          "provider": "",
+          "temperature": 0.2,
+          "think": false
+        }
+      }
+    ],
+    "connections": [
+      {
+        "from": 23,
+        "fromPort": "out",
+        "to": 21,
+        "toPort": "in"
+      },
+      {
+        "from": 23,
+        "fromPort": "out",
+        "to": 22,
+        "toPort": "in"
+      },
+      {
+        "from": 23,
+        "fromPort": "out",
+        "to": 24,
+        "toPort": "in"
+      },
+      {
+        "from": 21,
+        "fromPort": "out",
+        "to": 31,
+        "toPort": "in"
+      },
+      {
+        "from": 22,
+        "fromPort": "out",
+        "to": 32,
+        "toPort": "in"
+      },
+      {
+        "from": 24,
+        "fromPort": "out",
+        "to": 33,
+        "toPort": "in"
+      },
+      {
+        "from": 31,
+        "fromPort": "out",
+        "to": 37,
+        "toPort": "in"
+      },
+      {
+        "from": 32,
+        "fromPort": "out",
+        "to": 39,
+        "toPort": "in"
+      },
+      {
+        "from": 33,
+        "fromPort": "out",
+        "to": 40,
+        "toPort": "in"
+      }
+    ]
+  }
+}

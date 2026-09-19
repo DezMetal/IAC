@@ -278,18 +278,12 @@ def bootstrap(safe_mode=False, exclude=None):
         },
         handler=_ai_handler(agent_tools.task_ai_process)
     )
-    
-    # Make aliases clear and intuitive
-    registry.alias("ai.analyze_data", "ai.process")
-    registry.alias("analyze_data", "ai.process")
-    # ai.analyze is the name agents and pipelines reach for when analysing an
-    # image or blob already sitting in the payload. Without this it silently
-    # fails to resolve and the step is a no-op.
-    registry.alias("ai.analyze", "ai.process")
-    registry.alias("ai.vision", "ai.process")
-    # 'analyze' by default maps to 'web.analyze' since it operates on the live view/page
-    registry.alias("analyze", "web.analyze")
-    # Remove ai.brain and unify in ai.process
+
+    # No convenience aliases for ai.* (ai.analyze, ai.vision, analyze_data,
+    # bare `analyze`). An alias is not in the operation index, so a name that
+    # resolves through one WORKS SOMETIMES -- and a model that has been
+    # rewarded for guessing keeps guessing. ai.process is the one name, and
+    # a wrong guess is answered by iac.search rather than quietly accepted.
 
     # ai.plan — Standalone text inference with payload injection
     def _ai_plan_handler(args, context):
@@ -321,8 +315,9 @@ def bootstrap(safe_mode=False, exclude=None):
         },
         handler=_ai_plan_handler
     )
-
-    # 2. Register Web Operations
+  
+    # 2. Register Web Operations. A host that serves the browser some other
+    # way passes exclude=["web.*"] and these never enter the index.
     try:
         try:
             from .web.ops import register_web_operations
@@ -331,7 +326,7 @@ def bootstrap(safe_mode=False, exclude=None):
         register_web_operations(registry)
     except ImportError as e:
         print(f"[WARN] Web operations not available: {e}")
-        
+
     # 2.5 Register Desktop Operations
     if not safe_mode:
         try:
@@ -463,10 +458,6 @@ def bootstrap(safe_mode=False, exclude=None):
         registry.register("exec", "sys", "Run a shell command",
                           sys_schemas["exec"], _make_sys_handler("exec"))
 
-    # Add common aliases for backward compatibility with v1 plans
-    for op in ["goto", "click", "type", "wait", "scroll", "tour", "snap", "analyze", "extract", "probe", "eval", "stop", "sandbox"]:
-        registry.alias(op, f"web.{op}")
-    
     # Capability discovery. Registered for EVERY host, safe mode included:
     # it only reads the registry and runs no operation, and an agent that
     # cannot find out what it can do is the failure this whole module exists
@@ -492,20 +483,13 @@ def bootstrap(safe_mode=False, exclude=None):
                         "run_shell", "terminal", "sys.execute", "sys.shell"):
             registry.alias(_spoken, "sys.exec")
 
-    # The same lesson, for the camera. Asked to read the desktop, a model
-    # reached for `desktop.capture` -- twice in one call list -- and got
-    # "unavailable operation skipped" both times. `desktop.snap` and
-    # `sense.capture` were both sitting there; the name it guessed is the
-    # obvious compound of the two that exist, which makes it a naming gap
-    # rather than a mistake.
-    for _guessed, _target in (("desktop.capture", "sense.capture"),
-                              ("screen.capture", "sense.capture"),
-                              ("screenshot", "sense.capture"),
-                              ("take_screenshot", "sense.capture"),
-                              ("capture_screen", "sense.capture"),
-                              ("sense.screenshot", "sense.capture")):
-        if registry.has(_target):
-            registry.alias(_guessed, _target)
+    # Deliberately NOT extended to the camera. `desktop.capture`,
+    # `screenshot`, `take_screenshot` and friends used to resolve to
+    # sense.capture the same way. They came out because an alias that is not
+    # in the index is a name that works only sometimes, and a model rewarded
+    # for a guess keeps guessing. The shell synonyms above stay because a
+    # model that concludes it has NO shell stops trying altogether, which is
+    # the costlier failure; a model that cannot find the camera asks.
 
     # 4. Register Control Flow Operations (handled natively by runner)
     flow_noop = lambda a, c: {"status": "ok", "note": "handled by runner"}
