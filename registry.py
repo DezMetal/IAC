@@ -50,6 +50,21 @@ class OperationRegistry:
     # and a subclass that skips `__new__` for isolation still has one.
     _excluded = ()
 
+    # Moves on every change to what is registered. Anything that caches a
+    # view of the registry -- an index, a schema table, a prompt block --
+    # compares this rather than guessing when to rebuild. A host that
+    # rendered its operation index at startup and cached it kept offering
+    # a domain for the rest of the session after an MCP server had replaced
+    # it; nothing told the cache, because nothing could.
+    _version = 0
+
+    @property
+    def version(self) -> int:
+        return self._version
+
+    def _changed(self):
+        self._version = self._version + 1
+
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
@@ -73,6 +88,7 @@ class OperationRegistry:
                           if str(p).strip()]
         for qn in [qn for qn in list(self._ops) if self.is_excluded(qn)]:
             self.unregister(qn)
+        self._changed()
 
     def is_excluded(self, op_name: str) -> bool:
         if not self._excluded or not op_name:
@@ -86,12 +102,14 @@ class OperationRegistry:
         if self.is_excluded(op.qualified_name):
             return None
         self._ops[op.qualified_name] = op
+        self._changed()
         return op
 
     def register_operation(self, op: Operation):
         if self.is_excluded(op.qualified_name):
             return
         self._ops[op.qualified_name] = op
+        self._changed()
 
     def unregister(self, op_name: str) -> bool:
         """Remove an operation, and any alias that pointed at it.
@@ -108,12 +126,14 @@ class OperationRegistry:
         for alias_name, target in list(self._aliases.items()):
             if target in (op.qualified_name, op_name):
                 self._aliases.pop(alias_name, None)
+        self._changed()
         return True
 
     def alias(self, alias_name: str, target_name: str):
         if self.is_excluded(target_name) or self.is_excluded(alias_name):
             return
         self._aliases[alias_name] = target_name
+        self._changed()
 
     def resolve(self, op_name: str) -> Optional[Operation]:
         if op_name in self._ops:
@@ -206,6 +226,7 @@ class OperationRegistry:
     def clear(self):
         self._ops.clear()
         self._aliases.clear()
+        self._changed()
 
     def __len__(self):
         return len(self._ops)
