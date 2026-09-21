@@ -19,6 +19,16 @@ except ImportError:
     from agent_tools import task_ai_process, task_encode, resolve_resource, get_skip_duplicates_option, _seen_hashes, get_duplicate_threshold_option
     from inference import DEFAULT_AI_CONFIG
 
+def _no_window():
+    """On Windows a console child of a windowless parent gets a console window
+    of its own. Nothing run here is meant to be seen; its output is captured."""
+    if sys.platform != "win32":
+        return {}
+    si = subprocess.STARTUPINFO()
+    si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    return {"creationflags": subprocess.CREATE_NO_WINDOW, "startupinfo": si}
+
+
 # Words too common to prove a result is on topic. Deliberately short: the
 # check asks whether ANY distinctive word survived, so over-trimming here
 # would start calling good searches bad.
@@ -1174,7 +1184,7 @@ class WebAgent:
         try:
             result = subprocess.run(
                 cmd, shell=True, cwd=cwd, capture_output=True,
-                timeout=timeout
+                timeout=timeout, **_no_window()
             )
             output = result.stdout.decode("utf-8", errors="replace").strip() if result.stdout else ""
             err = result.stderr.decode("utf-8", errors="replace").strip() if result.stderr else ""

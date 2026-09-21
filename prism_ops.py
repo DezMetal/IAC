@@ -9,7 +9,18 @@ import re
 import json
 import time
 import subprocess
+import sys
 import datetime
+
+def _no_window():
+    """On Windows a console child of a windowless parent gets a console window
+    of its own. Nothing run here is meant to be seen; its output is captured."""
+    if sys.platform != "win32":
+        return {}
+    si = subprocess.STARTUPINFO()
+    si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    return {"creationflags": subprocess.CREATE_NO_WINDOW, "startupinfo": si}
+
 
 # Common project markers for structural DNA extraction
 CORE_MARKERS = [
@@ -133,7 +144,7 @@ def _git(repo, *args):
     try:
         out = subprocess.run(
             ['git', '-C', repo] + list(args),
-            capture_output=True, text=True, timeout=20
+            capture_output=True, text=True, timeout=20, **_no_window()
         )
     except (OSError, subprocess.SubprocessError):
         return None
