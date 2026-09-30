@@ -106,7 +106,32 @@ def register_vision_operations(registry):
                     payload[key]["src"] = out_path
                     # Also keep original just in case
                     payload[key]["original_src"] = src_path
-                    
+                    # THE GRID THAT WAS ACTUALLY DRAWN.
+                    #
+                    # grid_size given here is overridden whenever it is missing
+                    # or under 50, so the numbers painted on the picture were
+                    # not the numbers the caller asked for -- and resolve_cells
+                    # took its own grid_size at face value, defaulting to 100.
+                    # Two operations meant to be used together therefore
+                    # described DIFFERENT grids unless the caller passed the
+                    # same value over 50 to both: cell 20 was read off one grid
+                    # and resolved against another, and the click landed
+                    # somewhere else entirely. Remembered here so resolve_cells
+                    # can use the grid that exists instead of being told.
+                    if overlay_type == "grid":
+                        payload[key]["grid_size"] = grid_size
+                        cols = math.ceil(width / grid_size)
+                        rows = math.ceil(height / grid_size)
+                        payload[key]["grid"] = {"size": grid_size, "cols": cols,
+                                                "rows": rows, "cells": cols * rows}
+                        return {"status": "ok", "path": out_path,
+                                "grid_size": grid_size, "cols": cols, "rows": rows,
+                                "cells": cols * rows,
+                                "note": ("%d cells numbered 1-%d, left to right then down, "
+                                         "%dpx each. resolve_cells reads this grid from the "
+                                         "payload; you do not need to repeat grid_size."
+                                         % (cols * rows, cols * rows, grid_size))}
+
                     return {"status": "ok", "path": out_path}
                     
                 elif op_name == "resolve_cells":
@@ -121,7 +146,13 @@ def register_vision_operations(registry):
                     img = Image.open(src_path)
                     width, height = img.size
                     
-                    grid_size = args.get("grid_size", 100)
+                    # The grid the overlay actually drew wins over anything
+                    # passed here: the numbers being resolved were READ OFF
+                    # that picture, so any other value resolves a cell that
+                    # was never on screen. Falls back to the argument (then to
+                    # 100) for an image nobody drew a grid on.
+                    drawn = payload[key].get("grid_size")
+                    grid_size = int(drawn or args.get("grid_size") or 100)
                     cols = math.ceil(width / grid_size)
                     
                     cells = args.get("cells", [])
@@ -166,7 +197,12 @@ def register_vision_operations(registry):
                     
                     out_key = args.get("output_key", "resolved_box")
                     payload[out_key] = box
-                    return {"status": "ok", "box": box, "key": out_key}
+                    return {"status": "ok", "box": box, "key": out_key,
+                            "grid_size": grid_size, "cols": cols,
+                            "note": ("cell(s) %s on the %dpx grid -> click "
+                                     "x=%d y=%d" % (", ".join(str(c) for c in cells),
+                                                    grid_size, box["center_x"],
+                                                    box["center_y"]))}
                 
                 return {"status": "error", "error": f"Unknown vision operation: {op_name}"}
                 
@@ -181,7 +217,7 @@ def register_vision_operations(registry):
             "properties": {
                 "payload_key": {"type": "string", "description": "Key of the image in payload to overlay on"},
                 "type": {"type": "string", "description": "Type of overlay: grid, boxes, points", "default": "grid"},
-                "grid_size": {"type": "integer", "description": "Size of each grid cell in pixels (for type=grid). Recommended: 200", "default": 200},
+                "grid_size": {"type": "integer", "description": "Pixels per cell (type=grid). Recommended 200; under 50 is raised to keep the numbers readable, and the result says which grid was drawn", "default": 200},
                 "color": {"type": "string", "description": "Color of the overlay elements", "default": "red"},
                 "output_path": {"type": "string", "description": "Optional custom path to save overlaid image"},
                 "boxes": {"type": "array", "description": "List of box objects {x, y, w, h, label} for type=boxes"},
@@ -193,7 +229,7 @@ def register_vision_operations(registry):
             "type": "object",
             "properties": {
                 "payload_key": {"type": "string", "description": "Key of the original image in payload to get dimensions"},
-                "grid_size": {"type": "integer", "description": "Size of the grid cells used", "default": 100},
+                "grid_size": {"type": "integer", "description": "Pixels per cell. Leave it out after vision.overlay: the grid that was drawn is remembered and used, so the cell numbers you read off the picture resolve against the same grid"},
                 "cells": {"type": "array", "items": {"type": "integer"}, "description": "List of cell numbers to bound"},
                 "start_cell": {"type": "integer", "description": "Alternative to 'cells': top-left cell number"},
                 "end_cell": {"type": "integer", "description": "Alternative to 'cells': bottom-right cell number"},
