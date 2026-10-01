@@ -388,15 +388,21 @@ def register_web_operations(registry):
         ("click", "Click an element by selector"),
         ("type", "Type value into an element"),
         ("wait", "Wait for specified milliseconds"),
-        ("scroll", "Scroll the page"),
-        ("tour", "Execute an automated guided tour"),
-        ("snap", "Take a screenshot"),
+        ("scroll", "Scroll the web page down (or up with a negative amount), "
+                   "then return what is on screen after it"),
+        ("tour", "Walk the page: scroll through it in steps, snapshotting as it "
+                 "goes, for seeing a long page without reading it all at once"),
+        ("snap", "Screenshot of the WEB PAGE in the browser. For this desktop "
+                 "use sense.capture instead; for a region of it, sense.capture "
+                 "with a region. The picture comes back to you to look at"),
         ("analyze", "Analyze the CURRENTLY LOADED page via AI -- goto or search first"),
         ("extract", "Extract data from the DOM"),
-        ("heartbeat", "Enable high-FPS canvas heartbeat"),
+        ("heartbeat", "Keep the page rendering at a high frame rate, for "
+                      "watching something animate or draw on a canvas"),
         ("probe", "Discover interactive elements"),
         ("eval", "Execute custom JavaScript"),
-        ("stop", "Finalize the session"),
+        ("stop", "Close this browsing session and let the browser go. Anything "
+                 "not saved with web.save_state is gone"),
         ("save_state", "Save browser storage state"),
         ("sandbox", "Enter interactive sandbox mode"),
         # These were reachable from the sandbox HUD but never registered, so a

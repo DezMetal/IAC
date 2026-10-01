@@ -184,7 +184,9 @@ def bootstrap(safe_mode=False, exclude=None):
         ("drop", "Remove specific keys from the payload"),
         ("wait", "Pause execution for N milliseconds"),
         ("log", "Output a message to the console"),
-        ("noop", "No-operation placeholder")
+        ("noop", "Do nothing, successfully. For a step that has to exist but has "
+                 "no work in it -- holding a place in a pipeline, or ending a run "
+                 "deliberately rather than by failing")
     ]
     try:
         from .runner import _fallback_execute
@@ -455,7 +457,11 @@ def bootstrap(safe_mode=False, exclude=None):
         # path policy entirely -- sys.fs_write would happily write outside every
         # configured root while filesystem.write refused the identical path.
         # One way to touch a file, and it is the guarded one.
-        registry.register("exec", "sys", "Run a shell command",
+        registry.register("exec", "sys",
+                          "Run a command in a shell and return what it printed, "
+                          "with its exit code. The one way to run anything on this "
+                          "machine: it is guarded, so a command reaching somewhere "
+                          "out of bounds is refused rather than run",
                           sys_schemas["exec"], _make_sys_handler("exec"))
 
     # Capability discovery. Registered for EVERY host, safe mode included:
@@ -525,7 +531,8 @@ def bootstrap(safe_mode=False, exclude=None):
     }
     flow_ops = [
         ("foreach", "Loop over a payload array"),
-        ("repeat", "Repeat steps N times"),
+        ("repeat", "Run the steps inside this one N times over, for work that is "
+                   "the same each time round"),
         ("if", "Conditional branching based on payload state")
     ]
     for name, desc in flow_ops:
