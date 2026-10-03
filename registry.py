@@ -13,7 +13,10 @@ The registry provides discovery, validation, and execution.
 
 import fnmatch
 import json
+import logging
 from typing import Any, Callable, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class Operation:
@@ -26,6 +29,17 @@ class Operation:
         self.description = description
         self.parameters = parameters
         self.handler = handler
+
+    @property
+    def provider(self) -> str:
+        """Who serves this: "iac", or "mcp:<server>" for anything from outside.
+
+        The handler already carries it -- `handler.external` is what the
+        boundary reads to know an operation came from outside and does not
+        know its roots. Naming it here is what lets the registry see that two
+        different things are trying to be the same operation.
+        """
+        return str(getattr(self.handler, "external", "") or "iac")
 
     @property
     def qualified_name(self) -> str:
@@ -99,15 +113,144 @@ class OperationRegistry:
     def register(self, name: str, domain: str, description: str,
                  parameters: dict, handler: Callable) -> Optional[Operation]:
         op = Operation(name, domain, description, parameters, handler)
-        if self.is_excluded(op.qualified_name):
+        if self.is_excluded(op.qualified_name) or self._owned_elsewhere(op):
             return None
+        self._note_clash(op)
         self._ops[op.qualified_name] = op
         self._changed()
         return op
 
-    def register_operation(self, op: Operation):
-        if self.is_excluded(op.qualified_name):
+    def _owned_elsewhere(self, op: Operation) -> bool:
+        """True when another provider has claimed this operation's domain.
+
+        A CLAIM HAS TO SURVIVE THE NEXT REGISTRATION, or it is not a claim.
+        Displacing the built-in browser when a browser server connects worked
+        exactly until something imported the module that registers built-ins
+        again -- and the registry is a singleton, so the second bootstrap
+        quietly put half of them back, on top. The result was one `web`
+        domain holding two browsers: `web.navigate` drove the server's,
+        `web.click` drove the built-in one's, and clicking never landed on
+        the page that had been navigated.
+
+        Order of arrival cannot be relied on for this. Ownership can.
+        """
+        owner = getattr(self, "_owners", {}).get((op.domain or "").lower())
+        if owner is None or owner == op.provider:
+            return False
+        if op.qualified_name not in getattr(self, "_refused", ()):
+            self._refused = set(getattr(self, "_refused", ())) | {op.qualified_name}
+            logger.info("Not registering %s from %s: '%s' is answered for by %s.",
+                        op.qualified_name, op.provider, op.domain, owner)
+        return True
+
+    def _note_clash(self, op: Operation):
+        """Two different providers answering to one name is not an update.
+
+        A LATE REGISTRATION USED TO WIN IN SILENCE. An MCP browser server and
+        the built-in browser both put their tools in `web`, so `web.type` was
+        the server's and `web.click` was the built-in one's -- two different
+        browsers behind one name. Driving a page then meant navigating in one
+        and clicking in the other, and the only symptom was that nothing
+        worked and the agent looked incompetent.
+
+        Replacing an operation with another from the SAME provider is an
+        ordinary update (a server reconnecting, a module reloading) and is
+        not a clash.
+        """
+        held = self._ops.get(op.qualified_name)
+        if held is None or held.provider == op.provider:
             return
+        row = {"op": op.qualified_name, "was": held.provider, "now": op.provider}
+        self._clashes = [c for c in getattr(self, "_clashes", [])
+                         if c["op"] != op.qualified_name] + [row]
+        logger.warning(
+            "%s now comes from %s, replacing %s. Two providers in one domain "
+            "means a name whose meaning depends on start-up order.",
+            op.qualified_name, op.provider, held.provider)
+
+    def clashes(self) -> list:
+        """Names two providers have both claimed, most recent last."""
+        return list(getattr(self, "_clashes", []))
+
+    def owners(self) -> dict:
+        """{domain: provider} -- domains one provider answers for."""
+        return dict(getattr(self, "_owners", {}))
+
+    def release_domain(self, domain: str, provider: str = "") -> bool:
+        """Give a domain back, so what it displaced may register again.
+
+        A server that goes away must not keep its claim: the built-in
+        operations it replaced are the fallback, and a claim nobody is
+        serving is a domain with nothing in it.
+        """
+        domain = (domain or "").strip().lower()
+        owners = dict(getattr(self, "_owners", {}))
+        if domain not in owners or (provider and owners[domain] != provider):
+            return False
+        del owners[domain]
+        self._owners = owners
+        self._refused = {q for q in getattr(self, "_refused", ())
+                         if not q.lower().startswith(domain + ".")}
+        logger.info("'%s' is no longer claimed; anything that registers there "
+                    "may have it again.", domain)
+        return True
+
+    def providers_by_domain(self) -> dict:
+        """{domain: {provider: [op, ...]}} -- who serves what, where.
+
+        A domain with more than one provider in it is the real fault: a
+        single clashing NAME is visible, but a domain quietly half-served by
+        each is the one that cannot be reasoned about at all.
+        """
+        out = {}
+        for qualified, op in self._ops.items():
+            out.setdefault(op.domain or "", {}).setdefault(op.provider, []).append(qualified)
+        return out
+
+    def mixed_domains(self) -> dict:
+        """Only the domains served by more than one provider."""
+        return {d: p for d, p in self.providers_by_domain().items() if len(p) > 1}
+
+    def claim_domain(self, domain: str, provider: str) -> list:
+        """One provider answers for a whole domain. Returns what was retired.
+
+        Reporting a mixed domain is not enough, because the mix is not a
+        warning about a future problem -- it IS the problem, from the moment
+        it exists. `web` half-served by a browser server and half by the
+        built-in browser is not two browsers you can choose between: it is
+        one name that drives whichever of them registered last, so navigating
+        and clicking land in different windows.
+
+        So a domain gets ONE owner and the rest of it steps aside. Nothing is
+        hidden: what was retired is returned and logged by name, and the
+        operations still exist in their own module for a host that wants them
+        instead.
+        """
+        domain = (domain or "").strip().lower()
+        if not domain:
+            return []
+        # Recorded, so a later registration from anyone else is refused
+        # rather than quietly winning. See _owned_elsewhere.
+        self._owners = dict(getattr(self, "_owners", {}))
+        self._owners[domain] = provider
+        retired = []
+        for qualified in [q for q, op in self._ops.items()
+                          if (op.domain or "").lower() == domain
+                          and op.provider != provider]:
+            retired.append(qualified)
+            del self._ops[qualified]
+        if retired:
+            self._aliases = {a: t for a, t in self._aliases.items() if t not in retired}
+            self._changed()
+            logger.warning("%s now answers for the whole '%s' domain; retired %d "
+                           "operation(s) that came from elsewhere: %s",
+                           provider, domain, len(retired), ", ".join(sorted(retired)))
+        return retired
+
+    def register_operation(self, op: Operation):
+        if self.is_excluded(op.qualified_name) or self._owned_elsewhere(op):
+            return
+        self._note_clash(op)
         self._ops[op.qualified_name] = op
         self._changed()
 
