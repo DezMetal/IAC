@@ -19,6 +19,11 @@ from typing import Any, Callable, Dict, List, Optional
 logger = logging.getLogger(__name__)
 
 
+def _local(name) -> str:
+    """The operation's own name, without its domain: `web.snap` -> `snap`."""
+    return str(name or "").strip().lower().rsplit(".", 1)[-1]
+
+
 class Operation:
     __slots__ = ("name", "domain", "description", "parameters", "handler")
 
@@ -134,8 +139,17 @@ class OperationRegistry:
 
         Order of arrival cannot be relied on for this. Ownership can.
         """
-        owner = getattr(self, "_owners", {}).get((op.domain or "").lower())
+        domain = (op.domain or "").lower()
+        owner = getattr(self, "_owners", {}).get(domain)
         if owner is None or owner == op.provider:
+            return False
+        # A claim covers the names the owner ANSWERS FOR, not the whole
+        # namespace. See claim_domain: a name the owner does not have is not
+        # a second browser behind one word, it is a capability, and refusing
+        # it here is how `web.search` and `web.snap` stayed gone across
+        # every later bootstrap.
+        answers = (getattr(self, "_owner_answers", {}) or {}).get(domain)
+        if answers is not None and _local(op.qualified_name) not in answers:
             return False
         if op.qualified_name not in getattr(self, "_refused", ()):
             self._refused = set(getattr(self, "_refused", ())) | {op.qualified_name}
@@ -211,8 +225,9 @@ class OperationRegistry:
         """Only the domains served by more than one provider."""
         return {d: p for d, p in self.providers_by_domain().items() if len(p) > 1}
 
-    def claim_domain(self, domain: str, provider: str) -> list:
-        """One provider answers for a whole domain. Returns what was retired.
+    def claim_domain(self, domain: str, provider: str, answers_for=None,
+                     keep_unmatched=False) -> list:
+        """One provider answers for a domain. Returns what was retired.
 
         Reporting a mixed domain is not enough, because the mix is not a
         warning about a future problem -- it IS the problem, from the moment
@@ -221,10 +236,27 @@ class OperationRegistry:
         one name that drives whichever of them registered last, so navigating
         and clicking land in different windows.
 
-        So a domain gets ONE owner and the rest of it steps aside. Nothing is
-        hidden: what was retired is returned and logged by name, and the
-        operations still exist in their own module for a host that wants them
-        instead.
+        SO A CLAIM IS TOTAL BY DEFAULT, AND THAT IS THE SAFE DIRECTION.
+        Keeping the operations a new owner has no name for sounds obviously
+        right, and for a domain backed by a shared resource -- the disk, the
+        desktop -- it is. For a domain backed by a private SESSION it is the
+        original bug wearing a better argument: `web.snap` from the built-in
+        browser next to `web.navigate` from a browser server does not restore
+        a screenshot, it screenshots the wrong window, and nothing says so.
+        A caller that knows its domain is shared passes `keep_unmatched`.
+
+        WHAT A CLAIM COSTS IS SAID OUT LOUD. `answers_for` is the names the
+        claimant actually serves. It does not change what is retired unless
+        `keep_unmatched` is set -- it changes what is REPORTED, by separating
+        the operations that were replaced from the ones that are simply gone.
+        Measured on 2026-10-18, the log said `mcp:web now answers for the
+        whole 'web' domain; retired 21 operation(s)` and listed them in one
+        breath -- so the five with no replacement at all (`web.extract`,
+        `web.scroll`, `web.search`, `web.visible`, `web.probe`) read exactly
+        like the sixteen that were superseded, and nobody looked twice. The
+        text that teaches her the domain went on naming retired operations
+        for months afterwards. A loss that is logged as a replacement is a
+        silent loss.
         """
         domain = (domain or "").strip().lower()
         if not domain:
@@ -233,19 +265,39 @@ class OperationRegistry:
         # rather than quietly winning. See _owned_elsewhere.
         self._owners = dict(getattr(self, "_owners", {}))
         self._owners[domain] = provider
-        retired = []
-        for qualified in [q for q, op in self._ops.items()
-                          if (op.domain or "").lower() == domain
-                          and op.provider != provider]:
-            retired.append(qualified)
+        answers = {_local(n) for n in answers_for if n} if answers_for else None
+        self._owner_answers = dict(getattr(self, "_owner_answers", {}))
+        self._owner_answers[domain] = answers if keep_unmatched else None
+        retired, kept, lost = [], [], []
+        for qualified, op in list(self._ops.items()):
+            if (op.domain or "").lower() != domain or op.provider == provider:
+                continue
+            unmatched = answers is not None and _local(qualified) not in answers
+            if unmatched and keep_unmatched:
+                kept.append(qualified)
+                continue
+            (lost if unmatched else retired).append(qualified)
             del self._ops[qualified]
-        if retired:
-            self._aliases = {a: t for a, t in self._aliases.items() if t not in retired}
+        gone = retired + lost
+        if gone:
+            self._aliases = {a: t for a, t in self._aliases.items() if t not in gone}
             self._changed()
-            logger.warning("%s now answers for the whole '%s' domain; retired %d "
-                           "operation(s) that came from elsewhere: %s",
-                           provider, domain, len(retired), ", ".join(sorted(retired)))
-        return retired
+            logger.info("%s answers for '%s' now, superseding %d operation(s) of "
+                        "the same name: %s", provider, domain, len(retired),
+                        ", ".join(sorted(retired)) or "none")
+        if lost:
+            # A warning, because this is capability leaving the system with
+            # nothing standing in for it. Anything that still mentions these
+            # names -- a skill, a prompt, a result notice -- is now telling
+            # her to call something that cannot be called.
+            logger.warning("%s does NOT replace %d '%s' operation(s), and they "
+                           "are gone: %s. Nothing should name them any more.",
+                           provider, len(lost), domain, ", ".join(sorted(lost)))
+        if kept:
+            logger.info("%s does not answer for %d existing '%s' operation(s), so "
+                        "they stay: %s", provider, len(kept), domain,
+                        ", ".join(sorted(kept)))
+        return gone
 
     def register_operation(self, op: Operation):
         if self.is_excluded(op.qualified_name) or self._owned_elsewhere(op):
