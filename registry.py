@@ -148,8 +148,11 @@ class OperationRegistry:
         # a second browser behind one word, it is a capability, and refusing
         # it here is how `web.search` and `web.snap` stayed gone across
         # every later bootstrap.
+        leaf = _local(op.qualified_name)
+        if leaf in ((getattr(self, "_owner_spared", {}) or {}).get(domain) or ()):
+            return False                    # the operator said to keep this one
         answers = (getattr(self, "_owner_answers", {}) or {}).get(domain)
-        if answers is not None and _local(op.qualified_name) not in answers:
+        if answers is not None and leaf not in answers:
             return False
         if op.qualified_name not in getattr(self, "_refused", ()):
             self._refused = set(getattr(self, "_refused", ())) | {op.qualified_name}
@@ -226,7 +229,7 @@ class OperationRegistry:
         return {d: p for d, p in self.providers_by_domain().items() if len(p) > 1}
 
     def claim_domain(self, domain: str, provider: str, answers_for=None,
-                     keep_unmatched=False) -> list:
+                     keep_unmatched=False, keep=None) -> list:
         """One provider answers for a domain. Returns what was retired.
 
         Reporting a mixed domain is not enough, because the mix is not a
@@ -266,11 +269,26 @@ class OperationRegistry:
         self._owners = dict(getattr(self, "_owners", {}))
         self._owners[domain] = provider
         answers = {_local(n) for n in answers_for if n} if answers_for else None
+        # NAMES THE OPERATOR SAYS MUST SURVIVE. Supersession is by meaning
+        # and matching is by name, so there is no rule that gets every case:
+        # `read_file` replaces `read` under a different name, and
+        # `filesystem.grep` has no replacement at all. Only the person who
+        # configured the server knows which is which, so they can say.
+        spared = {_local(n) for n in (keep or ()) if n}
+        # Two separate facts, because one set cannot carry both: what the
+        # owner answers for (None = the whole domain), and what is spared
+        # from the claim whatever the owner answers for. _owned_elsewhere
+        # reads them in that order.
         self._owner_answers = dict(getattr(self, "_owner_answers", {}))
         self._owner_answers[domain] = answers if keep_unmatched else None
+        self._owner_spared = dict(getattr(self, "_owner_spared", {}))
+        self._owner_spared[domain] = spared
         retired, kept, lost = [], [], []
         for qualified, op in list(self._ops.items()):
             if (op.domain or "").lower() != domain or op.provider == provider:
+                continue
+            if _local(qualified) in spared:
+                kept.append(qualified)
                 continue
             unmatched = answers is not None and _local(qualified) not in answers
             if unmatched and keep_unmatched:
@@ -286,13 +304,30 @@ class OperationRegistry:
                         "the same name: %s", provider, domain, len(retired),
                         ", ".join(sorted(retired)) or "none")
         if lost:
-            # A warning, because this is capability leaving the system with
-            # nothing standing in for it. Anything that still mentions these
-            # names -- a skill, a prompt, a result notice -- is now telling
-            # her to call something that cannot be called.
-            logger.warning("%s does NOT replace %d '%s' operation(s), and they "
-                           "are gone: %s. Nothing should name them any more.",
-                           provider, len(lost), domain, ", ".join(sorted(lost)))
+            # INFORMATION, NOT AN ALARM -- because this cannot tell the
+            # difference between a capability leaving and a rename.
+            #
+            # It was a warning, and on a real startup it produced 26 lines
+            # announcing that `filesystem.read`, `filesystem.list` and
+            # `filesystem.write` were "gone with nothing replacing them"
+            # when mcp:filesystem answers for all three as `read_file`,
+            # `list_directory` and `write_file`. Matching is by name and
+            # supersession is by meaning, so the test is wrong far more
+            # often than it is right, and a warning that is usually wrong
+            # teaches people to read past warnings.
+            #
+            # The question it was trying to answer -- is anything still
+            # telling her to call a name that is gone? -- is answered
+            # properly against the live registry by
+            # selfcheck.check_the_skills_name_operations_that_exist, and by
+            # mcp_client.available() at the moment advice is written. Here,
+            # the facts, once, quietly. `keep` is the operator's override
+            # for a name they know has no replacement.
+            logger.info("%s has no same-named answer for %d '%s' operation(s), "
+                        "so they are retired too: %s. If one of these has no "
+                        "replacement at all, name it in that server's "
+                        "`keep_operations`.",
+                        provider, len(lost), domain, ", ".join(sorted(lost)))
         if kept:
             logger.info("%s does not answer for %d existing '%s' operation(s), so "
                         "they stay: %s", provider, len(kept), domain,
