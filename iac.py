@@ -391,6 +391,25 @@ def bootstrap(safe_mode=False, exclude=None):
         except ImportError as e:
             print(f"[WARN] Prism operations not available: {e}")
 
+    # 2.10b Register Cell App operations.
+    # `apps.*` finds, inspects, runs and stops Cell Apps -- programs that
+    # declare what they are in a `cellapp.json`. It lives here rather than in
+    # a launcher of its own because this repository already has an operation
+    # registry, a runner and pipelines: running a declared program is the same
+    # job at a larger grain, and a separate component would have been a third
+    # surface over one idea. See `apps/DESIGN.md`.
+    #
+    # Withheld in safe mode: it starts subprocesses.
+    if not safe_mode:
+        try:
+            try:
+                from .apps_ops import register_apps_operations
+            except ImportError:
+                from apps_ops import register_apps_operations
+            register_apps_operations(registry)
+        except ImportError as e:
+            print(f"[WARN] Cell App operations not available: {e}")
+
     # 2.11 Third-party domains.
     # Anything product-specific -- a company's internal API, a host application's
     # own operations -- lives in an extension rather than in this repository.
