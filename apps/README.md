@@ -147,3 +147,61 @@ cannot crash on a Windows console.
 | A UI | Not built. `IAC/web/` and Aether's dashboard are the candidates — see DESIGN.md §8 | ❌ |
 | Pipelines as apps | Not built. A pipeline is a command with no code of its own | ❌ |
 | Remote run | Not built. `Cell.deploy` is the shape for that | ❌ |
+
+---
+
+## An optional web GUI
+
+A Cell App may declare one:
+
+```jsonc
+"ui": {"route": "/", "command": "serve", "title": "Transposer"}
+```
+
+The app serves it. The launcher only knows where to point a browser — a
+launcher that rendered app interfaces becomes the thing every app has to be
+written for, and its release cadence becomes every app's.
+
+What the app writes is a markup fragment and some fetch calls. The shell, DSS,
+the theme controller, the header and the footer come from `IAC/apps/ui.py`, so
+every Cell App GUI is one family by construction rather than by everyone
+remembering.
+
+**No CSS in an app.** DSS is the house stylesheet and `DSS/README.md` is
+explicit that its directory is the single source of truth. `ui.py` serves the
+canonical `DSS/dss.css` when the lab tree is present and a synced copy
+otherwise, and reports which — `IAC/apps/ui/` is registered in
+`DSS/targets.json`, so `python sync.py` keeps that copy current.
+
+Use real DSS classes. `dss-button`, `dss-card`, `dss-field`, `dss-input`,
+`dss-select`, `dss-textarea`, `dss-tag`, `dss-status`, `dss-dot`,
+`dss-eyebrow`, `dss-container`, `dss-rule-iri`, `dss-bar`. There is no
+`dss-btn`, `dss-callout`, `dss-muted` or `dss-check` — those were invented in
+a first draft and the page rendered unstyled while looking finished in the
+source. The suite checks for them.
+
+Three rules from `DNetLab/WEB_STANDARDS.md` are enforced by the shell, because
+they are about not shipping something that looks broken: it renders a
+`<noscript>` rather than sitting on "loading" forever; secondary detail goes
+in a `.dss-bar` or behind a keyline rather than shrunken grey type; and the
+tagline is not used as decoration.
+
+## Making one
+
+```bash
+python3 -m IAC.apps new note-taker --kind ui --needs-cell \
+    --summary "Keeps short notes and finds them again."
+```
+
+or `apps.new` over IAC. `kind` is `service`, `ui` or `tool`. It writes a
+manifest, an IAC domain, a CLI, a service, a GUI and a config — **all running
+before you change anything**, because a shape is easier to learn from a file
+that runs than from documentation about one that would.
+
+`SKILL.md` beside this file is the authoring guide for an agent: what to
+replace, the rules that are not style, and the DSS vocabulary. It carries
+skill frontmatter so Aether or any agent host can load it directly.
+
+It will not overwrite an existing directory, invent requirements the app did
+not ask for, or write a plausible-sounding summary for an app that does
+nothing yet.

@@ -20,6 +20,7 @@ import os
 
 from .apps.bundle import export_app, import_bundle, inspect_bundle
 from .apps.registry import Registry, check
+from .apps.scaffold import SCAFFOLD_KINDS, scaffold
 from .apps.runner import RunError, Runner
 
 __all__ = ["build_domain", "register", "get_registry", "get_runner"]
@@ -248,6 +249,46 @@ def build_domain(config=None):
         get_registry(config, refresh=True)
         return {"status": "ok", "data": result,
                 "message": "imported %s to %s. %s"
+                           % (result["app"], result["path"], result["next"])}
+
+    @apps.op("new",
+             "Create a new Cell App: a manifest, a service, an IAC domain, "
+             "and optionally a DSS-styled GUI",
+             {"name": {"type": "string",
+                       "description": "Lowercase id, e.g. 'note-taker'."},
+              "kind": {"type": "string",
+                       "description": "service | ui | tool. 'ui' adds a web "
+                                      "GUI styled by DSS."},
+              "title": {"type": "string"},
+              "summary": {"type": "string",
+                          "description": "One sentence on what it DOES. Not "
+                                         "what it will do."},
+              "needs_cell": {"type": "boolean",
+                             "description": "Does it need an intelligence "
+                                            "core?"},
+              "into": {"type": "string",
+                       "description": "Where to create it. Defaults to the "
+                                      "first configured root."},
+              "port": {"type": "integer"}},
+             required=["name"])
+    def _new(args, context=None):
+        args = args or {}
+        registry = get_registry(config)
+        destination = args.get("into") or (registry.roots[0]
+                                           if registry.roots else os.getcwd())
+        try:
+            result = scaffold(
+                args["name"], destination,
+                kind=args.get("kind") or "service",
+                title=args.get("title"), summary=args.get("summary"),
+                needs_cell=bool(args.get("needs_cell")),
+                port=int(args.get("port") or 8800))
+        except (ValueError, OSError) as exc:
+            return {"status": "error", "error": str(exc),
+                    "kinds": SCAFFOLD_KINDS}
+        get_registry(config, refresh=True)
+        return {"status": "ok", "data": result,
+                "message": "created %s at %s. %s"
                            % (result["app"], result["path"], result["next"])}
 
     @apps.op("domains",

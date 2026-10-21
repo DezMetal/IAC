@@ -17,6 +17,7 @@ Run:  python3 IAC/apps/tests/test_apps.py
 
 import io
 import json
+import ast
 import os
 import shutil
 import sys
@@ -356,6 +357,82 @@ def test_console():
        isinstance(safe("café ─ \U0001f600", stream=Cp1252()), str))
 
 
+def test_ui_and_scaffold():
+    """The GUI shell and the scaffold."""
+    print("")
+    print("ui and scaffold")
+    from IAC.apps import scaffold
+    from IAC.apps.ui import describe, serve_ui_request, shell
+
+    info = describe()
+    ok("DSS is found", info["dss_available"],
+       "IAC/apps/ui is a DSS sync target; run python sync.py in DSS/")
+    ok("and it says which copy", bool(info["dss_source"]))
+
+    html = shell("Test", body="<p>hi</p>", subtitle="A subtitle.",
+                 links=(("Status", "status"),))
+    invented = [c for c in ("dss-btn", "dss-callout", "dss-muted",
+                            "dss-check") if c in html]
+    ok("the shell uses no invented DSS classes", not invented, str(invented))
+    ok("it renders something without JS", "<noscript>" in html,
+       "never let content be trapped invisible")
+    ok("the tagline is not used as decoration",
+       "From Mind To Matter" not in html,
+       "WEB_STANDARDS section 3: the redundancy budget")
+    ok("DSS is linked, not inlined", "/ui/dss.css" in html)
+
+    served = serve_ui_request("/ui/dss.css")
+    ok("the shell serves DSS", served is not None and served[0] == 200)
+    ok("and it is CSS", bool(served) and "css" in served[1])
+    ok("an unknown ui route is not claimed",
+       serve_ui_request("/ui/nope.css") is None)
+
+    destination = tempfile.mkdtemp(prefix="apps-new-")
+    try:
+        result = scaffold("my-test-app", destination, kind="ui",
+                          summary="Does a test thing.", port=8899)
+        root = result["path"]
+        ok("the directory is the MODULE name, not the app name",
+           os.path.basename(root) == "my_test_app",
+           "python cannot import a hyphen")
+        for filename in ("cellapp.json", "app.py", "iac_domain.py",
+                         "service.py", "web.py", "config.json", "README.md"):
+            ok("it writes %s" % filename,
+               os.path.isfile(os.path.join(root, filename)))
+
+        manifest = load(os.path.join(root, MANIFEST_NAME))
+        ok("the generated manifest is valid", manifest.valid,
+           str(manifest.problems()))
+        ok("it declares a ui", manifest.ui is not None)
+        ok("and the ui names a real command",
+           bool(manifest.ui) and manifest.ui["command"] in manifest.commands)
+        ok("the generated app is discoverable",
+           Registry([destination]).names() == ["my-test-app"])
+
+        for filename in ("app.py", "iac_domain.py", "service.py", "web.py"):
+            path = os.path.join(root, filename)
+            try:
+                ast.parse(io.open(path, encoding="utf-8").read())
+                ok("generated %s parses" % filename, True)
+            except SyntaxError as exc:
+                ok("generated %s parses" % filename, False, str(exc))
+
+        try:
+            scaffold("my-test-app", destination)
+            ok("it refuses to overwrite", False)
+        except ValueError as exc:
+            ok("it refuses to overwrite", "already exists" in str(exc))
+
+        for bad in ("Bad Name", "9lives", ""):
+            try:
+                scaffold(bad, destination)
+                ok("rejects the name %r" % bad, False)
+            except ValueError:
+                ok("rejects the name %r" % bad, True)
+    finally:
+        shutil.rmtree(destination, ignore_errors=True)
+
+
 def main():
     print("IAC Launcher tests")
     test_manifest()
@@ -363,6 +440,7 @@ def main():
     test_bundles()
     test_bundle_safety()
     test_runner()
+    test_ui_and_scaffold()
     test_console()
 
     print("\n%d passed, %d failed, %d skipped"

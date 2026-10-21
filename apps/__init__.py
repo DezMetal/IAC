@@ -25,8 +25,9 @@ and over IAC, as `apps.*`.
 from .bundle import export_app, import_bundle, inspect_bundle
 from .manifest import MANIFEST_NAME, SPEC_VERSION, Manifest, load
 from .registry import Registry, check, default_roots
+from .scaffold import SCAFFOLD_KINDS, scaffold
 from .runner import RunError, Runner
 
 __all__ = ["Manifest", "load", "MANIFEST_NAME", "SPEC_VERSION", "Registry",
            "check", "default_roots", "Runner", "RunError", "export_app",
-           "import_bundle", "inspect_bundle"]
+           "import_bundle", "inspect_bundle", "scaffold", "SCAFFOLD_KINDS"]

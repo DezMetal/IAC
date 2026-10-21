@@ -129,8 +129,13 @@ class Runner:
         # an app can `from Transposer...` without being installed.
         lab_root = os.path.dirname(os.path.dirname(os.path.dirname(
             os.path.abspath(__file__))))
+        # The app's PARENT directory too, so an app installed outside the
+        # lab tree -- imported from a bundle into ~/.cell/apps, say -- can
+        # import its own package. Without it only apps inside the lab tree
+        # could ever start.
+        app_parent = os.path.dirname(manifest.root) if manifest.root else None
         env["PYTHONPATH"] = os.pathsep.join(
-            [p for p in (lab_root, env.get("PYTHONPATH")) if p])
+            [p for p in (lab_root, app_parent, env.get("PYTHONPATH")) if p])
 
         log_path = os.path.join(self.log_dir, "%s-%s.log"
                                 % (manifest.name, command))

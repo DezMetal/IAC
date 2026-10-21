@@ -39,7 +39,7 @@ _NAME_OK = re.compile(r"^[a-z][a-z0-9_-]{1,40}$")
 _KNOWN = {
     "cellapp", "name", "title", "summary", "version", "domain", "register",
     "commands", "requires", "config", "compute", "homepage", "author",
-    "icon", "tags",
+    "icon", "tags", "ui",
 }
 
 #: Hardware or environment an app can ask for, and who can answer.
@@ -118,6 +118,39 @@ class Manifest:
         return None
 
     @property
+    def ui(self):
+        """The app's optional web GUI, as declared.
+
+        `{"route": "/", "command": "serve", "title": "..."}` -- the command
+        that serves it and the path it answers on. The launcher does not
+        render it; it only knows where to point a browser, because an app
+        that serves its own GUI stays shippable without a launcher.
+        """
+        block = self.data.get("ui")
+        if not isinstance(block, dict):
+            return None
+        return {"route": block.get("route") or "/",
+                "command": block.get("command") or "serve",
+                "title": block.get("title") or self.title,
+                "port": block.get("port")}
+
+    def ui_url(self, port=None):
+        """Where this app's GUI lives, if it declares one."""
+        block = self.ui
+        if not block:
+            return None
+        port = port or block.get("port")
+        if not port:
+            spec = self.commands.get(block["command"]) or {}
+            port = spec.get("port")
+        if not port:
+            return None
+        route = block["route"]
+        if not route.startswith("/"):
+            route = "/" + route
+        return "http://127.0.0.1:%s%s" % (port, route)
+
+    @property
     def config_path(self):
         name = self.data.get("config")
         if not name or not self.root:
@@ -181,6 +214,16 @@ class Manifest:
                           % (", ".join(unknown_caps),
                              ", ".join(sorted(KNOWN_CAPABILITIES))))
 
+        block = self.data.get("ui")
+        if block is not None and not isinstance(block, dict):
+            issues.append("'ui' must be an object, e.g. "
+                          "{\"route\": \"/\", \"command\": \"serve\"}")
+        elif self.ui and self.ui["command"] not in self.commands:
+            issues.append("'ui' names the command %r, which this app does not "
+                          "have. It has: %s"
+                          % (self.ui["command"],
+                             ", ".join(sorted(self.commands)) or "none"))
+
         mode = self.compute_mode
         if mode and mode not in ("home", "local", "prefer-local"):
             issues.append("compute mode %r must be home, local or "
@@ -220,6 +263,7 @@ class Manifest:
                          "capabilities": self.capabilities,
                          "python": self.requires.get("python")},
             "compute": self.compute_mode,
+            "ui": self.ui, "ui_url": self.ui_url(),
             "root": self.root, "path": self.path,
             "valid": self.valid, "problems": self.problems(),
             "unknown_keys": self.unknown_keys(),

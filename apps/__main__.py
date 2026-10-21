@@ -29,6 +29,7 @@ import sys
 from .bundle import export_app, import_bundle, inspect_bundle
 from .console import say
 from .registry import Registry, check
+from .scaffold import SCAFFOLD_KINDS, scaffold
 from .runner import RunError, Runner
 
 
@@ -261,6 +262,26 @@ def cmd_import(args):
     return 0
 
 
+def cmd_new(args):
+    registry = _registry(args)
+    destination = args.into or (registry.roots[0] if registry.roots
+                                else os.getcwd())
+    try:
+        result = scaffold(args.name, destination, kind=args.kind,
+                          title=args.title, summary=args.summary,
+                          needs_cell=args.needs_cell, port=args.port)
+    except (ValueError, OSError) as exc:
+        say("  %s" % exc)
+        return 1
+    say("  created %s (%s)" % (result["app"], result["kind"]))
+    say("  at %s" % result["path"])
+    for filename in result["files"]:
+        say("    %s" % filename)
+    say("")
+    say("  %s" % result["next"])
+    return 0
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(
         prog="python3 -m IAC.apps",
@@ -293,6 +314,16 @@ def main(argv=None):
     export.add_argument("--include-config", action="store_true",
                         dest="include_config")
 
+    new = subparsers.add_parser("new")
+    new.add_argument("name")
+    new.add_argument("--kind", default="service",
+                     choices=sorted(SCAFFOLD_KINDS))
+    new.add_argument("--title")
+    new.add_argument("--summary")
+    new.add_argument("--needs-cell", action="store_true", dest="needs_cell")
+    new.add_argument("--into")
+    new.add_argument("--port", type=int, default=8800)
+
     inspect = subparsers.add_parser("inspect")
     inspect.add_argument("path")
 
@@ -307,7 +338,7 @@ def main(argv=None):
     handlers = {"list": cmd_list, "info": cmd_info, "check": cmd_check,
                 "run": cmd_run, "stop": cmd_stop, "status": cmd_status,
                 "export": cmd_export, "inspect": cmd_inspect,
-                "import": cmd_import}
+                "import": cmd_import, "new": cmd_new}
     return handlers[action](args)
 
 
