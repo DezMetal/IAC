@@ -66,6 +66,10 @@ def default_roots():
     home = os.path.expanduser("~")
     candidates = [
         os.environ.get("CELL_APPS"),
+        # The lab's own apps, grouped. Named explicitly rather than relying on
+        # the lab root's walk depth, so the grouping can be nested further
+        # without the launcher quietly losing sight of them.
+        os.path.join(_LAB_ROOT, "CellApps"),
         _LAB_ROOT,
         os.path.join(home, ".cell", "apps"),
     ]
@@ -218,8 +222,17 @@ class Registry:
     def rebuild(self):
         self._apps = {}
         self._errors = []
+        # The same manifest can be reached through two roots -- CellApps/ is
+        # named explicitly AND sits inside the lab root -- and finding it
+        # twice is not a name clash. Without this it reported an app as
+        # conflicting with itself, naming the identical path on both sides.
+        seen_paths = set()
         for root in self.roots:
             for path in find_in(root):
+                key = os.path.normcase(os.path.abspath(path))
+                if key in seen_paths:
+                    continue
+                seen_paths.add(key)
                 try:
                     manifest = load(path)
                 except ValueError as exc:
