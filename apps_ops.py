@@ -307,6 +307,7 @@ def build_domain(config=None):
             if manifest is None or not manifest.register:
                 continue
             module, _, func = str(manifest.register).partition(":")
+            _importable(manifest, module)
             try:
                 imported = __import__(module, fromlist=[func])
                 count = getattr(imported, func)(
@@ -325,6 +326,35 @@ def build_domain(config=None):
                               ", %d failed" % len(failed) if failed else "")}
 
     return apps
+
+
+def _importable(manifest, module):
+    """Make an app's `register` module importable in THIS process.
+
+    The runner gives a subprocess the lab root and the app's parent on
+    PYTHONPATH; `apps.domains` imports in-process and did neither, so every
+    app outside an already-importable location failed with "No module named"
+    -- the Transposer and the Dash both. The package is found where it
+    actually is: the app directory IS the package (Transposer), or the
+    package sits inside it (`labdash` inside DNetLab). Only the directory
+    that holds the package is added, so an app's loose top-level files never
+    shadow anything.
+    """
+    import sys
+
+    root = manifest.root
+    if not root:
+        return
+    top = module.split(".")[0]
+    parent = os.path.dirname(root)
+    if os.path.basename(root) == top:
+        holder = parent
+    elif os.path.isdir(os.path.join(root, top)):
+        holder = root
+    else:
+        return
+    if holder not in sys.path:
+        sys.path.insert(0, holder)
 
 
 def _app_config(manifest):
