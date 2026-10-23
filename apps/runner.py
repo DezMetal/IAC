@@ -39,6 +39,7 @@ __all__ = ["Runner", "RunError"]
 _STATE_DIR = os.path.join(os.path.expanduser("~"), ".cell", "apps")
 _STATE_FILE = os.path.join(_STATE_DIR, "running.json")
 _LOG_DIR = os.path.join(_STATE_DIR, "logs")
+_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 
 
 class RunError(Exception):
@@ -51,8 +52,12 @@ def _alive(pid):
         return False
     try:
         if os.name == "nt":
+            # CREATE_NO_WINDOW: a windowless host (pythonw, a tray app, a
+            # detached console) polling status would otherwise flash a
+            # console for every check.
             out = subprocess.run(["tasklist", "/FI", "PID eq %d" % pid],
-                                 capture_output=True, text=True, timeout=20)
+                                 capture_output=True, text=True, timeout=20,
+                                 creationflags=_NO_WINDOW)
             return str(pid) in (out.stdout or "")
         os.kill(pid, 0)
         return True
@@ -200,7 +205,8 @@ class Runner:
             try:
                 if os.name == "nt":
                     subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"],
-                                   capture_output=True, timeout=30)
+                                   capture_output=True, timeout=30,
+                                   creationflags=_NO_WINDOW)
                 else:
                     os.kill(pid, signal.SIGTERM)
                     deadline = time.time() + timeout
