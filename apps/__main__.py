@@ -93,7 +93,15 @@ def cmd_info(args):
     say("  name      : %s" % data["name"])
     say("  root      : %s" % data["root"])
     say("  domain    : %s" % (data["domain"] or "none"))
-    say("  commands  : %s" % ", ".join(data["commands"]))
+    say("")
+    say("  Commands")
+    for name, help_ in sorted((data.get("command_help") or {}).items()):
+        mark = " (service)" if help_["service"] else ""
+        say("    %-10s %s%s" % (name, help_["summary"] or "", mark))
+        if help_["needs"]:
+            say("               needs: %s" % ", ".join(help_["needs"]))
+    if not data.get("command_help"):
+        say("    %s" % ", ".join(data["commands"]))
     if data["services"]:
         say("  services  : %s" % ", ".join(data["services"]))
     say("  compute   : %s" % (data["compute"] or "unspecified"))

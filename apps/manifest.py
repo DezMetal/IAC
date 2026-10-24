@@ -157,6 +157,27 @@ class Manifest:
             return None
         return os.path.join(self.root, name)
 
+    def command_help(self):
+        """Each command, what it does and what it needs.
+
+        Declared in the manifest rather than inferred, because only the app
+        knows. Surfaced by `apps.info` so a person or an agent can see what a
+        command requires *before* running it -- the Transposer's `serve`
+        looked like a prerequisite for everything when it is required by
+        nothing, and nothing said so.
+        """
+        out = {}
+        for name, spec in self.commands.items():
+            if not isinstance(spec, dict):
+                continue
+            out[name] = {
+                "summary": spec.get("summary") or "",
+                "needs": [str(n) for n in (spec.get("needs") or [])],
+                "service": bool(spec.get("service")),
+                "port": spec.get("port"),
+            }
+        return out
+
     def services(self):
         """Commands that are long-running surfaces rather than one-shot runs."""
         return {name: spec for name, spec in self.commands.items()
@@ -257,6 +278,7 @@ class Manifest:
             "name": self.name, "title": self.title, "summary": self.summary,
             "version": self.version, "domain": self.domain,
             "commands": sorted(self.commands),
+            "command_help": self.command_help(),
             "services": sorted(self.services()),
             "requires": {"cell": self.needs_cell,
                          "packages": self.packages,
