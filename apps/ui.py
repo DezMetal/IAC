@@ -98,11 +98,21 @@ def _nav(links):
 
 
 def shell(app, body="", links=(), subtitle="", scripts=(), eyebrow="Cell App",
-          no_js=""):
+          no_js="", layout="page", styles=()):
     """The page every Cell App GUI is wrapped in.
 
     `body` is the app's own markup. Everything around it comes from here, so a
     GUI written by one app looks like a GUI written by any other.
+
+    `layout` is `"page"` (a document: header, content, footer) or `"app"` (a
+    tool that owns the window -- a canvas, an editor, a map). An app layout
+    is the full viewport: one compact top bar, then `main` filling exactly
+    what is left, with no footer and no page scroll, so nothing is clipped at
+    the edges or the bottom. The first Weave board sat in a fixed-height box
+    inside the page column and read as cut off on every side.
+
+    `styles` are the app's own *layout* stylesheets, linked in the head after
+    DSS. Layout, never colour: colours are DSS tokens.
 
     DNetLab/WEB_STANDARDS.md governs visitor-facing properties rather than app
     interfaces, but several of its rules are about not shipping something that
@@ -143,6 +153,14 @@ def shell(app, body="", links=(), subtitle="", scripts=(), eyebrow="Cell App",
     theme, _ = theme_script()
     theme_tag = ('<script src="%s/dss.js" defer></script>' % UI_ROUTE_PREFIX
                  if theme else "")
+    style_tag += "".join('<link rel="stylesheet" href="%s">' % href
+                         for href in styles)
+    if layout == "app":
+        return _app_shell(app, body, links, subtitle, eyebrow, no_js,
+                          style_tag, warning, theme_tag, script_tags,
+                          css_source)
+    if layout != "page":
+        raise ValueError("layout must be 'page' or 'app', not %r" % layout)
 
     return """<!doctype html>
 <html lang="en">
@@ -161,10 +179,17 @@ def shell(app, body="", links=(), subtitle="", scripts=(), eyebrow="Cell App",
   .cellapp-detail { margin-top:1rem; padding:.9rem 1.15rem;
                     font-family:var(--dss-font-mono); font-size:.82rem;
                     color:var(--dss-ink-soft); }
+  /* The footer sits at the bottom of a short page instead of floating
+     mid-screen, and the page never ends on a bare strip of background. */
+  .cellapp-page { min-height:100vh; min-height:100dvh; display:flex;
+                  flex-direction:column; }
+  .cellapp-page > main { flex:1 0 auto; }
+  .cellapp-page > .cellapp-foot { margin-top:3rem; }
+  h1, h2, h3 { text-wrap:balance; }
 </style>
 </head>
-<body>
-<div class="dss-container">
+<body class="dss-bg-grid">
+<div class="dss-container cellapp-page">
   <header class="cellapp-head">
     <div>
       <p class="dss-eyebrow" style="margin:0 0 .35rem">%(eyebrow)s</p>
@@ -212,6 +237,79 @@ def shell(app, body="", links=(), subtitle="", scripts=(), eyebrow="Cell App",
         "theme": theme_tag,
         "scripts": script_tags,
         "dss_note": (" &middot; DSS (%s)" % css_source) if css_source else "",
+    }
+
+
+def _app_shell(app, body, links, subtitle, eyebrow, no_js, style_tag, warning,
+               theme_tag, script_tags, css_source):
+    """`layout="app"`: the window belongs to the tool.
+
+    One `.dss-bar--top` holds the app's name, the shared links and a theme
+    toggle; `main` fills every pixel below it. The app's own toolbars go
+    inside `main`. No footer -- the attribution a page footer carries is the
+    title attribute of the name, so it is still one hover away.
+    """
+    return """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>%(title)s</title>
+%(style)s
+<style>
+  html, body { height:100%%; }
+  body.cellapp-app { display:flex; flex-direction:column; overflow:hidden;
+                     height:100vh; height:100dvh; }
+  .cellapp-appbar { display:flex; align-items:center; gap:.75rem;
+                    padding:.45rem max(.9rem, env(safe-area-inset-right))
+                            .45rem max(.9rem, env(safe-area-inset-left));
+                    min-height:3rem; flex:0 0 auto; }
+  .cellapp-appbar h1 { margin:0; font-size:1.05rem; line-height:1; white-space:nowrap; }
+  .cellapp-appbar .dss-eyebrow { white-space:nowrap; }
+  .cellapp-nav  { display:flex; gap:.5rem; align-items:center; margin-left:auto; }
+  .cellapp-main { position:relative; flex:1 1 auto; min-height:0; min-width:0;
+                  display:flex; flex-direction:column;
+                  padding-bottom:env(safe-area-inset-bottom); }
+  @media (max-width: 620px) { .cellapp-appbar .dss-eyebrow { display:none; } }
+</style>
+</head>
+<body class="dss-bg-grid cellapp-app">
+<header class="dss-bar dss-bar--top cellapp-appbar">
+  <h1 class="dss-display" title="%(title)s · a Cell App · D-Net Lab%(dss_note)s">%(title)s</h1>
+  <span class="dss-eyebrow">%(eyebrow)s</span>
+  <nav class="cellapp-nav">%(nav)s
+    <button class="dss-icon-btn" type="button" data-dss-theme-toggle aria-label="Toggle theme"></button>
+  </nav>
+</header>
+<noscript>
+  <div class="dss-card dss-card--flat" style="margin:1rem">
+    <h2 style="margin-top:0">This interface needs JavaScript</h2>
+    <p>%(subtitle)sIt reads live data from the app over its own JSON API, so
+    there is nothing to show without it. %(no_js)s</p>
+  </div>
+</noscript>
+%(warning)s
+<main id="cellapp-body" class="cellapp-main">%(body)s</main>
+%(theme)s
+%(scripts)s
+</body>
+</html>
+""" % {
+        "title": app,
+        "eyebrow": eyebrow,
+        "subtitle": (subtitle + " ") if subtitle else "",
+        "style": style_tag,
+        "nav": "".join(
+            '<a class="dss-button dss-button--secondary dss-button--sm" '
+            'href="%s">%s</a>' % (href, label) for label, href in links),
+        "warning": warning,
+        "body": body,
+        "no_js": no_js or ("Every one of its operations is also available from "
+                           "a terminal and over IAC, which need no browser at "
+                           "all."),
+        "theme": theme_tag,
+        "scripts": script_tags,
+        "dss_note": (" · DSS (%s)" % css_source) if css_source else "",
     }
 
 

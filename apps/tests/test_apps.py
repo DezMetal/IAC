@@ -380,6 +380,24 @@ def test_ui_and_scaffold():
        "From Mind To Matter" not in html,
        "WEB_STANDARDS section 3: the redundancy budget")
     ok("DSS is linked, not inlined", "/ui/dss.css" in html)
+    ok("glass has something behind it (DSS rule 00000)",
+       'class="dss-bg-grid' in html)
+
+    app = shell("Tool", body="<div>canvas</div>", layout="app",
+                styles=("/static/tool.css",))
+    ok("an app layout owns the viewport", "cellapp-app" in app
+       and "cellapp-main" in app and "cellapp-foot" not in app)
+    ok("an app layout still renders without JS", "<noscript>" in app)
+    ok("an app's layout stylesheet goes in the head",
+       app.index("/static/tool.css") < app.index("</head>"))
+    ok("an app layout uses no invented DSS classes",
+       not [c for c in ("dss-btn", "dss-callout", "dss-muted", "dss-check")
+            if c in app])
+    try:
+        shell("Bad", layout="sidebar")
+        ok("an unknown layout is refused", False)
+    except ValueError:
+        ok("an unknown layout is refused", True)
 
     served = serve_ui_request("/ui/dss.css")
     ok("the shell serves DSS", served is not None and served[0] == 200)

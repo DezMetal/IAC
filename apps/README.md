@@ -173,6 +173,17 @@ canonical `DSS/dss.css` when the lab tree is present and a synced copy
 otherwise, and reports which — `IAC/apps/ui/` is registered in
 `DSS/targets.json`, so `python sync.py` keeps that copy current.
 
+**Two layouts.** `shell(..., layout="page")` (the default) is a document:
+header, content, a footer that stays at the bottom of a short page. A tool
+that owns the window — a canvas, an editor, a map — passes `layout="app"`:
+one compact top bar with a theme toggle, then `main` filling exactly what is
+left, no footer and no page scroll, so nothing is clipped at the edges or the
+bottom. Its own layout stylesheet goes in `styles=[...]`, in the head after
+DSS. Both put DSS's backdrop (`.dss-bg-grid`) on the body, because glass with
+nothing behind it reads as a flat panel — DSS rule 00000. *Added 2026-10-24
+for Weave, whose first board sat in a fixed box inside the page column and
+read as cut off on every side.*
+
 Use real DSS classes. `dss-button`, `dss-card`, `dss-field`, `dss-input`,
 `dss-select`, `dss-textarea`, `dss-tag`, `dss-status`, `dss-dot`,
 `dss-eyebrow`, `dss-container`, `dss-rule-iri`, `dss-bar`. There is no
