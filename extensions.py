@@ -138,21 +138,27 @@ class Domain:
     # ── declaring operations ──────────────────────────────────────────────
     def op(self, name: str, description: str = "",
            properties: Optional[dict] = None,
-           required: Optional[List[str]] = None) -> Callable:
+           required: Optional[List[str]] = None,
+           readonly: bool = False) -> Callable:
         """Decorator form. The function becomes the handler.
 
             @crm.op("lookup", "Find a customer", {"email": {...}}, ["email"])
             def lookup(args, context): ...
         """
         def decorator(fn):
-            self.add(name, fn, description, properties, required)
+            self.add(name, fn, description, properties, required, readonly)
             return fn
         return decorator
 
     def add(self, name: str, handler: Callable, description: str = "",
             properties: Optional[dict] = None,
-            required: Optional[List[str]] = None) -> "Domain":
-        """Imperative form, for handlers you already have."""
+            required: Optional[List[str]] = None,
+            readonly: bool = False) -> "Domain":
+        """Imperative form, for handlers you already have.
+
+        `readonly=True` declares that running the operation changes nothing:
+        no process started, no file written, nothing sent. Say it only when
+        it is true -- readers that run operations unattended trust it."""
         name = str(name or "").strip()
         if not name:
             raise ExtensionError(f"[{self.name}] an operation needs a name")
@@ -174,6 +180,7 @@ class Domain:
                 "required": list(required or []),
             },
             "handler": handler,
+            "readonly": bool(readonly),
         }
         return self
 
@@ -255,7 +262,8 @@ def register_domain(domain: Domain, registry=None, replace: bool = False,
             registry.register(name=op_name, domain=domain.name,
                               description=spec["description"],
                               parameters=spec["parameters"],
-                              handler=spec["handler"])
+                              handler=spec["handler"],
+                              readonly=spec.get("readonly", False))
             count += 1
         except Exception as e:
             logger.warning("Could not register %s.%s: %s",

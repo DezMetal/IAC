@@ -25,15 +25,22 @@ def _local(name) -> str:
 
 
 class Operation:
-    __slots__ = ("name", "domain", "description", "parameters", "handler")
+    __slots__ = ("name", "domain", "description", "parameters", "handler",
+                 "readonly")
 
     def __init__(self, name: str, domain: str, description: str,
-                 parameters: dict, handler: Callable):
+                 parameters: dict, handler: Callable, readonly: bool = False):
         self.name = name
         self.domain = domain
         self.description = description
         self.parameters = parameters
         self.handler = handler
+        # Declared by the operation's owner: running it changes nothing --
+        # no process started, no file written, nothing sent. A reader that
+        # runs operations unattended (a Weave live node, a dashboard) may
+        # run these and nothing else. Unknown is False: an operation that
+        # never said so is assumed to write.
+        self.readonly = bool(readonly)
 
     @property
     def provider(self) -> str:
@@ -56,7 +63,8 @@ class Operation:
             "name": self.name,
             "domain": self.domain,
             "description": self.description,
-            "parameters": self.parameters
+            "parameters": self.parameters,
+            "readonly": self.readonly,
         }
 
     def __repr__(self):
@@ -116,8 +124,10 @@ class OperationRegistry:
         return any(fnmatch.fnmatch(low, pat) for pat in self._excluded)
 
     def register(self, name: str, domain: str, description: str,
-                 parameters: dict, handler: Callable) -> Optional[Operation]:
-        op = Operation(name, domain, description, parameters, handler)
+                 parameters: dict, handler: Callable,
+                 readonly: bool = False) -> Optional[Operation]:
+        op = Operation(name, domain, description, parameters, handler,
+                       readonly)
         if self.is_excluded(op.qualified_name) or self._owned_elsewhere(op):
             return None
         self._note_clash(op)
@@ -409,6 +419,11 @@ class OperationRegistry:
             return op.handler(args, context or {})
         except Exception as e:
             return {"error": f"[{op_name}] {e}", "status": "error"}
+
+    def is_readonly(self, op_name: str) -> bool:
+        """True only when the operation's owner declared it changes nothing."""
+        op = self._ops.get(op_name)
+        return bool(op and op.readonly)
 
     def list_operations(self, domain: str = None) -> List[dict]:
         ops = []

@@ -76,6 +76,39 @@ def test_the_schema_reaches_the_registry_intact():
     forget("demo")
 
 
+def test_readonly_is_declared_by_the_owner_and_reaches_the_registry():
+    """A reader that runs operations unattended (a Weave live node, a
+    dashboard) may run only what the operation's owner says changes nothing.
+    Undeclared means it writes."""
+    d, reg = _fresh()
+    d.add("look", lambda a, c: {"status": "ok"}, "Look", readonly=True)
+
+    @d.op("change", "Change something")
+    def change(args, context):
+        return {"status": "ok"}
+
+    d.register(reg)
+    schemas = {s["op"]: s for s in reg.list_operations("demo")}
+    assert schemas["demo.look"]["readonly"] is True
+    assert schemas["demo.change"]["readonly"] is False
+    assert reg.is_readonly("demo.look") and not reg.is_readonly("demo.change")
+    assert not reg.is_readonly("demo.nothing-by-this-name")
+    forget("demo")
+
+
+def test_the_launcher_marks_only_its_reads_readonly():
+    from IAC.apps_ops import register_apps_operations
+    forget("apps")
+    reg = Reg()
+    try:
+        register_apps_operations(reg)
+        ro = {s["op"] for s in reg.list_operations("apps") if s["readonly"]}
+        assert ro == {"apps.list", "apps.info", "apps.check", "apps.status", "apps.inspect"}
+        assert not reg.is_readonly("apps.run") and not reg.is_readonly("apps.new")
+    finally:
+        forget("apps")      # a later bootstrap registers it for real
+
+
 # ── the boundary ──────────────────────────────────────────────────────────
 
 def test_a_core_domain_cannot_be_shadowed_by_accident():

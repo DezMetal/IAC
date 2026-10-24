@@ -61,7 +61,7 @@ def build_domain(config=None):
             "Every Cell App on this machine, with what it needs",
             {"deep": {"type": "boolean",
                       "description": "Also check whether each one can run "
-                                     "here. Costs a probe per app."}})
+                                     "here. Costs a probe per app."}}, readonly=True)
     def _list(args, context=None):
         args = args or {}
         registry = get_registry(config, refresh=True)
@@ -81,7 +81,7 @@ def build_domain(config=None):
     @apps.op("info",
             "One app's manifest, in full",
             {"app": {"type": "string", "description": "The app's name."}},
-            required=["app"])
+            required=["app"], readonly=True)
     def _info(args, context=None):
         name = str((args or {}).get("app") or "").strip()
         manifest = get_registry(config).get(name)
@@ -94,7 +94,7 @@ def build_domain(config=None):
     @apps.op("check",
             "Whether an app can run on this host, and what is missing",
             {"app": {"type": "string"}},
-            required=["app"])
+            required=["app"], readonly=True)
     def _check(args, context=None):
         name = str((args or {}).get("app") or "").strip()
         manifest = get_registry(config).get(name)
@@ -177,7 +177,7 @@ def build_domain(config=None):
 
     @apps.op("status",
             "What is running, and what exited",
-            {})
+            {}, readonly=True)
     def _status(args, context=None):
         entries = get_runner(config).status()
         alive = [e for e in entries if e["alive"]]
@@ -217,7 +217,7 @@ def build_domain(config=None):
     @apps.op("inspect",
             "What is inside a .cellapp bundle, without unpacking it",
             {"path": {"type": "string"}},
-            required=["path"])
+            required=["path"], readonly=True)
     def _inspect(args, context=None):
         path = str((args or {}).get("path") or "")
         try:
