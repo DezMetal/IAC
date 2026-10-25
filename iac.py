@@ -407,7 +407,10 @@ def bootstrap(safe_mode=False, exclude=None):
             except ImportError:
                 from apps_ops import register_apps_operations
             register_apps_operations(registry)
-        except ImportError as e:
+        except Exception as e:
+            # Any failure, not only ImportError: an optional domain must never
+            # take the host down with it. Catching ImportError alone let a
+            # registration clash stop Aether's web server from starting.
             print(f"[WARN] Cell App operations not available: {e}")
 
     # 2.11 Third-party domains.

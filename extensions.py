@@ -251,10 +251,18 @@ def register_domain(domain: Domain, registry=None, replace: bool = False,
             return 0
 
     existing = _loaded.get(domain.name)
-    if existing and not replace:
+    if existing and not replace and not _same_domain(existing, domain):
         raise ExtensionError(
             f"domain '{domain.name}' is already registered (from "
-            f"{existing['source']}). Pass replace=True to override it.")
+            f"{existing['source']}) by {existing.get('author') or 'another provider'} "
+            f"with different operations. Pass replace=True to override it.")
+    # The SAME domain registering again is not a takeover -- it is a host
+    # initialising IAC twice (Aether does: its tool router, then its web
+    # server), or one domain going into a second registry. Refusing that
+    # took Aether's web server down on 2026-10-24 with "domain 'apps' is
+    # already registered (from direct)": IAC refusing its own `apps` domain.
+    # The guard exists to stop a DIFFERENT provider claiming a taken name,
+    # so the same one simply re-attaches its operations to this registry.
 
     count = 0
     for op_name, spec in domain._ops.items():
@@ -274,6 +282,15 @@ def register_domain(domain: Domain, registry=None, replace: bool = False,
     logger.info("Registered domain '%s' (%d ops) from %s",
                 domain.name, count, source)
     return count
+
+
+def _same_domain(existing: dict, domain: "Domain") -> bool:
+    """Whether a recorded registration is this same domain again: same
+    author and the same operation names. Version may differ -- a reload
+    after an upgrade is still the owner, not an impostor."""
+    info = domain.info()
+    return (existing.get("author") == info.get("author")
+            and sorted(existing.get("operations") or []) == sorted(info.get("operations") or []))
 
 
 def load(target, registry=None, replace: bool = False,

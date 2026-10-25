@@ -133,18 +133,48 @@ def test_a_core_domain_cannot_be_shadowed_by_accident():
     forget("filesystem")
 
 
-def test_registering_the_same_domain_twice_is_refused():
+def test_a_different_domain_claiming_a_taken_name_is_refused():
     """Two extensions claiming one name is a conflict the host must see."""
-    d, reg = _fresh()
+    d, reg = _fresh(author="Owner")
     d.add("x", lambda a, c: None)
     d.register(reg)
+    impostor = Domain("demo", author="Someone else")
+    impostor.add("y", lambda a, c: None)
     try:
-        d.register(reg)
-        assert False, "second registration was silent"
+        impostor.register(reg)
+        assert False, "a different provider silently took the name"
     except ExtensionError as e:
         assert "already registered" in str(e)
-    assert d.register(reg, replace=True) == 1
+    assert impostor.register(reg, replace=True) == 1
     forget("demo")
+
+
+def test_the_same_domain_registering_again_is_not_a_conflict():
+    """A host that initialises IAC twice -- Aether does, tool router then web
+    server -- registers the same domain twice. Refusing that took Aether's web
+    server down (2026-10-24, "domain 'apps' is already registered"). The
+    second registration re-attaches the operations, including to a different
+    registry, and raises nothing."""
+    d, reg = _fresh(author="Owner")
+    d.add("x", lambda a, c: {"status": "ok"})
+    assert d.register(reg) == 1
+    assert d.register(reg) == 1
+    second = Reg()
+    assert d.register(second) == 1 and second.has("demo.x")
+    forget("demo")
+
+
+def test_iac_bootstrapped_twice_keeps_the_launcher():
+    """The real case: the bootstrap that registers `apps.*` running twice."""
+    from IAC.apps_ops import register_apps_operations
+    forget("apps")
+    first, second = Reg(), Reg()
+    try:
+        register_apps_operations(first)
+        register_apps_operations(second)
+        assert first.has("apps.list") and second.has("apps.list")
+    finally:
+        forget("apps")
 
 
 def test_safe_mode_refuses_capabilities_the_host_did_not_allow():
