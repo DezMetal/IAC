@@ -150,6 +150,25 @@ cannot crash on a Windows console.
 
 ---
 
+## Where a service listens
+
+A service's network is two keys in the config its manifest declares, and a
+sibling `config.local.json` (this machine's settings, kept out of git)
+overrides them:
+
+```jsonc
+{"host": "127.0.0.1", "port": 8757}   // this machine only -- the safe default
+{"host": "0.0.0.0",   "port": 8757}   // every interface: LAN and Tailscale too
+```
+
+That is the whole convention, so any tool can read and change an app's
+network without knowing the app: write `host`/`port` into its
+`config.local.json`, restart the command. Keep loopback the default, and
+give anything that can act on the machine a key or PIN before it listens on
+`0.0.0.0`.
+
+---
+
 ## An optional web GUI
 
 A Cell App may declare one:
