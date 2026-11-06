@@ -155,12 +155,12 @@ def shell(app, body="", links=(), subtitle="", scripts=(), eyebrow="Cell App",
                  if theme else "")
     style_tag += "".join('<link rel="stylesheet" href="%s">' % href
                          for href in styles)
-    if layout == "app":
+    if layout in ("app", "bare"):
         return _app_shell(app, body, links, subtitle, eyebrow, no_js,
                           style_tag, warning, theme_tag, script_tags,
-                          css_source)
+                          css_source, bare=(layout == "bare"))
     if layout != "page":
-        raise ValueError("layout must be 'page' or 'app', not %r" % layout)
+        raise ValueError("layout must be 'page', 'app' or 'bare', not %r" % layout)
 
     return """<!doctype html>
 <html lang="en">
@@ -241,8 +241,14 @@ def shell(app, body="", links=(), subtitle="", scripts=(), eyebrow="Cell App",
 
 
 def _app_shell(app, body, links, subtitle, eyebrow, no_js, style_tag, warning,
-               theme_tag, script_tags, css_source):
+               theme_tag, script_tags, css_source, bare=False):
     """`layout="app"`: the window belongs to the tool.
+
+    `layout="bare"` is the same without the top bar: the app is **inside
+    another app's page** -- the Dash showing a Weave board, say -- where a
+    second header and a second theme toggle would be one chrome too many. It
+    is still the shared shell, so DSS, the theme and the no-JS message are
+    the same everywhere.
 
     One `.dss-bar--top` holds the app's name, the shared links and a theme
     toggle; `main` fills every pixel below it. The app's own toolbars go
@@ -274,13 +280,7 @@ def _app_shell(app, body, links, subtitle, eyebrow, no_js, style_tag, warning,
 </style>
 </head>
 <body class="dss-bg-grid cellapp-app">
-<header class="dss-bar dss-bar--top cellapp-appbar">
-  <h1 class="dss-display" title="%(title)s · a Cell App · D-Net Lab%(dss_note)s">%(title)s</h1>
-  <span class="dss-eyebrow">%(eyebrow)s</span>
-  <nav class="cellapp-nav">%(nav)s
-    <button class="dss-icon-btn" type="button" data-dss-theme-toggle aria-label="Toggle theme"></button>
-  </nav>
-</header>
+%(header)s
 <noscript>
   <div class="dss-card dss-card--flat" style="margin:1rem">
     <h2 style="margin-top:0">This interface needs JavaScript</h2>
@@ -299,6 +299,17 @@ def _app_shell(app, body, links, subtitle, eyebrow, no_js, style_tag, warning,
         "eyebrow": eyebrow,
         "subtitle": (subtitle + " ") if subtitle else "",
         "style": style_tag,
+        "header": "" if bare else (
+            '<header class="dss-bar dss-bar--top cellapp-appbar">\n'
+            '  <h1 class="dss-display" title="%s · a Cell App · D-Net Lab%s">%s</h1>\n'
+            '  <span class="dss-eyebrow">%s</span>\n'
+            '  <nav class="cellapp-nav">%s\n'
+            '    <button class="dss-icon-btn" type="button" data-dss-theme-toggle '
+            'aria-label="Toggle theme"></button>\n'
+            '  </nav>\n</header>'
+            % (app, (" · DSS (%s)" % css_source) if css_source else "", app, eyebrow,
+               "".join('<a class="dss-button dss-button--secondary dss-button--sm" '
+                       'href="%s">%s</a>' % (href, label) for label, href in links))),
         "nav": "".join(
             '<a class="dss-button dss-button--secondary dss-button--sm" '
             'href="%s">%s</a>' % (href, label) for label, href in links),

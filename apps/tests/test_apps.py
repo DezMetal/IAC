@@ -393,11 +393,36 @@ def test_ui_and_scaffold():
     ok("an app layout uses no invented DSS classes",
        not [c for c in ("dss-btn", "dss-callout", "dss-muted", "dss-check")
             if c in app])
+
+    # `bare` is `app` without the top bar: the app is INSIDE another app's
+    # page -- the Dash showing a Weave board -- where a second header and a
+    # second theme toggle are one chrome too many. It must still be the
+    # shared shell, or an embedded app drifts from the house baseline in a
+    # place nobody looks at on its own.
+    bare = shell("Embedded", body="<div>board</div>", layout="bare")
+    # Assert on the ELEMENT, not the class name: `.cellapp-appbar` is still
+    # defined in the shell's own <style> whether or not a bar is rendered,
+    # so a name test passes for the wrong reason and then fails for it too.
+    ok("a bare layout drops the top bar", "<header" not in bare,
+       "the host page already has one")
+    ok("an app layout still has one", "<header" in app)
+    ok("and no second theme toggle", "data-dss-theme-toggle" not in bare)
+    ok("a bare layout still owns its viewport",
+       "cellapp-app" in bare and "cellapp-main" in bare)
+    ok("a bare layout is still the shared shell",
+       "<noscript>" in bare and 'class="dss-bg-grid' in bare
+       and "/ui/dss.css" in bare)
+    ok("a bare layout uses no invented DSS classes",
+       not [c for c in ("dss-btn", "dss-callout", "dss-muted", "dss-check")
+            if c in bare])
+
     try:
         shell("Bad", layout="sidebar")
         ok("an unknown layout is refused", False)
-    except ValueError:
+    except ValueError as e:
         ok("an unknown layout is refused", True)
+        ok("and the refusal names every layout there is",
+           all(w in str(e) for w in ("page", "app", "bare")), str(e))
 
     served = serve_ui_request("/ui/dss.css")
     ok("the shell serves DSS", served is not None and served[0] == 200)
@@ -451,6 +476,71 @@ def test_ui_and_scaffold():
         shutil.rmtree(destination, ignore_errors=True)
 
 
+# ── app domains ───────────────────────────────────────────────────────────
+
+def test_app_domains():
+    """An installed app's OWN domain, and what happens when one will not load.
+
+    `bootstrap()` and the `apps.domains` operation both come through
+    `register_app_domains`, so this is the path a host takes when it learns
+    what `weave.*` or `dash.*` can do. It is in-process: none of the apps has
+    to be running.
+
+    The failure case is the one worth asserting. An app whose domain raises
+    must be reported BY NAME and must not take its neighbours with it --
+    capability the agent cannot see is capability it does not have
+    (D-NET-LAB.md section 2), and a silently missing domain is exactly that.
+    """
+    print("")
+    print("app domains")
+    from IAC import apps_ops
+
+    root = tempfile.mkdtemp(prefix="apps-dom-")
+    try:
+        # The app directory IS the package, which is the shape _importable
+        # resolves (the Transposer's shape) and the shape a loose module file
+        # in the app root deliberately is not.
+        for package, app_name, body in (
+                ("good_ops", "good-app",
+                 "def register(registry=None, config=None):\n"
+                 "    return 3\n"),
+                ("broken_ops", "broken-app",
+                 "raise RuntimeError('no such sensor')\n")):
+            app = os.path.join(root, package)
+            os.makedirs(app)
+            manifest = dict(GOOD)
+            manifest["name"] = app_name
+            manifest["domain"] = package.split("_")[0]
+            manifest["register"] = "%s:register" % package
+            manifest.pop("requires", None)
+            with io.open(os.path.join(app, MANIFEST_NAME), "w",
+                         encoding="utf-8") as handle:
+                json.dump(manifest, handle)
+            with io.open(os.path.join(app, "__init__.py"), "w",
+                         encoding="utf-8") as handle:
+                handle.write(body)
+
+        apps_ops.get_registry({"roots": [root]}, refresh=True)
+        landed, failed = apps_ops.register_app_domains()
+
+        ok("an app's own domain is registered", "good-app" in landed,
+           str(landed))
+        ok("and it reports its domain name",
+           landed.get("good-app", {}).get("domain") == "good")
+        ok("and how many operations it brought",
+           landed.get("good-app", {}).get("operations") == 3)
+        ok("a domain that will not load is reported BY NAME",
+           "broken-app" in failed, str(failed))
+        ok("and the reason is carried, not swallowed",
+           "no such sensor" in failed.get("broken-app", ""),
+           str(failed))
+        ok("one broken app does not cost us a working one",
+           "good-app" in landed and "broken-app" not in landed)
+    finally:
+        apps_ops._registry = None
+        shutil.rmtree(root, ignore_errors=True)
+
+
 def main():
     print("IAC Launcher tests")
     test_manifest()
@@ -459,6 +549,7 @@ def main():
     test_bundle_safety()
     test_runner()
     test_ui_and_scaffold()
+    test_app_domains()
     test_console()
 
     print("\n%d passed, %d failed, %d skipped"

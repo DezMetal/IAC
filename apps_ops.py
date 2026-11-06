@@ -23,7 +23,8 @@ from .apps.registry import Registry, check
 from .apps.scaffold import SCAFFOLD_KINDS, scaffold
 from .apps.runner import RunError, Runner
 
-__all__ = ["build_domain", "register", "get_registry", "get_runner"]
+__all__ = ["build_domain", "register", "register_app_domains", "get_registry",
+           "get_runner"]
 
 
 _registry = None
@@ -298,27 +299,7 @@ def build_domain(config=None):
                      "description": "Just this one. Omit for all."}})
     def _domains(args, context=None):
         args = args or {}
-        from IAC.registry import OperationRegistry
-
-        registry = get_registry(config)
-        wanted = [registry.get(args["app"])] if args.get("app") else list(registry)
-        landed, failed = {}, {}
-        for manifest in wanted:
-            if manifest is None or not manifest.register:
-                continue
-            module, _, func = str(manifest.register).partition(":")
-            _importable(manifest, module)
-            try:
-                imported = __import__(module, fromlist=[func])
-                count = getattr(imported, func)(
-                    registry=OperationRegistry(),
-                    config=_app_config(manifest))
-                landed[manifest.name] = {"domain": manifest.domain,
-                                         "operations": count}
-            except Exception as exc:
-                # An app whose domain will not load is reported by name: the
-                # alternative is an agent silently missing capability.
-                failed[manifest.name] = str(exc)[:200]
+        landed, failed = register_app_domains(config=config, app=args.get("app"))
         return {"status": "ok", "data": {"registered": landed,
                                          "failed": failed},
                 "message": "registered %d domain(s)%s"
@@ -326,6 +307,42 @@ def build_domain(config=None):
                               ", %d failed" % len(failed) if failed else "")}
 
     return apps
+
+
+def register_app_domains(registry=None, config=None, app=None):
+    """Register installed Cell Apps' own IAC domains. Returns (landed, failed).
+
+    A Cell App that declares `domain` and `register` in its manifest owns a
+    piece of this host's capability -- `weave.*`, `dash.*`, `cell.*`. Both
+    `apps.domains` and `bootstrap()` come here, so an app's domain reaches a
+    host the same way however it was asked for.
+
+    **This is in-process and needs none of the apps running.** The domains are
+    Python, not HTTP: an agent can read the operator's boards with Weave's
+    server stopped, and the operations that do need it say so themselves.
+    """
+    from IAC.registry import OperationRegistry
+
+    apps = get_registry(config)
+    wanted = [apps.get(app)] if app else list(apps)
+    landed, failed = {}, {}
+    for manifest in wanted:
+        if manifest is None or not manifest.register:
+            continue
+        module, _, func = str(manifest.register).partition(":")
+        _importable(manifest, module)
+        try:
+            imported = __import__(module, fromlist=[func])
+            count = getattr(imported, func)(
+                registry=OperationRegistry() if registry is None else registry,
+                config=_app_config(manifest))
+            landed[manifest.name] = {"domain": manifest.domain,
+                                     "operations": count}
+        except Exception as exc:
+            # An app whose domain will not load is reported by name: the
+            # alternative is an agent silently missing capability.
+            failed[manifest.name] = str(exc)[:200]
+    return landed, failed
 
 
 def _importable(manifest, module):

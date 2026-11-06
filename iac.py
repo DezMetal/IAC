@@ -413,6 +413,29 @@ def bootstrap(safe_mode=False, exclude=None):
             # registration clash stop Aether's web server from starting.
             print(f"[WARN] Cell App operations not available: {e}")
 
+        # And the apps' OWN domains. An installed Cell App that declares one
+        # is capability this host has -- `weave.*` reads the operator's
+        # boards, `dash.*` answers where he was -- and it is in-process, so
+        # none of them has to be running. Without this a host saw `apps.run`
+        # and nothing it could run: capability the agent cannot see is
+        # capability it does not have (D-NET-LAB.md §2). Each app is guarded
+        # separately inside, and the names that failed are printed rather
+        # than swallowed.
+        try:
+            try:
+                from .apps_ops import register_app_domains
+            except ImportError:
+                from apps_ops import register_app_domains
+            landed, failed = register_app_domains(registry)
+            if landed:
+                print("[IAC] Registered %d Cell App domain(s): %s"
+                      % (len(landed), ", ".join(sorted(v["domain"] or k
+                                                       for k, v in landed.items()))))
+            for name, why in (failed or {}).items():
+                print(f"[WARN] Cell App '{name}' has a domain that would not load: {why}")
+        except Exception as e:
+            print(f"[WARN] Cell App domains not registered: {e}")
+
     # 2.11 Third-party domains.
     # Anything product-specific -- a company's internal API, a host application's
     # own operations -- lives in an extension rather than in this repository.
