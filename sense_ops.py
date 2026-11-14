@@ -371,7 +371,13 @@ def attach_sources(sources, screens_wanted=True, cameras_wanted=(),
                          note=str(spec.get("note", "region")))
         registered.append(name)
 
-    if not registered:
+    # ONLY A FAILURE WHEN SOMETHING WAS ASKED FOR. Aether's Vigil runs with
+    # `screens: false` on purpose -- it watches the window in front as a text
+    # source instead -- and this warned on every start that "nothing could be
+    # registered", listing four libraries that were all present. An alarm
+    # that fires on a correct configuration teaches the reader to ignore it.
+    wanted = bool(screens_wanted) or bool(cameras_wanted) or bool(regions)
+    if not registered and wanted:
         logger.warning("Nothing on this machine could be registered as a "
                        "visual source (PIL=%s mss=%s cv2=%s pyautogui=%s).",
                        HAS_PIL, HAS_MSS, _cv2() is not None, HAS_PYAUTOGUI)
