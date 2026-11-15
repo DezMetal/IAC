@@ -541,6 +541,28 @@ def test_app_domains():
         shutil.rmtree(root, ignore_errors=True)
 
 
+def test_lab_root():
+    """A vendored IAC (Aether/IAC) must find the LAB, not its host."""
+    from IAC.apps.registry import find_lab_root
+    root = tempfile.mkdtemp(prefix="labroot-test-")
+    try:
+        lab = os.path.join(root, "lab")
+        for d in ("IAC/apps", "DSS", "Host/IAC/apps"):
+            os.makedirs(os.path.join(lab, *d.split("/")))
+        saved = os.environ.pop("DNETLAB_ROOT", None)
+        try:
+            ok("lab root from the origin checkout",
+               find_lab_root(os.path.join(lab, "IAC", "apps")) == os.path.abspath(lab))
+            ok("lab root from a vendored copy is the lab, not the host",
+               find_lab_root(os.path.join(lab, "Host", "IAC", "apps")) == os.path.abspath(lab))
+            ok("no lab above a bare folder", find_lab_root(root) is None)
+        finally:
+            if saved is not None:
+                os.environ["DNETLAB_ROOT"] = saved
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+
 def main():
     print("IAC Launcher tests")
     test_manifest()
@@ -551,6 +573,7 @@ def main():
     test_ui_and_scaffold()
     test_app_domains()
     test_console()
+    test_lab_root()
 
     print("\n%d passed, %d failed, %d skipped"
           % (len(_passed), len(_failed), len(_skipped)))

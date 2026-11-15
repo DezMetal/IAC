@@ -34,14 +34,41 @@ import urllib.request
 
 from .manifest import KNOWN_CAPABILITIES, MANIFEST_NAME, find_in, load
 
-__all__ = ["Registry", "default_roots", "check"]
+__all__ = ["Registry", "default_roots", "check", "find_lab_root"]
 
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
-#: This file lives at <lab>/IAC/apps/, so the lab root is two levels up.
-#: It was one level up before this moved into IAC, and getting it wrong made
-#: the launcher search inside IAC itself and report no apps at all.
-_LAB_ROOT = os.path.dirname(os.path.dirname(_HERE))
+
+
+def find_lab_root(start=None):
+    """The lab tree: the nearest ancestor holding both `IAC/` and `DSS/`.
+
+    Found by LOOKING, not by counting levels -- the same rule the Dash uses
+    (`labdash.lab.find_lab_root`), so every program means one place by "the
+    lab". Counting was right only for the origin checkout at <lab>/IAC/apps/.
+    A host that vendors IAC (Aether/IAC, DNet/IAC) is one level deeper, so two
+    levels up landed on the HOST's folder: Aether searched itself for Cell
+    Apps, found none, registered no `weave.*` or `dash.*`, and said nothing --
+    which is how a config list of import paths grew up to paper over it.
+    `DNETLAB_ROOT` wins when set. None outside a lab.
+    """
+    env = os.environ.get("DNETLAB_ROOT")
+    if env and os.path.isdir(os.path.join(env, "IAC")):
+        return os.path.abspath(env)
+    here = os.path.abspath(start or _HERE)
+    while True:
+        if (os.path.isdir(os.path.join(here, "IAC"))
+                and os.path.isdir(os.path.join(here, "DSS"))):
+            return here
+        parent = os.path.dirname(here)
+        if parent == here:
+            return None
+        here = parent
+
+
+#: Outside a lab (a standalone IAC, a droplet) the old guess stands: the
+#: folder that holds IAC.
+_LAB_ROOT = find_lab_root() or os.path.dirname(os.path.dirname(_HERE))
 
 #: pip name -> import name, where they differ. Checking the wrong one reports
 #: a missing package that is installed, which is worse than not checking.

@@ -130,10 +130,9 @@ class Runner:
         # The lab root, so `from Transposer...` and `from Cell...` resolve
         # without the app needing to be installed.
         env = dict(os.environ)
-        # <lab>/IAC/apps/runner.py -> the lab root is three levels up, so
-        # an app can `from Transposer...` without being installed.
-        lab_root = os.path.dirname(os.path.dirname(os.path.dirname(
-            os.path.abspath(__file__))))
+        # Found by looking (registry.find_lab_root), not three levels up:
+        # from a vendored copy three levels up is the host, not the lab.
+        from .registry import _LAB_ROOT as lab_root
         # The app's PARENT directory too, so an app installed outside the
         # lab tree -- imported from a bundle into ~/.cell/apps, say -- can
         # import its own package. Without it only apps inside the lab tree
