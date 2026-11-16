@@ -42,6 +42,78 @@ _LOG_DIR = os.path.join(_STATE_DIR, "logs")
 _NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 
 
+# Run by a short-lived helper process (see _spawn_detached). It starts the real
+# command in its own group with no console, prints that command's pid, and
+# exits -- which leaves the command with no living parent to be found through.
+_LAUNCHER = """
+import json, subprocess, sys
+log, cwd, argv = sys.argv[1], sys.argv[2], json.loads(sys.argv[3])
+handle = open(log, "ab")
+kw = dict(cwd=cwd or None, stdout=handle, stderr=subprocess.STDOUT,
+          stdin=subprocess.DEVNULL)
+flags = 0x00000200 | 0x00000008 | 0x08000000
+try:
+    child = subprocess.Popen(argv, creationflags=flags | 0x01000000, **kw)
+except OSError:
+    child = subprocess.Popen(argv, creationflags=flags, **kw)
+print(child.pid, flush=True)
+"""
+
+
+class _Detached:
+    """The part of Popen the Runner uses, for a process we did not parent."""
+
+    def __init__(self, pid):
+        self.pid = pid
+        self.returncode = None
+
+    def poll(self):
+        if self.returncode is None and not _alive(self.pid):
+            # The real exit code is not ours to read; a vanished pid is "gone".
+            self.returncode = -1
+        return self.returncode
+
+
+def _spawn_detached(argv, cwd, env, log_path):
+    """Windows service launch: the classic double launch (see _spawn)."""
+    import json
+    helper = subprocess.run(
+        [sys.executable, "-c", _LAUNCHER, log_path, cwd or "", json.dumps(argv)],
+        env=env, capture_output=True, text=True, timeout=60,
+        stdin=subprocess.DEVNULL, creationflags=_NO_WINDOW)
+    try:
+        pid = int((helper.stdout or "").strip().splitlines()[-1])
+    except (ValueError, IndexError):
+        raise OSError("the launcher did not report a pid: %s"
+                      % ((helper.stderr or helper.stdout or "").strip()[-300:]
+                         or "no output"))
+    return _Detached(pid)
+
+
+def _spawn(argv, cwd, env, handle, service=False, log_path=None):
+    """Start a command. A SERVICE outlives whoever started it.
+
+    A service (Cell, the Dash, Weave) is shared: an agents view that pressed
+    "Start Cell" and then closed must not take Cell -- and offline mode for
+    every agent -- down with it. Measured 2026-11-16: a parent started Cell,
+    then `taskkill /PID <parent> /T /F` killed Cell too, even though Cell was
+    detached and in its own group, because taskkill /T follows parent-process
+    links. So on Windows a service is launched twice: a short-lived helper
+    starts it and exits, leaving it with no living parent to follow. POSIX
+    uses a new session, which a signal to the parent's group does not reach.
+    `apps.stop` stops it by pid as before. Commands that are not services
+    stay attached, which is what a one-shot tool wants.
+    """
+    common = dict(cwd=cwd, env=env, stdout=handle, stderr=subprocess.STDOUT,
+                  stdin=subprocess.DEVNULL)
+    if os.name != "nt":
+        return subprocess.Popen(argv, start_new_session=bool(service), **common)
+    if service and log_path:
+        return _spawn_detached(argv, cwd, env, log_path)
+    return subprocess.Popen(argv, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+                            **common)
+
+
 class RunError(Exception):
     """An app could not be started or stopped. Carries a sentence."""
 
@@ -149,12 +221,9 @@ class Runner:
             raise RunError("could not open a log at %s: %s" % (log_path, exc))
 
         try:
-            process = subprocess.Popen(
-                argv, cwd=manifest.root, env=env,
-                stdout=handle, stderr=subprocess.STDOUT,
-                stdin=subprocess.DEVNULL,
-                creationflags=(subprocess.CREATE_NEW_PROCESS_GROUP
-                               if os.name == "nt" else 0))
+            process = _spawn(argv, manifest.root, env, handle,
+                             service=bool(spec.get("service")),
+                             log_path=log_path)
         except Exception as exc:
             handle.close()
             raise RunError("could not start %s: %s" % (key, exc))

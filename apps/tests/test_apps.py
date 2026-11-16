@@ -334,6 +334,61 @@ def test_runner():
         shutil.rmtree(state, ignore_errors=True)
 
 
+def test_service_survives_tree_kill():
+    print("\nservice outlives its starter")
+    if os.name != "nt":
+        skip("a service survives its starter's tree kill", "Windows tree kill only")
+        return
+    import subprocess
+    import time
+    from IAC.apps.runner import _alive
+    state = tempfile.mkdtemp(prefix="apps-state-")
+    root, app = _tree(data={
+        "cellapp": "1.0", "name": "svc", "title": "Svc", "summary": "sleeps",
+        "version": "1", "requires": {"cell": False},
+        "commands": {"up": {"run": "svcmod:main", "service": True}},
+    }, name="svc")
+    with io.open(os.path.join(root, "svcmod.py"), "w") as h:
+        h.write("import time\ndef main():\n    time.sleep(120)\n")
+    state_file = os.path.join(state, "running.json")
+    log_dir = os.path.join(state, "logs")
+    lab = os.path.dirname(os.path.dirname(os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__)))))
+    starter_code = (
+        "import sys, time; sys.path.insert(0, %r)\n"
+        "from IAC.apps import Runner, load\n"
+        "r = Runner(state_file=%r, log_dir=%r)\n"
+        "rec = r.start(load(%r), 'up')\n"
+        "print(rec['pid'], flush=True)\ntime.sleep(120)\n"
+        % (lab, state_file, log_dir, os.path.join(app, MANIFEST_NAME)))
+    starter = None
+    pid = None
+    try:
+        starter = subprocess.Popen([sys.executable, "-c", starter_code],
+                                   stdout=subprocess.PIPE, text=True)
+        pid = int(starter.stdout.readline().strip())
+        ok("the service is up before the kill", _alive(pid))
+        subprocess.run(["taskkill", "/PID", str(starter.pid), "/T", "/F"],
+                       capture_output=True, timeout=30)
+        time.sleep(1.0)
+        ok("a service survives its starter's tree kill", _alive(pid),
+           "pid %s died with its starter" % pid)
+        runner = Runner(state_file=state_file, log_dir=log_dir)
+        stopped = runner.stop("svc")
+        time.sleep(0.5)
+        ok("Runner.stop still stops it by pid",
+           bool(stopped) and not _alive(pid), str(stopped))
+    except Exception as exc:
+        ok("a service survives its starter's tree kill", False, repr(exc))
+    finally:
+        for p in (starter.pid if starter else None, pid):
+            if p:
+                subprocess.run(["taskkill", "/PID", str(p), "/T", "/F"],
+                               capture_output=True, timeout=30)
+        shutil.rmtree(root, ignore_errors=True)
+        shutil.rmtree(state, ignore_errors=True)
+
+
 def test_console():
     print("\nconsole")
 
@@ -570,6 +625,7 @@ def main():
     test_bundles()
     test_bundle_safety()
     test_runner()
+    test_service_survives_tree_kill()
     test_ui_and_scaffold()
     test_app_domains()
     test_console()
