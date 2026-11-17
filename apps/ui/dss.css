@@ -512,6 +512,14 @@ a:hover { color: var(--dss-accent); text-shadow: 0 0 10px var(--dss-accent-weak)
   transition: border-color var(--dss-speed) var(--dss-ease);
 }
 .dss-textarea { min-height: 120px; resize: vertical; line-height: 1.6; }
+/* An opened dropdown is drawn by the OS: with the theme's light text on the
+   system's white list, every option but the highlighted one vanished
+   (2026-11-17, "dropdowns only offer the selected option"). Give the list
+   the theme's own colours. */
+select option, select optgroup {
+  background: var(--dss-surface-solid);
+  color: var(--dss-ink);
+}
 .dss-input:focus, .dss-select:focus, .dss-textarea:focus {
   border-color: var(--dss-accent);
   box-shadow: inset 0 1px 0 var(--dss-gloss), 0 0 0 3px var(--dss-accent-weak);
